@@ -719,7 +719,7 @@ export function Home() {
   useEffect(() => {
     const isoDate = new Date().toISOString().split('T')[0];
     fetchPuzzleByDate(isoDate).then(p => {
-      if (p) setTodaysPuzzle({ number: p.number, clue: p.clue, letterCount: p.letter_count });
+      if (p) setTodaysPuzzle({ number: p.number, clue: p.clue_text, letterCount: p.answer_length });
     });
   }, []);
 

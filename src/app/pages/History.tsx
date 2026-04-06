@@ -12,7 +12,7 @@ import {
   fetchUserStats,
   fetchPuzzleArchive,
   type DbSolveRecord,
-  type DbPuzzle,
+  type DbDailyPuzzle,
   isSupabaseConfigured,
 } from '../../lib/supabase';
 
@@ -215,7 +215,7 @@ function SolveRow({ record, isDark, index }: { record: DbSolveRecord; isDark: bo
 
 // ─── ARCHIVE ROW ──────────────────────────────────────────────────────────────
 
-function ArchiveRow({ puzzle, isDark, index }: { puzzle: DbPuzzle; isDark: boolean; index: number }) {
+function ArchiveRow({ puzzle, isDark, index }: { puzzle: DbDailyPuzzle; isDark: boolean; index: number }) {
   const T = getTheme(isDark);
   const navigate = useNavigate();
   const dateStr = new Date(puzzle.date).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
@@ -238,9 +238,9 @@ function ArchiveRow({ puzzle, isDark, index }: { puzzle: DbPuzzle; isDark: boole
         <div>
           <div style={{ fontWeight: 700, color: T.text, fontSize: '0.9rem' }}>
             Puzzle #{puzzle.number}
-            {puzzle.clue_type && (
+            {puzzle.primary_type && (
               <span className="ml-2 px-2 py-0.5 rounded-full text-xs" style={{ background: isDark ? '#1A1035' : '#F5F0FF', color: isDark ? '#C4B5FD' : '#7C3AED' }}>
-                {puzzle.clue_type}
+                {puzzle.primary_type}
               </span>
             )}
           </div>
@@ -263,7 +263,7 @@ export function History() {
 
   // Remote data state
   const [solveHistory, setSolveHistory] = useState<DbSolveRecord[]>([]);
-  const [archive, setArchive] = useState<DbPuzzle[]>([]);
+  const [archive, setArchive] = useState<DbDailyPuzzle[]>([]);
   const [remoteStats, setRemoteStats] = useState<{ xp: number; totalSolved: number; bestStreak: number; streakCount: number } | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(false);

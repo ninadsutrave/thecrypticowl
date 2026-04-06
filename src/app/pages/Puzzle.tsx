@@ -10,6 +10,7 @@ import { useDarkMode } from '../context/DarkModeContext';
 import { getTheme } from '../theme';
 import { useStreak, getXPForSolve, getLevelTitle, getLevelFromXP, hasSolvedToday } from '../hooks/useStreak';
 import { useAuth } from '../context/AuthContext';
+import { fetchPuzzleByDate } from '../../lib/supabase';
 
 // ─── PUZZLE DATA ──────────────────────────────────────────────────────────────
 
@@ -86,16 +87,18 @@ const PART_STYLES: Record<string, { bg: string; bgDark: string; color: string; b
 function ClueReactionWidget({
   puzzleNumber,
   userId,
+  puzzleId,
   isDark,
   variant = 'inline',
 }: {
   puzzleNumber: number;
   userId?: string;
+  puzzleId?: string;
   isDark: boolean;
   variant?: 'inline' | 'card';
 }) {
   const T = getTheme(isDark);
-  const { reaction, vote } = useClueReaction(puzzleNumber, userId);
+  const { reaction, vote } = useClueReaction(puzzleNumber, userId, puzzleId);
   const [flash, setFlash] = useState<'like' | 'dislike' | null>(null);
 
   const handleVote = (r: 'like' | 'dislike') => {
@@ -404,12 +407,16 @@ function HintCard({
 
 function SuccessState({
   hintsUsed,
+  wrongAttemptsCount,
   solveTime,
+  puzzleId,
   onReset,
   isDark,
 }: {
   hintsUsed: number;
+  wrongAttemptsCount: number;
   solveTime: number;
+  puzzleId?: string;
   onReset: () => void;
   isDark: boolean;
 }) {
@@ -425,8 +432,8 @@ function SuccessState({
     if (!runConfetti.current) {
       runConfetti.current = true;
 
-      // Record the solve in streak
-      const result = recordSolve(hintsUsed, PUZZLE.number, user?.id);
+      // Record the solve — passes wrongAttemptsCount, puzzleId, and solveTime for Supabase
+      const result = recordSolve(hintsUsed, PUZZLE.number, user?.id, puzzleId, wrongAttemptsCount, solveTime || undefined);
       if (result) {
         setFinalData({ streak: result.count, total: result.totalSolved, xp: result.xp, level: result.level });
       }
@@ -808,7 +815,7 @@ function SuccessState({
       </div>
 
       {/* Clue feedback — card variant in success state */}
-      <ClueReactionWidget puzzleNumber={PUZZLE.number} userId={user?.id} isDark={isDark} variant="card" />
+      <ClueReactionWidget puzzleNumber={PUZZLE.number} userId={user?.id} puzzleId={puzzleId} isDark={isDark} variant="card" />
 
       {/* Next puzzle countdown */}
       <NextPuzzleCountdown isDark={isDark} />
@@ -910,16 +917,25 @@ export function Puzzle() {
   const [hintsUnlocked, setHintsUnlocked] = useState(0);
   const [isCorrect, setIsCorrect] = useState(false);
   const [wrongAttempt, setWrongAttempt] = useState<string | null>(null);
+  const [wrongAttemptsCount, setWrongAttemptsCount] = useState(0);
   const [newHintIndex, setNewHintIndex] = useState<number | null>(null);
   const [showAllHints, setShowAllHints] = useState(false);
   const [startTime] = useState(Date.now());
   const [solveTime, setSolveTime] = useState(0);
+  const [puzzleId, setPuzzleId] = useState<string | undefined>(undefined);
   const inputRef = useRef<HTMLInputElement>(null);
   const { isDark } = useDarkMode();
   const T = getTheme(isDark);
   const { user } = useAuth();
   const alreadySolved = hasSolvedToday();
   const today = new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
+
+  // Fetch today's puzzle UUID from Supabase so we can write solve records and reactions.
+  // Game logic stays on the hardcoded PUZZLE constant; this is purely for the DB foreign key.
+  useEffect(() => {
+    const isoDate = new Date().toISOString().split('T')[0];
+    fetchPuzzleByDate(isoDate).then(p => { if (p) setPuzzleId(p.id); });
+  }, []);
 
   // Archive view: past puzzle requested that isn't the hardcoded one
   if (isArchiveView) {
@@ -969,6 +985,7 @@ export function Puzzle() {
       setIsCorrect(true);
       setWrongAttempt(null);
     } else {
+      setWrongAttemptsCount(c => c + 1);
       setWrongAttempt(answer.trim());
       setAnswer('');
       inputRef.current?.focus();
@@ -1056,7 +1073,7 @@ export function Puzzle() {
               </div>
 
               {/* Clue feedback */}
-              <ClueReactionWidget puzzleNumber={PUZZLE.number} userId={user?.id} isDark={isDark} />
+              <ClueReactionWidget puzzleNumber={PUZZLE.number} userId={user?.id} puzzleId={puzzleId} isDark={isDark} />
 
               {/* Answer boxes */}
               <div className="flex gap-2">
@@ -1221,7 +1238,7 @@ export function Puzzle() {
           </AnimatePresence>
         </div>
       ) : (
-        <SuccessState hintsUsed={hintsUnlocked} solveTime={solveTime} onReset={handleReset} isDark={isDark} />
+        <SuccessState hintsUsed={hintsUnlocked} wrongAttemptsCount={wrongAttemptsCount} solveTime={solveTime} puzzleId={puzzleId} onReset={handleReset} isDark={isDark} />
       )}
 
       {/* Mobile sticky input bar */}

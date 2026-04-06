@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import { upsertUserStats, insertSolveRecord } from '../../lib/supabase';
+import { callRecordSolve } from '../../lib/supabase';
 
 export interface SolveRecord {
   date: string;
@@ -82,12 +82,15 @@ export function useStreak() {
   /**
    * Record a puzzle solve.
    * - Always writes to localStorage immediately (works offline / without auth).
-   * - If userId is provided, fire-and-forget syncs to Supabase in the background.
+   * - If userId is provided, fire-and-forget syncs to Supabase via record_solve() RPC.
    */
   const recordSolve = useCallback((
     hintsUsed: number,
     puzzleNumber: number = 0,
-    userId?: string
+    userId?: string,
+    puzzleId?: string,        // UUID from DB — required for Supabase write; omit for local-only
+    wrongAttempts: number = 0,
+    solveTimeSeconds?: number
   ) => {
     const today = new Date().toDateString();
     const current = getStoredStreakData();
@@ -119,10 +122,20 @@ export function useStreak() {
     saveData(newData);
     setData(newData);
 
-    // Sync to Supabase in the background — never blocks the UI
-    if (userId) {
-      upsertUserStats(userId, newData).catch(console.error);
-      insertSolveRecord(userId, { puzzleNumber, hintsUsed, xpEarned: xpGained }).catch(console.error);
+    // Sync to Supabase in the background — never blocks the UI.
+    // record_solve() atomically writes solve_history + updates user_stats in one
+    // transaction, so no separate upsertUserStats call is needed here.
+    // puzzleId (UUID) is required by the DB schema; skip if we only have a local
+    // puzzle number (e.g. the hardcoded fallback puzzle used in local dev).
+    if (userId && puzzleId) {
+      callRecordSolve(userId, {
+        clueId:           puzzleId,
+        puzzleNumber,
+        hintsUsed,
+        wrongAttempts,
+        xpEarned:         xpGained,
+        solveTimeSeconds,
+      }).catch(console.error);
     }
 
     return newData;

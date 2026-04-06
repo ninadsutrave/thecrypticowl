@@ -14,90 +14,228 @@ export const supabase = createClient(
   import.meta.env.VITE_SUPABASE_ANON_KEY || 'placeholder-anon-key'
 );
 
+// ─── ENUMS (mirror the PostgreSQL lookup tables / enums in 001_initial.sql) ───
+
+export type ClueWordplayType =
+  | 'anagram' | 'reversal' | 'container' | 'hidden' | 'deletion'
+  | 'charade' | 'homophone' | 'double_definition' | 'cryptic_definition'
+  | 'andlit' | 'compound';
+
+export type ClueIndicatorType =
+  | 'anagram' | 'reversal' | 'container' | 'hidden' | 'deletion'
+  | 'homophone' | 'initial_letters' | 'final_letters'
+  | 'alternating_letters' | 'spoonerism';
+
+export type ClueComponentRole =
+  | 'definition' | 'indicator' | 'fodder'
+  | 'container_outer' | 'container_inner'
+  | 'link_word' | 'result';
+
+export type PuzzleDifficulty = 'easy' | 'medium' | 'hard' | 'expert';
+
 // ─── TYPES ────────────────────────────────────────────────────────────────────
 
+/** One colour-coded segment of the clue string. Stored as JSONB in clues.clue_parts. */
+export interface CluePart {
+  text: string;
+  /** null = structural text (letter count, filler) */
+  type: 'definition' | 'indicator' | 'fodder' | 'link' | null;
+}
+
+/** One progressive hint card. Stored as JSONB in clues.hints.
+ *  snake_case matches the DB column; the frontend maps to camelCase as needed. */
 export interface PuzzleHint {
   id: number;
   title: string;
   text: string;
   highlight: string | null;
-  mascotComment: string;
+  mascot_comment: string;
   color: string;
   bg: string;
-  bgDark: string;
+  bg_dark: string;
   border: string;
 }
 
-export interface CluePart {
-  text: string;
-  type: string | null;
-}
+/**
+ * Flattened result of daily_puzzles JOIN clues.
+ * This is the primary type the frontend works with for the game.
+ * `number` and `date` come from daily_puzzles; everything else from clues.
+ */
+export interface DbDailyPuzzle {
+  // From daily_puzzles
+  number: number;                  // puzzle_number — the user-facing "Puzzle #42"
+  date: string;                    // ISO date string e.g. "2026-04-06"
 
-/** Row shape in the `puzzles` table */
-export interface DbPuzzle {
+  // From clues
   id: string;
-  number: number;
-  date: string;          // ISO date string e.g. "2026-04-06"
-  clue: string;
+  published: boolean;
+  clue_text: string;
   answer: string;
-  letter_count: number;
-  clue_type: string | null;
-  hints: PuzzleHint[];
-  clue_parts: CluePart[];
-  created_at: string;
-}
+  answer_length: number;           // generated column — always equals answer.length
+  answer_pattern: string;          // display form: "5", "3,4", "2-3"
 
-/** Row shape in the `user_stats` table */
-export interface DbUserStats {
-  user_id: string;
-  streak_count: number;
-  last_solved: string | null; // ISO date string
-  total_solved: number;
-  xp: number;
-  level: number;
-  best_streak: number;
+  primary_type: ClueWordplayType;
+  definition_text: string;
+  wordplay_summary: string;        // shown to user after a solve
+
+  clue_parts: CluePart[];
+  hints: PuzzleHint[];
+
+  difficulty: PuzzleDifficulty;
+  author: string | null;
+  tags: string[];
+  // notes is intentionally omitted — never sent to the frontend
+
+  created_at: string;
   updated_at: string;
 }
 
-/** Row shape in the `solve_history` table */
+/** Row from the `clue_components` table (normalised wordplay breakdown). */
+export interface DbClueComponent {
+  id: string;
+  clue_id: string;
+  step_order: number;
+  role: ClueComponentRole;
+  clue_text: string;
+  derived_text: string | null;
+  indicator_type: ClueIndicatorType | null;
+  explanation: string | null;
+  created_at: string;
+}
+
+/** Row from the `user_stats` table. */
+export interface DbUserStats {
+  user_id: string;
+  streak_count: number;
+  best_streak: number;
+  last_solved: string | null;      // ISO date string
+  total_solved: number;
+  xp: number;
+  level: number;
+  updated_at: string;
+}
+
+/** Row from the `solve_history` table. */
 export interface DbSolveRecord {
   id: string;
   user_id: string;
-  puzzle_number: number;
+  clue_id: string;
+  puzzle_number: number;           // denormalised for fast list queries
   hints_used: number;
+  wrong_attempts: number;
   xp_earned: number;
+  solve_time_seconds: number | null;
   solved_at: string;
 }
 
-// ─── PUZZLES ──────────────────────────────────────────────────────────────────
+/** Row from the `clue_solve_stats` view (admin / clue-author use). */
+export interface DbClueSolveStats {
+  clue_id: string;
+  date: string;
+  primary_type: ClueWordplayType;
+  difficulty: PuzzleDifficulty;
+  author: string | null;
+  total_solves: number;
+  avg_hints_used: number | null;
+  avg_solve_seconds: number | null;
+  avg_wrong_attempts: number | null;
+  hint_1_opens: number;
+  hint_2_opens: number;
+  hint_3_opens: number;
+  hint_4_opens: number;
+  zero_hint_solves: number;
+  likes: number;
+  dislikes: number;
+  like_pct: number | null;
+}
 
-/** Fetch the puzzle for a specific ISO date (e.g. today). Returns null if not found. */
-export async function fetchPuzzleByDate(isoDate: string): Promise<DbPuzzle | null> {
+// ─── DAILY PUZZLES ────────────────────────────────────────────────────────────
+
+/**
+ * Fetch the published puzzle for a specific ISO date (e.g. "2026-04-06").
+ * Joins daily_puzzles → clues and flattens the result into DbDailyPuzzle.
+ * Returns null if no published puzzle exists for that date.
+ */
+export async function fetchPuzzleByDate(isoDate: string): Promise<DbDailyPuzzle | null> {
   if (!isSupabaseConfigured) return null;
   const { data, error } = await supabase
-    .from('puzzles')
-    .select('*')
+    .from('daily_puzzles')
+    .select(`
+      puzzle_number,
+      date,
+      clues (
+        id, published,
+        clue_text, answer, answer_length, answer_pattern,
+        primary_type, definition_text, wordplay_summary,
+        clue_parts, hints,
+        difficulty, author, tags,
+        created_at, updated_at
+      )
+    `)
     .eq('date', isoDate)
+    .eq('published', true)
     .single();
+
   if (error) {
     console.warn('[supabase] fetchPuzzleByDate:', error.message);
     return null;
   }
-  return data as DbPuzzle;
+  if (!data || !data.clues) return null;
+
+  // Flatten the nested join into a single object
+  const clue = data.clues as unknown as Record<string, unknown>;
+  return {
+    number: data.puzzle_number,
+    date:   data.date,
+    ...clue,
+  } as DbDailyPuzzle;
 }
 
-/** Fetch all puzzles ordered by date descending (for the archive). */
-export async function fetchPuzzleArchive(): Promise<DbPuzzle[]> {
+/** Fetch all published daily puzzles ordered by date descending (for the archive). */
+export async function fetchPuzzleArchive(): Promise<DbDailyPuzzle[]> {
   if (!isSupabaseConfigured) return [];
   const { data, error } = await supabase
-    .from('puzzles')
-    .select('id, number, date, clue, clue_type, letter_count')
+    .from('daily_puzzles')
+    .select(`
+      puzzle_number,
+      date,
+      clues (
+        id, published,
+        clue_text, answer_length, answer_pattern,
+        primary_type, difficulty
+      )
+    `)
+    .eq('published', true)
     .order('date', { ascending: false });
+
   if (error) {
     console.warn('[supabase] fetchPuzzleArchive:', error.message);
     return [];
   }
-  return (data ?? []) as DbPuzzle[];
+
+  return (data ?? []).map(row => {
+    const clue = (row.clues ?? {}) as unknown as Record<string, unknown>;
+    return {
+      number: row.puzzle_number,
+      date:   row.date,
+      ...clue,
+    } as DbDailyPuzzle;
+  });
+}
+
+/** Fetch the normalised wordplay components for a clue (admin / detail view). */
+export async function fetchClueComponents(clueId: string): Promise<DbClueComponent[]> {
+  if (!isSupabaseConfigured) return [];
+  const { data, error } = await supabase
+    .from('clue_components')
+    .select('*')
+    .eq('clue_id', clueId)
+    .order('step_order');
+  if (error) {
+    console.warn('[supabase] fetchClueComponents:', error.message);
+    return [];
+  }
+  return (data ?? []) as DbClueComponent[];
 }
 
 // ─── USER STATS ───────────────────────────────────────────────────────────────
@@ -116,20 +254,23 @@ export async function fetchUserStats(userId: string): Promise<DbUserStats | null
   return (data as DbUserStats) ?? null;
 }
 
-/** Create or update a user's stats row. */
+/**
+ * Upsert a user's stats row directly.
+ * Used only for the initial sign-in sync (syncLocalStatsToSupabase).
+ * For in-game solves, use callRecordSolve() instead — it updates stats atomically.
+ */
 export async function upsertUserStats(userId: string, stats: Omit<StreakData, 'history'>): Promise<void> {
   if (!isSupabaseConfigured) return;
   const { error } = await supabase.from('user_stats').upsert({
-    user_id: userId,
+    user_id:      userId,
     streak_count: stats.count,
-    last_solved: stats.lastSolved
+    last_solved:  stats.lastSolved
       ? new Date(stats.lastSolved).toISOString().split('T')[0]
       : null,
     total_solved: stats.totalSolved,
-    xp: stats.xp,
-    level: stats.level,
-    best_streak: stats.bestStreak,
-    updated_at: new Date().toISOString(),
+    xp:           stats.xp,
+    level:        stats.level,
+    best_streak:  stats.bestStreak,
   });
   if (error) console.warn('[supabase] upsertUserStats:', error.message);
 }
@@ -141,7 +282,7 @@ export async function upsertUserStats(userId: string, stats: Omit<StreakData, 'h
 export async function syncLocalStatsToSupabase(userId: string, local: Omit<StreakData, 'history'>): Promise<void> {
   if (!isSupabaseConfigured || local.totalSolved === 0) return;
   const existing = await fetchUserStats(userId);
-  // Only push if local is ahead (more XP) or no remote data exists
+  // Only push local data if it's ahead (more XP) or no remote record exists yet
   if (!existing || local.xp > existing.xp) {
     await upsertUserStats(userId, local);
   }
@@ -164,37 +305,51 @@ export async function fetchSolveHistory(userId: string): Promise<DbSolveRecord[]
   return (data ?? []) as DbSolveRecord[];
 }
 
-/** Record a puzzle solve. Ignores duplicate (user_id, puzzle_number) pairs. */
-export async function insertSolveRecord(
+/**
+ * Record a puzzle solve atomically via the record_solve() PL/pgSQL function.
+ * Updates both solve_history and user_stats in a single transaction.
+ * Returns true if this was a new solve, false if the user already solved this clue.
+ */
+export async function callRecordSolve(
   userId: string,
-  record: { puzzleNumber: number; hintsUsed: number; xpEarned: number }
-): Promise<void> {
-  if (!isSupabaseConfigured) return;
-  const { error } = await supabase.from('solve_history').upsert(
-    {
-      user_id: userId,
-      puzzle_number: record.puzzleNumber,
-      hints_used: record.hintsUsed,
-      xp_earned: record.xpEarned,
-      solved_at: new Date().toISOString(),
-    },
-    { onConflict: 'user_id,puzzle_number', ignoreDuplicates: true }
-  );
-  if (error) console.warn('[supabase] insertSolveRecord:', error.message);
+  record: {
+    clueId: string;
+    puzzleNumber: number;
+    hintsUsed: number;
+    wrongAttempts: number;
+    xpEarned: number;
+    solveTimeSeconds?: number;
+  }
+): Promise<boolean> {
+  if (!isSupabaseConfigured) return false;
+  const { data, error } = await supabase.rpc('record_solve', {
+    p_user_id:            userId,
+    p_clue_id:            record.clueId,
+    p_puzzle_number:      record.puzzleNumber,
+    p_hints_used:         record.hintsUsed,
+    p_wrong_attempts:     record.wrongAttempts,
+    p_xp_earned:          record.xpEarned,
+    p_solve_time_seconds: record.solveTimeSeconds ?? null,
+  });
+  if (error) {
+    console.warn('[supabase] record_solve:', error.message);
+    return false;
+  }
+  return data as boolean;
 }
 
 // ─── CLUE REACTIONS ───────────────────────────────────────────────────────────
 
-/** Upsert a like or dislike for a puzzle clue. */
+/** Upsert a like or dislike for a clue. Keyed by clue_id (UUID). */
 export async function upsertClueReaction(
   userId: string,
-  puzzleNumber: number,
+  clueId: string,
   reaction: 'like' | 'dislike'
 ): Promise<void> {
   if (!isSupabaseConfigured) return;
   const { error } = await supabase.from('clue_reactions').upsert({
-    user_id: userId,
-    puzzle_number: puzzleNumber,
+    user_id:    userId,
+    clue_id:    clueId,
     reaction,
     updated_at: new Date().toISOString(),
   });
@@ -204,13 +359,13 @@ export async function upsertClueReaction(
 /** Remove a user's reaction (when they toggle off). */
 export async function deleteClueReaction(
   userId: string,
-  puzzleNumber: number
+  clueId: string
 ): Promise<void> {
   if (!isSupabaseConfigured) return;
   const { error } = await supabase
     .from('clue_reactions')
     .delete()
     .eq('user_id', userId)
-    .eq('puzzle_number', puzzleNumber);
+    .eq('clue_id', clueId);
   if (error) console.warn('[supabase] deleteClueReaction:', error.message);
 }

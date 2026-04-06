@@ -6,6 +6,7 @@ import { useDarkMode } from '../context/DarkModeContext';
 import { getTheme } from '../theme';
 import { useStreak, getLevelTitle, getXPToNextLevel } from '../hooks/useStreak';
 import { useEffect, useState } from 'react';
+import { fetchPuzzleByDate } from '../../lib/supabase';
 
 // ─── FLOATING BG ──────────────────────────────────────────────────────────────
 
@@ -90,7 +91,19 @@ function NextPuzzleCountdown({ isDark }: { isDark: boolean }) {
 
 // ─── TODAY'S PUZZLE HERO ──────────────────────────────────────────────────────
 
-function TodaysPuzzleHero({ onNavigate, isDark }: { onNavigate: () => void; isDark: boolean }) {
+interface TodayPuzzleData {
+  number: number;
+  clue: string;
+  letterCount: number;
+}
+
+const FALLBACK_PUZZLE: TodayPuzzleData = {
+  number: 42,
+  clue: 'Pears mixed up to form a weapon (5)',
+  letterCount: 5,
+};
+
+function TodaysPuzzleHero({ onNavigate, isDark, puzzle }: { onNavigate: () => void; isDark: boolean; puzzle: TodayPuzzleData }) {
   const T = getTheme(isDark);
   const today = new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
 
@@ -118,7 +131,7 @@ function TodaysPuzzleHero({ onNavigate, isDark }: { onNavigate: () => void; isDa
                 color: '#7C3AED',
               }}
             >
-              🧩 CRYPTIC #42
+              🧩 CRYPTIC #{puzzle.number}
             </p>
             <p style={{ fontSize: '0.78rem', color: T.textMuted, fontWeight: 600, marginTop: 1 }}>
               {today}
@@ -129,7 +142,7 @@ function TodaysPuzzleHero({ onNavigate, isDark }: { onNavigate: () => void; isDa
               className="rounded-full px-3 py-1"
               style={{ background: isDark ? '#1A0F35' : '#EDE9FE', border: `1.5px solid ${isDark ? '#4C3580' : '#C4B5FD'}` }}
             >
-              <span style={{ fontSize: '0.78rem', color: '#7C3AED', fontWeight: 700 }}>5 letters</span>
+              <span style={{ fontSize: '0.78rem', color: '#7C3AED', fontWeight: 700 }}>{puzzle.letterCount} letters</span>
             </div>
           </div>
         </div>
@@ -161,13 +174,13 @@ function TodaysPuzzleHero({ onNavigate, isDark }: { onNavigate: () => void; isDa
                 lineHeight: 1.7,
               }}
             >
-              "Pears mixed up to form a weapon (5)"
+              "{puzzle.clue}"
             </p>
           </div>
 
           {/* Answer boxes preview */}
           <div className="flex gap-2 justify-center mb-6">
-            {[...Array(5)].map((_, i) => (
+            {[...Array(puzzle.letterCount)].map((_, i) => (
               <motion.div
                 key={i}
                 initial={{ scale: 0, rotate: -10 }}
@@ -558,10 +571,10 @@ function LeaderboardTeaser({ isDark }: { isDark: boolean }) {
   const { count, bestStreak } = useStreak();
 
   const milestones = [
+    { label: 'First solve!', target: 1, emoji: '🎉', achieved: bestStreak >= 1 },
     { label: '3-day streak', target: 3, emoji: '🔥', achieved: count >= 3 || bestStreak >= 3 },
     { label: '7-day streak', target: 7, emoji: '🏅', achieved: count >= 7 || bestStreak >= 7 },
     { label: '30-day streak', target: 30, emoji: '🏆', achieved: count >= 30 || bestStreak >= 30 },
-    { label: 'First solve!', target: 1, emoji: '🎉', achieved: bestStreak >= 1 },
   ];
 
   return (
@@ -701,6 +714,14 @@ export function Home() {
   const navigate = useNavigate();
   const { isDark } = useDarkMode();
   const T = getTheme(isDark);
+  const [todaysPuzzle, setTodaysPuzzle] = useState<TodayPuzzleData>(FALLBACK_PUZZLE);
+
+  useEffect(() => {
+    const isoDate = new Date().toISOString().split('T')[0];
+    fetchPuzzleByDate(isoDate).then(p => {
+      if (p) setTodaysPuzzle({ number: p.number, clue: p.clue_text, letterCount: p.answer_length });
+    });
+  }, []);
 
   return (
     <div className="relative overflow-hidden">
@@ -755,7 +776,7 @@ export function Home() {
         </motion.div>
 
         {/* TODAY'S PUZZLE — front and centre */}
-        <TodaysPuzzleHero onNavigate={() => navigate('/puzzle')} isDark={isDark} />
+        <TodaysPuzzleHero onNavigate={() => navigate('/puzzle')} isDark={isDark} puzzle={todaysPuzzle} />
 
         {/* Stats strip */}
         <StatsStrip isDark={isDark} />

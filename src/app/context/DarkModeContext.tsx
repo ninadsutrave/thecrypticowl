@@ -12,7 +12,7 @@ export function DarkModeProvider({ children }: { children: ReactNode }) {
     try {
       const stored = localStorage.getItem('tco-dark');
       if (stored !== null) return stored === 'true';
-      return window.matchMedia('(prefers-color-scheme: dark)').matches;
+      return false; // default to light mode
     } catch {
       return false;
     }

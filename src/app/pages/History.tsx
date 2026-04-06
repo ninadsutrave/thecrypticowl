@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Trophy, Zap, Lock, LogOut, Calendar, Puzzle as PuzzleIcon, ChevronRight, BookOpen, RefreshCw } from 'lucide-react';
 import { useDarkMode } from '../context/DarkModeContext';
@@ -224,7 +224,7 @@ function ArchiveRow({ puzzle, isDark, index }: { puzzle: DbPuzzle; isDark: boole
     <motion.button
       className="w-full flex items-center justify-between px-4 py-3 rounded-2xl border text-left"
       style={{ background: T.cardBg, borderColor: T.cardBorder }}
-      onClick={() => navigate('/puzzle')}
+      onClick={() => navigate(`/puzzle/${puzzle.number}`)}
       whileHover={{ y: -1, scale: 1.01 }}
       whileTap={{ scale: 0.98 }}
       initial={{ opacity: 0, y: 10 }}
@@ -268,31 +268,36 @@ export function History() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(false);
 
-  useEffect(() => {
+  const loadData = useCallback(async () => {
     if (!isSignedIn || !user) return;
     setLoading(true);
     setError(false);
-
-    Promise.all([
-      fetchSolveHistory(user.id),
-      fetchUserStats(user.id),
-      fetchPuzzleArchive(),
-    ])
-      .then(([history, stats, puzzles]) => {
-        setSolveHistory(history);
-        setArchive(puzzles);
-        if (stats) {
-          setRemoteStats({
-            xp: stats.xp,
-            totalSolved: stats.total_solved,
-            bestStreak: stats.best_streak,
-            streakCount: stats.streak_count,
-          });
-        }
-      })
-      .catch(() => setError(true))
-      .finally(() => setLoading(false));
+    try {
+      const [history, stats, puzzles] = await Promise.all([
+        fetchSolveHistory(user.id),
+        fetchUserStats(user.id),
+        fetchPuzzleArchive(),
+      ]);
+      setSolveHistory(history);
+      setArchive(puzzles);
+      if (stats) {
+        setRemoteStats({
+          xp: stats.xp,
+          totalSolved: stats.total_solved,
+          bestStreak: stats.best_streak,
+          streakCount: stats.streak_count,
+        });
+      }
+    } catch {
+      setError(true);
+    } finally {
+      setLoading(false);
+    }
   }, [isSignedIn, user?.id]);
+
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
 
   if (!isSignedIn) return <SignInGate isDark={isDark} />;
 
@@ -363,7 +368,7 @@ export function History() {
                 Couldn't load remote data. Showing local stats.
               </span>
               <motion.button
-                onClick={() => { setError(false); setLoading(true); }}
+                onClick={() => loadData()}
                 className="flex items-center gap-1 text-xs font-bold"
                 style={{ color: isDark ? '#FCA5A5' : '#EF4444' }}
                 whileTap={{ scale: 0.9 }}

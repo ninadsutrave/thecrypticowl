@@ -3,13 +3,16 @@ import type { StreakData } from '../app/hooks/useStreak';
 
 // ─── CLIENT ───────────────────────────────────────────────────────────────────
 
-export const supabase = createClient(
-  import.meta.env.VITE_SUPABASE_URL ?? '',
-  import.meta.env.VITE_SUPABASE_ANON_KEY ?? ''
-);
-
 export const isSupabaseConfigured =
   !!import.meta.env.VITE_SUPABASE_URL && !!import.meta.env.VITE_SUPABASE_ANON_KEY;
+
+// Use placeholder strings when env vars are missing so createClient doesn't
+// throw synchronously and crash the app before React mounts.
+// All helper functions below guard on isSupabaseConfigured before making calls.
+export const supabase = createClient(
+  import.meta.env.VITE_SUPABASE_URL || 'https://placeholder.supabase.co',
+  import.meta.env.VITE_SUPABASE_ANON_KEY || 'placeholder-anon-key'
+);
 
 // ─── TYPES ────────────────────────────────────────────────────────────────────
 
@@ -178,4 +181,36 @@ export async function insertSolveRecord(
     { onConflict: 'user_id,puzzle_number', ignoreDuplicates: true }
   );
   if (error) console.warn('[supabase] insertSolveRecord:', error.message);
+}
+
+// ─── CLUE REACTIONS ───────────────────────────────────────────────────────────
+
+/** Upsert a like or dislike for a puzzle clue. */
+export async function upsertClueReaction(
+  userId: string,
+  puzzleNumber: number,
+  reaction: 'like' | 'dislike'
+): Promise<void> {
+  if (!isSupabaseConfigured) return;
+  const { error } = await supabase.from('clue_reactions').upsert({
+    user_id: userId,
+    puzzle_number: puzzleNumber,
+    reaction,
+    updated_at: new Date().toISOString(),
+  });
+  if (error) console.warn('[supabase] upsertClueReaction:', error.message);
+}
+
+/** Remove a user's reaction (when they toggle off). */
+export async function deleteClueReaction(
+  userId: string,
+  puzzleNumber: number
+): Promise<void> {
+  if (!isSupabaseConfigured) return;
+  const { error } = await supabase
+    .from('clue_reactions')
+    .delete()
+    .eq('user_id', userId)
+    .eq('puzzle_number', puzzleNumber);
+  if (error) console.warn('[supabase] deleteClueReaction:', error.message);
 }

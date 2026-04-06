@@ -1,6 +1,6 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import type { Session, User } from '@supabase/supabase-js';
-import { supabase, syncLocalStatsToSupabase } from '../../lib/supabase';
+import { supabase, isSupabaseConfigured, syncLocalStatsToSupabase } from '../../lib/supabase';
 import { getStoredStreakData } from '../hooks/useStreak';
 
 // ─── TYPES ────────────────────────────────────────────────────────────────────
@@ -48,6 +48,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    if (!isSupabaseConfigured) {
+      setLoading(false);
+      return;
+    }
+
     // Restore existing session on mount
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
@@ -71,6 +76,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const signIn = async () => {
+    if (!isSupabaseConfigured) {
+      console.warn('[auth] Set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in .env to enable sign-in.');
+      return;
+    }
     await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {

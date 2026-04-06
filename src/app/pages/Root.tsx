@@ -1,10 +1,11 @@
 import { Outlet, NavLink, useLocation } from 'react-router';
-import { Menu, X, BookOpen, Puzzle as PuzzleNavIcon, Home, Sun, Moon } from 'lucide-react';
+import { Menu, X, BookOpen, Puzzle as PuzzleNavIcon, Home, Sun, Moon, History, Lock } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useDarkMode } from '../context/DarkModeContext';
 import { getTheme } from '../theme';
 import { useStreak } from '../hooks/useStreak';
+import { useAuth } from '../context/AuthContext';
 
 function OwlLogoMini() {
   return (
@@ -35,6 +36,7 @@ export function Root() {
   const { isDark, toggle: toggleDark } = useDarkMode();
   const T = getTheme(isDark);
   const { count: streak, refresh: refreshStreak } = useStreak();
+  const { user, isSignedIn, signOut } = useAuth();
   const location = useLocation();
 
   // Close mobile menu and refresh streak on route change
@@ -44,9 +46,10 @@ export function Root() {
   }, [location.pathname]);
 
   const navLinks = [
-    { to: '/', label: 'Home', icon: Home },
-    { to: '/learn', label: 'Learn', icon: BookOpen },
-    { to: '/puzzle', label: "Today's Puzzle", icon: PuzzleNavIcon },
+    { to: '/', label: 'Home', icon: Home, requiresAuth: false },
+    { to: '/learn', label: 'Learn', icon: BookOpen, requiresAuth: false },
+    { to: '/puzzle', label: "Today's Puzzle", icon: PuzzleNavIcon, requiresAuth: false },
+    { to: '/history', label: 'History', icon: History, requiresAuth: true },
   ];
 
   return (
@@ -77,13 +80,13 @@ export function Root() {
 
           {/* Desktop Nav */}
           <div className="hidden md:flex items-center gap-1">
-            {navLinks.map(({ to, label }) => (
+            {navLinks.map(({ to, label, requiresAuth }) => (
               <NavLink
                 key={to}
                 to={to}
                 end={to === '/'}
                 className={({ isActive }) =>
-                  `px-4 py-2 rounded-full text-sm transition-all no-underline font-semibold ${
+                  `px-4 py-2 rounded-full text-sm transition-all no-underline font-semibold flex items-center gap-1.5 ${
                     isActive ? 'shadow-md' : ''
                   }`
                 }
@@ -94,11 +97,14 @@ export function Root() {
                 })}
               >
                 {label}
+                {requiresAuth && !isSignedIn && (
+                  <Lock size={11} style={{ opacity: 0.6 }} />
+                )}
               </NavLink>
             ))}
           </div>
 
-          {/* Right: Streak + Dark toggle + Mobile menu */}
+          {/* Right: Streak + Auth + Dark toggle + Mobile menu */}
           <div className="flex items-center gap-2">
             {/* Streak */}
             <motion.div
@@ -129,6 +135,44 @@ export function Root() {
                 streak
               </span>
             </motion.div>
+
+            {/* Auth: avatar or sign-in nudge */}
+            <div className="hidden md:flex">
+              {isSignedIn && user ? (
+                <div className="flex items-center gap-2">
+                  <NavLink to="/history" className="no-underline">
+                    <motion.img
+                      src={user.picture}
+                      alt={user.name}
+                      className="w-8 h-8 rounded-full"
+                      style={{ border: `2px solid ${isDark ? '#4C3580' : '#C4B5FD'}` }}
+                      whileHover={{ scale: 1.1 }}
+                      whileTap={{ scale: 0.9 }}
+                      title={user.name}
+                    />
+                  </NavLink>
+                </div>
+              ) : (
+                <NavLink
+                  to="/history"
+                  className="no-underline"
+                >
+                  <motion.div
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-bold border"
+                    style={{
+                      background: isDark ? '#261845' : '#F5F0FF',
+                      borderColor: isDark ? '#4C3580' : '#C4B5FD',
+                      color: isDark ? '#C4B5FD' : '#7C3AED',
+                      fontFamily: "'Nunito', sans-serif",
+                    }}
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                  >
+                    Sign in
+                  </motion.div>
+                </NavLink>
+              )}
+            </div>
 
             {/* Dark mode toggle */}
             <motion.button
@@ -195,7 +239,8 @@ export function Root() {
               style={{ borderColor: T.navBorder, background: T.navBg }}
             >
               <div className="px-4 py-3 flex flex-col gap-1">
-                {navLinks.map(({ to, label, icon: Icon }, i) => (
+                {/* Nav links */}
+                {navLinks.map(({ to, label, icon: Icon, requiresAuth }, i) => (
                   <motion.div
                     key={to}
                     initial={{ opacity: 0, x: -16 }}
@@ -216,15 +261,54 @@ export function Root() {
                     >
                       <Icon size={18} />
                       {label}
+                      {requiresAuth && !isSignedIn && (
+                        <Lock size={13} style={{ marginLeft: 'auto', opacity: 0.5 }} />
+                      )}
                     </NavLink>
                   </motion.div>
                 ))}
+
+                {/* Auth row */}
+                <motion.div
+                  initial={{ opacity: 0, x: -16 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: navLinks.length * 0.05, duration: 0.2 }}
+                >
+                  {isSignedIn && user ? (
+                    <div className="flex items-center gap-3 px-4 py-3 rounded-2xl" style={{ background: isDark ? '#261845' : '#F5F0FF' }}>
+                      <img src={user.picture} alt={user.name} className="w-7 h-7 rounded-full" />
+                      <span style={{ color: isDark ? '#C4B5FD' : '#6D28D9', fontWeight: 700, fontSize: '0.9rem', flex: 1 }}>
+                        {user.name}
+                      </span>
+                      <button
+                        onClick={() => { signOut(); setMenuOpen(false); }}
+                        style={{ color: isDark ? '#9381CC' : '#9CA3AF', fontSize: '0.8rem', fontWeight: 600 }}
+                      >
+                        Sign out
+                      </button>
+                    </div>
+                  ) : (
+                    <NavLink
+                      to="/history"
+                      onClick={() => setMenuOpen(false)}
+                      className="flex items-center gap-3 px-4 py-3 rounded-2xl text-sm no-underline font-bold transition-all"
+                      style={{
+                        background: isDark ? '#261845' : '#F5F0FF',
+                        color: isDark ? '#C4B5FD' : '#6D28D9',
+                        fontFamily: "'Nunito', sans-serif",
+                      }}
+                    >
+                      <Lock size={18} />
+                      Sign in with Google
+                    </NavLink>
+                  )}
+                </motion.div>
 
                 {/* Dark mode toggle in mobile menu */}
                 <motion.div
                   initial={{ opacity: 0, x: -16 }}
                   animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 0.15, duration: 0.2 }}
+                  transition={{ delay: (navLinks.length + 1) * 0.05, duration: 0.2 }}
                 >
                   <button
                     onClick={() => { toggleDark(); setMenuOpen(false); }}

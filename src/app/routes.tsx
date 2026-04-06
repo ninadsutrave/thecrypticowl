@@ -3,6 +3,7 @@ import { Root } from './pages/Root';
 import { Home } from './pages/Home';
 import { Learn } from './pages/Learn';
 import { Puzzle } from './pages/Puzzle';
+import { History } from './pages/History';
 
 export const router = createBrowserRouter([
   {
@@ -12,6 +13,7 @@ export const router = createBrowserRouter([
       { index: true, Component: Home },
       { path: 'learn', Component: Learn },
       { path: 'puzzle', Component: Puzzle },
+      { path: 'history', Component: History },
     ],
   },
 ]);

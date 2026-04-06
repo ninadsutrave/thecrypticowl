@@ -282,12 +282,67 @@ Part color tokens live in `PART_STYLES` in `Puzzle.tsx`:
 
 ---
 
+## Auth System (Google OAuth)
+
+**Library:** `@react-oauth/google`
+
+**Env var:** `VITE_GOOGLE_CLIENT_ID` — must be set in `.env` (see `.env.example`). If missing, the History page shows a dev warning instead of the Google button.
+
+**Provider setup in `App.tsx`:**
+```tsx
+<GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID ?? ''}>
+  <DarkModeProvider>
+    <AuthProvider>
+      <RouterProvider router={router} />
+    </AuthProvider>
+  </DarkModeProvider>
+</GoogleOAuthProvider>
+```
+
+**Consuming auth:**
+```tsx
+import { useAuth } from '../context/AuthContext';
+
+const { user, signIn, signOut, isSignedIn } = useAuth();
+// user: { name, email, picture, sub } | null
+```
+
+**Rendering the Google sign-in button:**
+```tsx
+import { GoogleLogin } from '@react-oauth/google';
+
+<GoogleLogin
+  onSuccess={(response) => {
+    if (response.credential) signIn(response.credential);
+  }}
+  onError={() => {}}
+  theme={isDark ? 'filled_black' : 'outline'}
+  shape="pill"
+/>
+```
+
+**Auth flow:** `GoogleLogin` returns a JWT credential → `signIn()` decodes the payload with `atob()` → stores `GoogleUser` in `localStorage` key `'tco-user'`. No backend involved.
+
+**Gating content behind auth:**
+```tsx
+const { isSignedIn } = useAuth();
+if (!isSignedIn) return <SignInGate isDark={isDark} />;
+// ... authenticated content
+```
+
+**What requires auth:** History page (`/history`) — past puzzle archive + personal solve history + stats. Everything else (Home, Learn, Puzzle) is free without sign-in.
+
+**Nav behaviour:** History link shows a `<Lock />` icon when not signed in. Desktop nav shows user avatar (links to `/history`) when signed in, or a "Sign in" pill button. Mobile menu shows sign-out row when signed in.
+
+---
+
 ## localStorage Keys
 
 | Key | Type | Description |
 |---|---|---|
-| `'tco-dark'` | `'true' \| 'false'` | Dark mode preference |
-| `'tco-streak'` | JSON `StreakData` | XP, level, streak counts |
+| `'tco-dark'` | `'true' \| 'false'` | Dark mode preference (defaults to `false` = light) |
+| `'tco-streak'` | JSON `StreakData` | XP, level, streak counts + solve history array |
+| `'tco-user'` | JSON `GoogleUser` | Signed-in user profile (name, email, picture, sub) |
 
 ---
 
@@ -345,6 +400,285 @@ Toasts via Sonner: `import { toast } from 'sonner';`
    ```
 3. Register in `routes.tsx`
 4. Add nav link in `Root.tsx`
+
+---
+
+## UI, Design & UX Patterns
+
+This section captures the visual language and UX conventions of the app. Follow these when adding any new UI — consistency matters more than personal preference.
+
+### Visual Identity
+
+The app has a warm, playful-but-smart personality — like a friendly professor owl. Every design decision should reinforce that: approachable, satisfying, never sterile.
+
+| Element | Rule |
+|---|---|
+| **Tone** | Encouraging, never intimidating. Cryptic crosswords are hard — the UI should make users feel capable |
+| **Mascot** | Ollie the Owl appears on key moments (first load, hints, success, errors). Always use him with a relevant `mood` and a `speechBubble` |
+| **Colour** | Purple-led palette. Green = success. Orange = streak/energy. Red = wrong. Blue = information |
+| **Spacing** | Generous. Cards have `p-5` or `p-6`. Sections breathe with `py-12` or `py-16` |
+| **Borders** | Always rounded — `rounded-2xl` (components), `rounded-3xl` (cards/sections). No sharp corners anywhere |
+
+---
+
+### Card Pattern
+
+Every content block is a card. Cards follow this exact template:
+
+```tsx
+<div
+  className="rounded-3xl border p-6"
+  style={{
+    background: T.cardBg,
+    borderColor: T.cardBorder,
+    boxShadow: isDark
+      ? '0 4px 24px rgba(0,0,0,0.3)'
+      : '0 4px 24px rgba(124,58,237,0.07)',
+  }}
+>
+```
+
+- Light shadow in light mode uses the brand purple tint (`rgba(124,58,237,...)`)
+- Dark shadow is plain black with moderate opacity
+- Never use `box-shadow` with a hard offset — always soft diffuse shadows
+- Inner sections within a card use `rounded-2xl` (one step smaller)
+
+---
+
+### Typography Hierarchy
+
+| Role | Font | Weight | Size |
+|---|---|---|---|
+| Page title / hero | Fredoka One | 400 (single weight) | `clamp(1.8rem, 4vw, 2.6rem)` |
+| Section heading | Fredoka One | 400 | `1.2rem – 1.5rem` |
+| Card title | Fredoka One | 400 | `1rem – 1.2rem` |
+| Stat / number display | Fredoka One | 400 | `1.5rem – 2rem` |
+| Body text | Nunito | 600 | `0.9rem – 1rem` |
+| Caption / meta | Nunito | 600 | `0.75rem – 0.83rem` |
+| Button label | Nunito | 700–800 | `0.85rem – 1rem` |
+| Badge / pill | Nunito | 700 | `0.72rem – 0.83rem` |
+
+**Rules:**
+- Fredoka One is purely decorative — never use it for interactive labels or body copy
+- Nunito `fontWeight: 600` is the minimum — never use 400 or 500 in UI elements
+- Use `clamp()` for any text above `1rem` that appears in a hero or section header
+- Emoji in headings is fine and encouraged (e.g. `Your Achievements 🦉`)
+
+---
+
+### Button Styles
+
+There are three button variants in this app. Do not invent new ones.
+
+**Primary CTA — gradient purple:**
+```tsx
+<motion.button
+  whileHover={{ scale: 1.04, y: -2 }}
+  whileTap={{ scale: 0.97 }}
+  style={{
+    background: 'linear-gradient(135deg, #7C3AED, #5B21B6)',
+    color: 'white',
+    fontFamily: "'Nunito', sans-serif",
+    fontWeight: 800,
+    fontSize: '1rem',
+    padding: '0.75rem 2rem',
+    borderRadius: '9999px',
+    border: 'none',
+  }}
+>
+  Start Solving
+</motion.button>
+```
+
+**Secondary — ghost with border:**
+```tsx
+<motion.button
+  whileHover={{ scale: 1.04 }}
+  whileTap={{ scale: 0.97 }}
+  style={{
+    background: isDark ? '#261845' : '#F5F0FF',
+    color: isDark ? '#C4B5FD' : '#7C3AED',
+    border: `1px solid ${isDark ? '#4C3580' : '#C4B5FD'}`,
+    fontFamily: "'Nunito', sans-serif",
+    fontWeight: 700,
+    borderRadius: '9999px',
+    padding: '0.6rem 1.5rem',
+  }}
+>
+  Learn More
+</motion.button>
+```
+
+**Destructive / muted — text-only feel:**
+```tsx
+<button
+  style={{
+    color: isDark ? '#9381CC' : '#6B7280',
+    fontWeight: 600,
+    fontSize: '0.83rem',
+    background: 'transparent',
+    border: 'none',
+  }}
+>
+  Sign out
+</button>
+```
+
+**Rules:**
+- All interactive elements use `motion.button` with `whileHover` + `whileTap`
+- `whileHover={{ scale: 1.04–1.1, y: -2 }}` for lift, `whileTap={{ scale: 0.95–0.97 }}` for press
+- Never use `cursor: pointer` manually — it's inherited from `button`
+- Pill shape (`borderRadius: '9999px'`) for all standalone buttons
+- `rounded-2xl` only for buttons embedded inside cards/grids
+
+---
+
+### Badge / Pill Pattern
+
+Used for level titles, wordplay types, hint labels, status tags:
+
+```tsx
+<span
+  className="px-3 py-0.5 rounded-full text-sm font-bold"
+  style={{
+    background: isDark ? '#261845' : '#F5F0FF',
+    color: isDark ? '#C4B5FD' : '#7C3AED',
+    border: `1px solid ${isDark ? '#4C3580' : '#C4B5FD'}`,
+  }}
+>
+  Word Wizard 🧙
+</span>
+```
+
+For coloured status badges (hints, achievements):
+```tsx
+<span
+  className="px-2 py-0.5 rounded-full text-xs font-bold"
+  style={{
+    background: isDark ? '#062010' : '#ECFDF5',
+    color: '#10B981',
+    border: '1px solid #10B98140',  // 25% opacity border
+  }}
+>
+  No hints
+</span>
+```
+
+---
+
+### Icon Usage
+
+Icons come from **Lucide React** exclusively. Size conventions:
+
+| Context | Size |
+|---|---|
+| Inside body text / inline | `14` |
+| Card icon accent | `18–20` |
+| Nav links | `18` |
+| Section header accent | `22–24` |
+| Hero / large decorative | `28–32` |
+
+Always pass `style={{ color: '...' }}` — never use Tailwind `text-*` classes on icons.
+
+```tsx
+import { Trophy, Zap, Flame } from 'lucide-react';
+
+<Trophy size={22} style={{ color: '#D97706' }} />
+```
+
+---
+
+### Colour Usage by Semantic Role
+
+Never use raw hex values for colours that have a semantic role. Reference the theme or the palette constants below:
+
+| Meaning | Light bg | Dark bg | Border / text |
+|---|---|---|---|
+| Brand / primary | `#F5F0FF` | `#261845` | `#7C3AED` / `#C4B5FD` |
+| Success | `#ECFDF5` | `#062010` | `#10B981` |
+| Error / wrong | `#FFF1F2` | `#2A0F15` | `#FCA5A5` / `#EF4444` |
+| Warning / streak | `#FFF7ED` | `#2A1505` | `#F97316` / `#FB923C` |
+| Info / definition | `#EFF6FF` | `#0D1F35` | `#3B82F6` / `#93C5FD` |
+| Indicator / purple | `#F5F3FF` | `#1A0F35` | `#7C3AED` / `#A78BFA` |
+
+Use `40` hex suffix for 25% opacity borders: `#10B98140`
+
+---
+
+### Spacing & Layout
+
+- **Max content width:** `max-w-2xl` (672px) for single-column content, `max-w-5xl` (1024px) for nav
+- **Page padding:** `px-4` on mobile, auto-centered with `mx-auto`
+- **Section vertical rhythm:** `py-12` between major sections, `mb-6` between sub-sections
+- **Card gap in grids:** `gap-3` for tight grids, `gap-4` for looser layouts
+- **Internal card padding:** `p-4` (compact), `p-5` or `p-6` (standard)
+
+Grid patterns used:
+```tsx
+className="grid grid-cols-2 sm:grid-cols-4 gap-3"   // stat grids
+className="grid grid-cols-1 sm:grid-cols-2 gap-4"   // card grids
+```
+
+---
+
+### Animation Principles
+
+Animations serve feedback — they communicate state, not decoration. Follow these rules:
+
+| Action | Animation |
+|---|---|
+| Page / section mount | `opacity: 0 → 1`, `y: 16 → 0`, `duration: 0.3–0.5` |
+| List items (staggered) | `delay: i * 0.05–0.07`, `x: -16 → 0` |
+| Card hover | `whileHover={{ y: -2, scale: 1.02 }}` — subtle lift |
+| Button press | `whileTap={{ scale: 0.95–0.97 }}` |
+| Success moment | Spring + confetti. `type: 'spring', stiffness: 400, damping: 24` |
+| Idle mascot | `y: [0, -4, 0]`, `duration: 3`, `repeat: Infinity` — gentle float |
+| Enter/exit panels | `height: 0 → auto` with `ease: [0.4, 0, 0.2, 1]` |
+
+**Never:** animate colors with Motion (use CSS `transition-colors`). Never use `duration > 0.6s` for UI feedback. Never animate layout-shifting properties like `width` on interactive elements.
+
+---
+
+### Empty States
+
+Every list or data section must have an empty state — never render nothing:
+
+```tsx
+{history.length === 0 && (
+  <div
+    className="rounded-2xl border p-8 text-center"
+    style={{ background: T.cardBg, borderColor: T.cardBorder }}
+  >
+    <div style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>🧩</div>
+    <p style={{ color: T.textMuted, fontSize: '0.9rem' }}>
+      No solves yet — go crack <a href="/puzzle" ...>today's puzzle</a>!
+    </p>
+  </div>
+)}
+```
+
+Pattern: large emoji → short friendly message → optional action link.
+
+---
+
+### Gated / Auth-Required UI
+
+When content requires sign-in, show a `SignInGate` — never hide the section silently:
+
+- Centre a card with the mascot (`mood="thinking"`)
+- Explain the value clearly (bullet list of what they'll unlock)
+- Show the Google sign-in button
+- Add a reassurance line: *"Free features don't require sign-in"*
+
+---
+
+### Mobile Considerations
+
+- All pages scroll vertically — no horizontal scroll except for tab bars (use `hide-scrollbar`)
+- Sticky input at bottom of Puzzle page uses `md:hidden` + `fixed bottom-0`
+- Touch targets minimum `44px` height — use `py-3` on nav items
+- Test that `AnimatePresence` exit animations don't cause layout shifts on mobile
+- Nav links in mobile menu use full-width `flex` rows, not inline pills
 
 ---
 

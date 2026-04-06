@@ -305,7 +305,7 @@ function SuccessState({
       runConfetti.current = true;
 
       // Record the solve in streak
-      const result = recordSolve(hintsUsed);
+      const result = recordSolve(hintsUsed, PUZZLE.number);
       if (result) {
         setFinalData({ streak: result.count, total: result.totalSolved, xp: result.xp, level: result.level });
       }

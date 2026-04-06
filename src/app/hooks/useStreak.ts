@@ -1,5 +1,12 @@
 import { useState, useCallback } from 'react';
 
+export interface SolveRecord {
+  date: string;         // toDateString() format
+  puzzleNumber: number;
+  hintsUsed: number;
+  xpEarned: number;
+}
+
 export interface StreakData {
   count: number;
   lastSolved: string | null;
@@ -7,6 +14,7 @@ export interface StreakData {
   xp: number;
   level: number;
   bestStreak: number;
+  history: SolveRecord[];
 }
 
 const STORAGE_KEY = 'tco-streak';
@@ -14,9 +22,13 @@ const STORAGE_KEY = 'tco-streak';
 function getStoredData(): StreakData {
   try {
     const stored = localStorage.getItem(STORAGE_KEY);
-    if (stored) return JSON.parse(stored);
+    if (stored) {
+      const parsed = JSON.parse(stored);
+      // Migrate older saves that don't have history
+      return { history: [], ...parsed };
+    }
   } catch {}
-  return { count: 0, lastSolved: null, totalSolved: 0, xp: 0, level: 1, bestStreak: 0 };
+  return { count: 0, lastSolved: null, totalSolved: 0, xp: 0, level: 1, bestStreak: 0, history: [] };
 }
 
 function saveData(data: StreakData) {
@@ -66,7 +78,7 @@ export function hasSolvedToday(): boolean {
 export function useStreak() {
   const [data, setData] = useState<StreakData>(getStoredData);
 
-  const recordSolve = useCallback((hintsUsed: number) => {
+  const recordSolve = useCallback((hintsUsed: number, puzzleNumber: number = 0) => {
     const today = new Date().toDateString();
     const current = getStoredData();
 
@@ -77,6 +89,13 @@ export function useStreak() {
     const xpGained = getXPForSolve(hintsUsed);
     const newXP = current.xp + xpGained;
 
+    const solveRecord: SolveRecord = {
+      date: today,
+      puzzleNumber,
+      hintsUsed,
+      xpEarned: xpGained,
+    };
+
     const newData: StreakData = {
       count: newCount,
       lastSolved: today,
@@ -84,6 +103,7 @@ export function useStreak() {
       xp: newXP,
       level: getLevelFromXP(newXP),
       bestStreak: Math.max(current.bestStreak, newCount),
+      history: [solveRecord, ...(current.history ?? [])],
     };
 
     saveData(newData);

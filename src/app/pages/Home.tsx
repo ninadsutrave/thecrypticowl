@@ -558,10 +558,10 @@ function LeaderboardTeaser({ isDark }: { isDark: boolean }) {
   const { count, bestStreak } = useStreak();
 
   const milestones = [
+    { label: 'First solve!', target: 1, emoji: '🎉', achieved: bestStreak >= 1 },
     { label: '3-day streak', target: 3, emoji: '🔥', achieved: count >= 3 || bestStreak >= 3 },
     { label: '7-day streak', target: 7, emoji: '🏅', achieved: count >= 7 || bestStreak >= 7 },
     { label: '30-day streak', target: 30, emoji: '🏆', achieved: count >= 30 || bestStreak >= 30 },
-    { label: 'First solve!', target: 1, emoji: '🎉', achieved: bestStreak >= 1 },
   ];
 
   return (

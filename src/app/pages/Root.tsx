@@ -1,5 +1,16 @@
 import { Outlet, NavLink, useLocation } from 'react-router';
-import { Menu, X, BookOpen, Puzzle as PuzzleNavIcon, Home, Sun, Moon, History, Lock, LogOut } from 'lucide-react';
+import {
+  Menu,
+  X,
+  BookOpen,
+  Puzzle as PuzzleNavIcon,
+  Home,
+  Sun,
+  Moon,
+  History,
+  Lock,
+  LogOut,
+} from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useDarkMode } from '../context/DarkModeContext';
@@ -113,9 +124,7 @@ export function Root() {
                 })}
               >
                 {label}
-                {requiresAuth && !isSignedIn && (
-                  <Lock size={11} style={{ opacity: 0.6 }} />
-                )}
+                {requiresAuth && !isSignedIn && <Lock size={11} style={{ opacity: 0.6 }} />}
               </NavLink>
             ))}
           </div>
@@ -182,10 +191,29 @@ export function Root() {
                         style={{ background: T.cardBg, borderColor: T.cardBorder }}
                       >
                         <div className="px-4 py-3 border-b" style={{ borderColor: T.cardBorder }}>
-                          <p style={{ fontWeight: 700, fontSize: '0.88rem', color: T.text, margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          <p
+                            style={{
+                              fontWeight: 700,
+                              fontSize: '0.88rem',
+                              color: T.text,
+                              margin: 0,
+                              overflow: 'hidden',
+                              textOverflow: 'ellipsis',
+                              whiteSpace: 'nowrap',
+                            }}
+                          >
                             {user.name}
                           </p>
-                          <p style={{ fontSize: '0.75rem', color: T.textMuted, margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          <p
+                            style={{
+                              fontSize: '0.75rem',
+                              color: T.textMuted,
+                              margin: 0,
+                              overflow: 'hidden',
+                              textOverflow: 'ellipsis',
+                              whiteSpace: 'nowrap',
+                            }}
+                          >
                             {user.email}
                           </p>
                         </div>
@@ -193,14 +221,26 @@ export function Root() {
                           to="/history"
                           onClick={() => setAvatarDropdown(false)}
                           className="flex items-center gap-2.5 px-4 py-2.5 text-sm no-underline font-semibold transition-colors hover:opacity-80"
-                          style={{ color: isDark ? '#C4B5FD' : '#5B21B6', fontFamily: "'Nunito', sans-serif" }}
+                          style={{
+                            color: isDark ? '#C4B5FD' : '#5B21B6',
+                            fontFamily: "'Nunito', sans-serif",
+                          }}
                         >
                           <History size={14} /> My History
                         </NavLink>
                         <button
-                          onClick={() => { setAvatarDropdown(false); signOut(); }}
+                          onClick={() => {
+                            setAvatarDropdown(false);
+                            signOut();
+                          }}
                           className="flex items-center gap-2.5 w-full px-4 py-2.5 text-sm font-semibold border-t transition-colors hover:opacity-80"
-                          style={{ color: '#EF4444', borderColor: T.cardBorder, background: 'none', fontFamily: "'Nunito', sans-serif", cursor: 'pointer' }}
+                          style={{
+                            color: '#EF4444',
+                            borderColor: T.cardBorder,
+                            background: 'none',
+                            fontFamily: "'Nunito', sans-serif",
+                            cursor: 'pointer',
+                          }}
                         >
                           <LogOut size={14} /> Sign out
                         </button>
@@ -328,14 +368,31 @@ export function Root() {
                   transition={{ delay: navLinks.length * 0.05, duration: 0.2 }}
                 >
                   {isSignedIn && user ? (
-                    <div className="flex items-center gap-3 px-4 py-3 rounded-2xl" style={{ background: isDark ? '#261845' : '#F5F0FF' }}>
+                    <div
+                      className="flex items-center gap-3 px-4 py-3 rounded-2xl"
+                      style={{ background: isDark ? '#261845' : '#F5F0FF' }}
+                    >
                       <img src={user.picture} alt={user.name} className="w-7 h-7 rounded-full" />
-                      <span style={{ color: isDark ? '#C4B5FD' : '#6D28D9', fontWeight: 700, fontSize: '0.9rem', flex: 1 }}>
+                      <span
+                        style={{
+                          color: isDark ? '#C4B5FD' : '#6D28D9',
+                          fontWeight: 700,
+                          fontSize: '0.9rem',
+                          flex: 1,
+                        }}
+                      >
                         {user.name}
                       </span>
                       <button
-                        onClick={() => { signOut(); setMenuOpen(false); }}
-                        style={{ color: isDark ? '#9381CC' : '#9CA3AF', fontSize: '0.8rem', fontWeight: 600 }}
+                        onClick={() => {
+                          signOut();
+                          setMenuOpen(false);
+                        }}
+                        style={{
+                          color: isDark ? '#9381CC' : '#9CA3AF',
+                          fontSize: '0.8rem',
+                          fontWeight: 600,
+                        }}
                       >
                         Sign out
                       </button>
@@ -364,7 +421,10 @@ export function Root() {
                   transition={{ delay: (navLinks.length + 1) * 0.05, duration: 0.2 }}
                 >
                   <button
-                    onClick={() => { toggleDark(); setMenuOpen(false); }}
+                    onClick={() => {
+                      toggleDark();
+                      setMenuOpen(false);
+                    }}
                     className="flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-semibold w-full transition-all"
                     style={{
                       background: isDark ? '#261845' : '#F5F0FF',

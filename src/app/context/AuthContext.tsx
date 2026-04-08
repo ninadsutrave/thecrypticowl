@@ -18,7 +18,7 @@ interface AuthContextType {
   loading: boolean;
   isSignedIn: boolean;
   signIn: () => Promise<void>;
-  signOut: () => void;   // synchronous — never awaited
+  signOut: () => void; // synchronous — never awaited
 }
 
 // ─── HELPERS ──────────────────────────────────────────────────────────────────
@@ -60,24 +60,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     });
 
     // Keep session in sync with Supabase auth state changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        setSession(session);
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(async (event, session) => {
+      setSession(session);
 
-        // On first sign-in, push any local progress to Supabase
-        if ((event === 'SIGNED_IN' || event === 'INITIAL_SESSION') && session?.user) {
-          const localData = getStoredStreakData();
-          await syncLocalStatsToSupabase(session.user.id, localData);
-        }
+      // On first sign-in, push any local progress to Supabase
+      if ((event === 'SIGNED_IN' || event === 'INITIAL_SESSION') && session?.user) {
+        const localData = getStoredStreakData();
+        await syncLocalStatsToSupabase(session.user.id, localData);
       }
-    );
+    });
 
     return () => subscription.unsubscribe();
   }, []);
 
   const signIn = async () => {
     if (!isSupabaseConfigured) {
-      console.warn('[auth] Set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in .env to enable sign-in.');
+      console.warn(
+        '[auth] Set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in .env to enable sign-in.'
+      );
       return;
     }
     // skipBrowserRedirect=true so Supabase returns the OAuth URL without
@@ -103,7 +105,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       'width=500,height=620,popup=yes,left=' +
         Math.round(window.screenX + (window.outerWidth - 500) / 2) +
         ',top=' +
-        Math.round(window.screenY + (window.outerHeight - 620) / 2),
+        Math.round(window.screenY + (window.outerHeight - 620) / 2)
     );
     // Fallback: if the browser blocked the popup, do a full redirect
     if (!popup) window.location.href = data.url;
@@ -138,7 +140,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const user = session?.user ? toAppUser(session.user) : null;
 
   return (
-    <AuthContext.Provider value={{ user, session, loading, isSignedIn: !!session, signIn, signOut }}>
+    <AuthContext.Provider
+      value={{ user, session, loading, isSignedIn: !!session, signIn, signOut }}
+    >
       {children}
     </AuthContext.Provider>
   );

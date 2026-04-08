@@ -21,7 +21,9 @@ export function DarkModeProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     try {
       localStorage.setItem('tco-dark', String(isDark));
-    } catch { /* localStorage unavailable (e.g. private browsing) */ }
+    } catch {
+      /* localStorage unavailable (e.g. private browsing) */
+    }
     document.documentElement.classList.toggle('dark', isDark);
   }, [isDark]);
 

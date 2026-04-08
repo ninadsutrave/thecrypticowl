@@ -38,7 +38,12 @@ function FloatingBg({ isDark }: { isDark: boolean }) {
             opacity: isDark ? 0.06 : 0.12,
           }}
           animate={{ y: [0, -18, 0], rotate: [0, 5, -5, 0] }}
-          transition={{ duration: 5 + i * 0.4, delay: item.delay, repeat: Infinity, ease: 'easeInOut' }}
+          transition={{
+            duration: 5 + i * 0.4,
+            delay: item.delay,
+            repeat: Infinity,
+            ease: 'easeInOut',
+          }}
         >
           {item.char}
         </motion.div>
@@ -103,9 +108,22 @@ const FALLBACK_PUZZLE: TodayPuzzleData = {
   letterCount: 5,
 };
 
-function TodaysPuzzleHero({ onNavigate, isDark, puzzle }: { onNavigate: () => void; isDark: boolean; puzzle: TodayPuzzleData }) {
+function TodaysPuzzleHero({
+  onNavigate,
+  isDark,
+  puzzle,
+}: {
+  onNavigate: () => void;
+  isDark: boolean;
+  puzzle: TodayPuzzleData;
+}) {
   const T = getTheme(isDark);
-  const today = new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+  const today = new Date().toLocaleDateString('en-GB', {
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+  });
 
   return (
     <motion.div
@@ -140,9 +158,14 @@ function TodaysPuzzleHero({ onNavigate, isDark, puzzle }: { onNavigate: () => vo
           <div className="flex items-center gap-2">
             <div
               className="rounded-full px-3 py-1"
-              style={{ background: isDark ? '#1A0F35' : '#EDE9FE', border: `1.5px solid ${isDark ? '#4C3580' : '#C4B5FD'}` }}
+              style={{
+                background: isDark ? '#1A0F35' : '#EDE9FE',
+                border: `1.5px solid ${isDark ? '#4C3580' : '#C4B5FD'}`,
+              }}
             >
-              <span style={{ fontSize: '0.78rem', color: '#7C3AED', fontWeight: 700 }}>{puzzle.letterCount} letters</span>
+              <span style={{ fontSize: '0.78rem', color: '#7C3AED', fontWeight: 700 }}>
+                {puzzle.letterCount} letters
+              </span>
             </div>
           </div>
         </div>
@@ -274,7 +297,9 @@ function StatsStrip({ isDark }: { isDark: boolean }) {
           >
             {s.value}
           </span>
-          <span style={{ fontSize: '0.75rem', color: T.textMuted, fontWeight: 600 }}>{s.label}</span>
+          <span style={{ fontSize: '0.75rem', color: T.textMuted, fontWeight: 600 }}>
+            {s.label}
+          </span>
         </motion.div>
       ))}
     </motion.div>
@@ -319,7 +344,7 @@ function NewPlayerJourney({ onNavigate, isDark }: { onNavigate: () => void; isDa
       num: '4',
       emoji: '✅',
       title: 'Confirm with the definition',
-      desc: 'Your answer should match both the wordplay AND the plain definition. That\'s the double-check!',
+      desc: "Your answer should match both the wordplay AND the plain definition. That's the double-check!",
       color: '#059669',
       bg: '#ECFDF5',
       dbg: '#062010',
@@ -357,10 +382,7 @@ function NewPlayerJourney({ onNavigate, isDark }: { onNavigate: () => void; isDa
             Learn to crack clues in 4 easy steps
           </p>
         </div>
-        <motion.div
-          animate={{ rotate: isExpanded ? 90 : 0 }}
-          transition={{ duration: 0.2 }}
-        >
+        <motion.div animate={{ rotate: isExpanded ? 90 : 0 }} transition={{ duration: 0.2 }}>
           <ChevronRight size={20} style={{ color: isDark ? '#A78BFA' : '#7C3AED' }} />
         </motion.div>
       </button>
@@ -386,7 +408,12 @@ function NewPlayerJourney({ onNavigate, isDark }: { onNavigate: () => void; isDa
             >
               <div
                 className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5"
-                style={{ background: step.color, color: 'white', fontFamily: "'Fredoka One', cursive", fontSize: '0.9rem' }}
+                style={{
+                  background: step.color,
+                  color: 'white',
+                  fontFamily: "'Fredoka One', cursive",
+                  fontSize: '0.9rem',
+                }}
               >
                 {step.num}
               </div>
@@ -401,7 +428,9 @@ function NewPlayerJourney({ onNavigate, isDark }: { onNavigate: () => void; isDa
                 >
                   {step.emoji} {step.title}
                 </p>
-                <p style={{ fontSize: '0.82rem', color: T.textSub, lineHeight: 1.6 }}>{step.desc}</p>
+                <p style={{ fontSize: '0.82rem', color: T.textSub, lineHeight: 1.6 }}>
+                  {step.desc}
+                </p>
               </div>
             </motion.div>
           ))}
@@ -434,16 +463,38 @@ function NewPlayerJourney({ onNavigate, isDark }: { onNavigate: () => void; isDa
 function HowItWorks({ isDark }: { isDark: boolean }) {
   const T = getTheme(isDark);
   const steps = [
-    { emoji: '🔍', title: 'Read the Clue', desc: 'Every cryptic clue has two parts: a definition and wordplay.' },
-    { emoji: '🧩', title: 'Decode the Wordplay', desc: 'Spot anagram indicators, hidden words, and other tricks.' },
-    { emoji: '💡', title: 'Use Hints', desc: 'Stuck? Our hints reveal the clue step-by-step without spoiling everything.' },
-    { emoji: '🎉', title: 'Celebrate!', desc: 'Solve it and share your result — just like Wordle, but nerdier.' },
+    {
+      emoji: '🔍',
+      title: 'Read the Clue',
+      desc: 'Every cryptic clue has two parts: a definition and wordplay.',
+    },
+    {
+      emoji: '🧩',
+      title: 'Decode the Wordplay',
+      desc: 'Spot anagram indicators, hidden words, and other tricks.',
+    },
+    {
+      emoji: '💡',
+      title: 'Use Hints',
+      desc: 'Stuck? Our hints reveal the clue step-by-step without spoiling everything.',
+    },
+    {
+      emoji: '🎉',
+      title: 'Celebrate!',
+      desc: 'Solve it and share your result — just like Wordle, but nerdier.',
+    },
   ];
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-12">
       <div className="text-center mb-10">
-        <h2 style={{ fontFamily: "'Fredoka One', cursive", fontSize: '1.8rem', color: isDark ? '#C4B5FD' : '#1E1B4B' }}>
+        <h2
+          style={{
+            fontFamily: "'Fredoka One', cursive",
+            fontSize: '1.8rem',
+            color: isDark ? '#C4B5FD' : '#1E1B4B',
+          }}
+        >
           How it works
         </h2>
         <p style={{ color: T.textMuted, fontWeight: 600, marginTop: 4, fontSize: '0.95rem' }}>
@@ -497,12 +548,54 @@ function HowItWorks({ isDark }: { isDark: boolean }) {
 function WordplayPreview({ onNavigate, isDark }: { onNavigate: () => void; isDark: boolean }) {
   const T = getTheme(isDark);
   const topics = [
-    { icon: '🔀', title: 'Anagram', color: '#A78BFA', bg: '#F5F0FF', dbg: '#1A0F35', desc: 'Letters scrambled to form a new word' },
-    { icon: '📝', title: 'Double Def', color: '#34D399', bg: '#ECFDF5', dbg: '#062015', desc: 'Two separate definitions, one answer' },
-    { icon: '🔄', title: 'Reversal', color: '#38BDF8', bg: '#F0F9FF', dbg: '#021520', desc: 'Read a word backwards for the answer' },
-    { icon: '🎙️', title: 'Homophone', color: '#FB923C', bg: '#FFF7ED', dbg: '#1A0A00', desc: 'The answer sounds like another word' },
-    { icon: '👻', title: 'Hidden Word', color: '#F472B6', bg: '#FDF2F8', dbg: '#1F0818', desc: 'Answer concealed within the clue' },
-    { icon: '✂️', title: 'Deletion', color: '#FBBF24', bg: '#FFFBEB', dbg: '#1A1000', desc: 'Remove letters to find the answer' },
+    {
+      icon: '🔀',
+      title: 'Anagram',
+      color: '#A78BFA',
+      bg: '#F5F0FF',
+      dbg: '#1A0F35',
+      desc: 'Letters scrambled to form a new word',
+    },
+    {
+      icon: '📝',
+      title: 'Double Def',
+      color: '#34D399',
+      bg: '#ECFDF5',
+      dbg: '#062015',
+      desc: 'Two separate definitions, one answer',
+    },
+    {
+      icon: '🔄',
+      title: 'Reversal',
+      color: '#38BDF8',
+      bg: '#F0F9FF',
+      dbg: '#021520',
+      desc: 'Read a word backwards for the answer',
+    },
+    {
+      icon: '🎙️',
+      title: 'Homophone',
+      color: '#FB923C',
+      bg: '#FFF7ED',
+      dbg: '#1A0A00',
+      desc: 'The answer sounds like another word',
+    },
+    {
+      icon: '👻',
+      title: 'Hidden Word',
+      color: '#F472B6',
+      bg: '#FDF2F8',
+      dbg: '#1F0818',
+      desc: 'Answer concealed within the clue',
+    },
+    {
+      icon: '✂️',
+      title: 'Deletion',
+      color: '#FBBF24',
+      bg: '#FFFBEB',
+      dbg: '#1A1000',
+      desc: 'Remove letters to find the answer',
+    },
   ];
 
   return (
@@ -608,15 +701,20 @@ function LeaderboardTeaser({ isDark }: { isDark: boolean }) {
               className="text-center rounded-2xl p-3 border-2 transition-all"
               style={{
                 background: m.achieved
-                  ? isDark ? '#1A0F35' : '#F5F0FF'
-                  : isDark ? '#1A1035' : '#F9F9F9',
-                borderColor: m.achieved
-                  ? '#7C3AED'
-                  : isDark ? '#3D2A6B' : '#E5E7EB',
+                  ? isDark
+                    ? '#1A0F35'
+                    : '#F5F0FF'
+                  : isDark
+                    ? '#1A1035'
+                    : '#F9F9F9',
+                borderColor: m.achieved ? '#7C3AED' : isDark ? '#3D2A6B' : '#E5E7EB',
                 opacity: m.achieved ? 1 : 0.6,
               }}
             >
-              <div className="text-2xl mb-1" style={{ filter: m.achieved ? 'none' : 'grayscale(100%)' }}>
+              <div
+                className="text-2xl mb-1"
+                style={{ filter: m.achieved ? 'none' : 'grayscale(100%)' }}
+              >
                 {m.emoji}
               </div>
               <p
@@ -634,7 +732,9 @@ function LeaderboardTeaser({ isDark }: { isDark: boolean }) {
                   className="mt-1.5 rounded-full px-2 py-0.5"
                   style={{ background: '#7C3AED', display: 'inline-block' }}
                 >
-                  <span style={{ fontSize: '0.65rem', color: 'white', fontWeight: 700 }}>EARNED</span>
+                  <span style={{ fontSize: '0.65rem', color: 'white', fontWeight: 700 }}>
+                    EARNED
+                  </span>
                 </div>
               )}
             </motion.div>
@@ -697,7 +797,12 @@ function BottomCTA({ onNavigate, isDark: _isDark }: { onNavigate: () => void; is
             <button
               onClick={onNavigate}
               className="px-8 py-3 rounded-full bg-white hover:bg-[#F5F0FF] transition-all font-bold"
-              style={{ color: '#7C3AED', fontFamily: "'Nunito', sans-serif", fontSize: '0.95rem', fontWeight: 800 }}
+              style={{
+                color: '#7C3AED',
+                fontFamily: "'Nunito', sans-serif",
+                fontSize: '0.95rem',
+                fontWeight: 800,
+              }}
             >
               Start Learning →
             </button>
@@ -758,8 +863,7 @@ export function Home() {
               marginBottom: 6,
             }}
           >
-            Cryptic crosswords,{' '}
-            <span style={{ color: '#7C3AED' }}>finally fun.</span>
+            Cryptic crosswords, <span style={{ color: '#7C3AED' }}>finally fun.</span>
           </h1>
           <p
             style={{
@@ -771,12 +875,17 @@ export function Home() {
               margin: '0 auto',
             }}
           >
-            Solve one clue a day, build your streak, and become a cryptic genius. No experience needed!
+            Solve one clue a day, build your streak, and become a cryptic genius. No experience
+            needed!
           </p>
         </motion.div>
 
         {/* TODAY'S PUZZLE — front and centre */}
-        <TodaysPuzzleHero onNavigate={() => navigate('/puzzle')} isDark={isDark} puzzle={todaysPuzzle} />
+        <TodaysPuzzleHero
+          onNavigate={() => navigate('/puzzle')}
+          isDark={isDark}
+          puzzle={todaysPuzzle}
+        />
 
         {/* Stats strip */}
         <StatsStrip isDark={isDark} />

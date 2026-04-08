@@ -1,7 +1,20 @@
 import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Mascot, MascotMood } from '../components/Mascot';
-import { Lightbulb, Send, RotateCcw, Copy, Check, ChevronDown, Share2, Timer, Zap, ThumbsUp, ThumbsDown, ExternalLink } from 'lucide-react';
+import {
+  Lightbulb,
+  Send,
+  RotateCcw,
+  Copy,
+  Check,
+  ChevronDown,
+  Share2,
+  Timer,
+  Zap,
+  ThumbsUp,
+  ThumbsDown,
+  ExternalLink,
+} from 'lucide-react';
 import { useParams } from 'react-router';
 import { useClueReaction } from '../hooks/useClueReaction';
 import confetti from 'canvas-confetti';
@@ -9,7 +22,12 @@ import { useDarkMode } from '../context/DarkModeContext';
 import { getTheme } from '../theme';
 import { useStreak, getXPForSolve, getLevelTitle, hasSolvedToday } from '../hooks/useStreak';
 import { useAuth } from '../context/AuthContext';
-import { fetchPuzzleByDate, fetchPuzzleByNumber, type DbDailyPuzzle, type PuzzleHint } from '../../lib/supabase';
+import {
+  fetchPuzzleByDate,
+  fetchPuzzleByNumber,
+  type DbDailyPuzzle,
+  type PuzzleHint,
+} from '../../lib/supabase';
 
 // ─── PUZZLE DATA ──────────────────────────────────────────────────────────────
 
@@ -24,7 +42,8 @@ const PUZZLE = {
       title: 'Definition Location',
       text: 'The definition is at the end of the clue.',
       highlight: 'a weapon',
-      mascotComment: 'The definition is always at the start or end of a cryptic clue. Look at the end! 👀',
+      mascotComment:
+        'The definition is always at the start or end of a cryptic clue. Look at the end! 👀',
       color: '#3B82F6',
       bg: '#EFF6FF',
       bgDark: '#0D1F35',
@@ -74,11 +93,38 @@ const CLUE_PARTS = [
   { text: ' (5)', type: null },
 ];
 
-const PART_STYLES: Record<string, { bg: string; bgDark: string; color: string; border: string; label: string }> = {
-  definition: { bg: '#EFF6FF', bgDark: '#0D1F35', color: '#1D4ED8', border: '#3B82F6', label: 'Definition' },
-  indicator: { bg: '#F5F3FF', bgDark: '#1A0F35', color: '#5B21B6', border: '#7C3AED', label: 'Indicator' },
-  fodder: { bg: '#FFF7ED', bgDark: '#2A1505', color: '#C2410C', border: '#F97316', label: 'Fodder' },
-  wordplay: { bg: '#ECFDF5', bgDark: '#062010', color: '#065F46', border: '#10B981', label: 'Wordplay' },
+const PART_STYLES: Record<
+  string,
+  { bg: string; bgDark: string; color: string; border: string; label: string }
+> = {
+  definition: {
+    bg: '#EFF6FF',
+    bgDark: '#0D1F35',
+    color: '#1D4ED8',
+    border: '#3B82F6',
+    label: 'Definition',
+  },
+  indicator: {
+    bg: '#F5F3FF',
+    bgDark: '#1A0F35',
+    color: '#5B21B6',
+    border: '#7C3AED',
+    label: 'Indicator',
+  },
+  fodder: {
+    bg: '#FFF7ED',
+    bgDark: '#2A1505',
+    color: '#C2410C',
+    border: '#F97316',
+    label: 'Fodder',
+  },
+  wordplay: {
+    bg: '#ECFDF5',
+    bgDark: '#062010',
+    color: '#065F46',
+    border: '#10B981',
+    label: 'Wordplay',
+  },
 };
 
 // ─── CLUE REACTION ────────────────────────────────────────────────────────────
@@ -109,7 +155,7 @@ function ClueReactionWidget({
     }
   };
 
-  const likeActive    = reaction === 'like';
+  const likeActive = reaction === 'like';
   const dislikeActive = reaction === 'dislike';
 
   const buttons = (
@@ -121,9 +167,9 @@ function ClueReactionWidget({
         whileTap={{ scale: 0.88 }}
         className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border transition-colors"
         style={{
-          background:   likeActive ? (isDark ? '#062010' : '#ECFDF5') : 'transparent',
-          borderColor:  likeActive ? '#10B981' : isDark ? '#3D2A6B' : '#E0E7FF',
-          color:        likeActive ? '#10B981' : T.textMuted,
+          background: likeActive ? (isDark ? '#062010' : '#ECFDF5') : 'transparent',
+          borderColor: likeActive ? '#10B981' : isDark ? '#3D2A6B' : '#E0E7FF',
+          color: likeActive ? '#10B981' : T.textMuted,
         }}
         aria-label="Like this clue"
         aria-pressed={likeActive}
@@ -138,9 +184,9 @@ function ClueReactionWidget({
         whileTap={{ scale: 0.88 }}
         className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border transition-colors"
         style={{
-          background:   dislikeActive ? (isDark ? '#2A0F15' : '#FFF1F2') : 'transparent',
-          borderColor:  dislikeActive ? '#EF4444' : isDark ? '#3D2A6B' : '#E0E7FF',
-          color:        dislikeActive ? '#EF4444' : T.textMuted,
+          background: dislikeActive ? (isDark ? '#2A0F15' : '#FFF1F2') : 'transparent',
+          borderColor: dislikeActive ? '#EF4444' : isDark ? '#3D2A6B' : '#E0E7FF',
+          color: dislikeActive ? '#EF4444' : T.textMuted,
         }}
         aria-label="Dislike this clue"
         aria-pressed={dislikeActive}
@@ -181,7 +227,15 @@ function ClueReactionWidget({
         transition={{ duration: 0.3 }}
       >
         <div className="flex items-center justify-between">
-          <p style={{ fontFamily: "'Nunito', sans-serif", fontWeight: 700, fontSize: '0.88rem', color: T.textMuted, margin: 0 }}>
+          <p
+            style={{
+              fontFamily: "'Nunito', sans-serif",
+              fontWeight: 700,
+              fontSize: '0.88rem',
+              color: T.textMuted,
+              margin: 0,
+            }}
+          >
             How was this clue?
           </p>
           {buttons}
@@ -192,7 +246,14 @@ function ClueReactionWidget({
 
   return (
     <div className="flex items-center justify-center gap-3">
-      <span style={{ fontSize: '0.75rem', fontWeight: 600, color: T.textFaint, fontFamily: "'Nunito', sans-serif" }}>
+      <span
+        style={{
+          fontSize: '0.75rem',
+          fontWeight: 600,
+          color: T.textFaint,
+          fontFamily: "'Nunito', sans-serif",
+        }}
+      >
         Rate this clue
       </span>
       {buttons}
@@ -251,7 +312,14 @@ function NextPuzzleCountdown({ isDark }: { isDark: boolean }) {
         borderColor: isDark ? '#3D2A6B' : '#C4B5FD',
       }}
     >
-      <p style={{ fontSize: '0.78rem', color: isDark ? '#9381CC' : '#6B7280', fontWeight: 700, marginBottom: 4 }}>
+      <p
+        style={{
+          fontSize: '0.78rem',
+          color: isDark ? '#9381CC' : '#6B7280',
+          fontWeight: 700,
+          marginBottom: 4,
+        }}
+      >
         NEXT PUZZLE IN
       </p>
       <p
@@ -264,7 +332,14 @@ function NextPuzzleCountdown({ isDark }: { isDark: boolean }) {
       >
         {timeLeft}
       </p>
-      <p style={{ fontSize: '0.78rem', color: isDark ? '#9381CC' : '#6B7280', fontWeight: 600, marginTop: 2 }}>
+      <p
+        style={{
+          fontSize: '0.78rem',
+          color: isDark ? '#9381CC' : '#6B7280',
+          fontWeight: 600,
+          marginTop: 2,
+        }}
+      >
         Come back tomorrow for #43 🦉
       </p>
     </div>
@@ -427,16 +502,33 @@ function SuccessState({
   const { count: streak, totalSolved, xp, level, recordSolve } = useStreak();
   const { user } = useAuth();
   const xpEarned = getXPForSolve(hintsUsed);
-  const [finalData, setFinalData] = useState<{ streak: number; total: number; xp: number; level: number } | null>(null);
+  const [finalData, setFinalData] = useState<{
+    streak: number;
+    total: number;
+    xp: number;
+    level: number;
+  } | null>(null);
 
   useEffect(() => {
     if (!runConfetti.current) {
       runConfetti.current = true;
 
       // Record the solve — passes wrongAttemptsCount, puzzleId, and solveTime for Supabase
-      const result = recordSolve(hintsUsed, activePuzzle.number, user?.id, puzzleId, wrongAttemptsCount, solveTime || undefined);
+      const result = recordSolve(
+        hintsUsed,
+        activePuzzle.number,
+        user?.id,
+        puzzleId,
+        wrongAttemptsCount,
+        solveTime || undefined
+      );
       if (result) {
-        setFinalData({ streak: result.count, total: result.totalSolved, xp: result.xp, level: result.level });
+        setFinalData({
+          streak: result.count,
+          total: result.totalSolved,
+          xp: result.xp,
+          level: result.level,
+        });
       }
 
       const end = Date.now() + 2800;
@@ -460,16 +552,18 @@ function SuccessState({
   };
   const getShareBlocks = () => [...Array(4)].map((_, i) => getShareEmoji(i)).join('');
 
-  const today = new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
+  const today = new Date().toLocaleDateString('en-GB', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+  });
   const solveTimeStr =
-    solveTime < 60
-      ? `${solveTime}s`
-      : `${Math.floor(solveTime / 60)}m ${solveTime % 60}s`;
+    solveTime < 60 ? `${solveTime}s` : `${Math.floor(solveTime / 60)}m ${solveTime % 60}s`;
 
   const getFunCallout = () => {
     if (hintsUsed === 0) return "I cracked today's cryptic with zero hints 🧠 Can you?";
     if (hintsUsed === 1) return "Just 1 hint to crack today's cryptic — your turn 👀";
-    if (hintsUsed <= 3) return "Tricky clue, but I got there! Think you can crack it? 🔍";
+    if (hintsUsed <= 3) return 'Tricky clue, but I got there! Think you can crack it? 🔍';
     return "Today's cryptic nearly had me — reckon you can solve it? 🤯";
   };
 
@@ -516,22 +610,41 @@ function SuccessState({
       {/* ── 0. SUCCESS HEADER ── */}
       <div className="text-center py-6">
         <div className="flex justify-center mb-4">
-          <Mascot mood="celebrating" size={120} speechBubble="Brilliant solve! 🎉" bubbleDirection="right" animate />
+          <Mascot
+            mood="celebrating"
+            size={120}
+            speechBubble="Brilliant solve! 🎉"
+            bubbleDirection="right"
+            animate
+          />
         </div>
         <motion.div
           initial={{ scale: 0 }}
           animate={{ scale: 1 }}
           transition={{ delay: 0.3, type: 'spring', stiffness: 300 }}
         >
-          <h2 style={{ fontFamily: "'Fredoka One', cursive", fontSize: '2.2rem', color: '#7C3AED', marginBottom: 4 }}>
+          <h2
+            style={{
+              fontFamily: "'Fredoka One', cursive",
+              fontSize: '2.2rem',
+              color: '#7C3AED',
+              marginBottom: 4,
+            }}
+          >
             You got it! 🎊
           </h2>
-          <p style={{ color: isDark ? '#A78BFA' : '#6B7280', fontWeight: 600, fontFamily: "'Nunito', sans-serif" }}>
+          <p
+            style={{
+              color: isDark ? '#A78BFA' : '#6B7280',
+              fontWeight: 600,
+              fontFamily: "'Nunito', sans-serif",
+            }}
+          >
             {hintsUsed === 0
               ? "No hints needed — you're a natural!"
               : hintsUsed === 1
-              ? 'Solved with just 1 hint. Impressive!'
-              : `Solved with ${hintsUsed} hints. Great effort!`}
+                ? 'Solved with just 1 hint. Impressive!'
+                : `Solved with ${hintsUsed} hints. Great effort!`}
           </p>
         </motion.div>
       </div>
@@ -550,12 +663,30 @@ function SuccessState({
           style={{ background: 'linear-gradient(135deg, #7C3AED, #5B21B6)' }}
         >
           <div className="flex items-center gap-2">
-            <span style={{ fontFamily: "'Fredoka One', cursive", fontSize: '1.3rem', color: 'white' }}>🦉</span>
+            <span
+              style={{ fontFamily: "'Fredoka One', cursive", fontSize: '1.3rem', color: 'white' }}
+            >
+              🦉
+            </span>
             <div>
-              <p style={{ fontFamily: "'Fredoka One', cursive", fontSize: '1rem', color: 'white', margin: 0 }}>
+              <p
+                style={{
+                  fontFamily: "'Fredoka One', cursive",
+                  fontSize: '1rem',
+                  color: 'white',
+                  margin: 0,
+                }}
+              >
                 The Cryptic Owl
               </p>
-              <p style={{ fontSize: '0.72rem', color: 'rgba(255,255,255,0.7)', fontFamily: "'Nunito', sans-serif", margin: 0 }}>
+              <p
+                style={{
+                  fontSize: '0.72rem',
+                  color: 'rgba(255,255,255,0.7)',
+                  fontFamily: "'Nunito', sans-serif",
+                  margin: 0,
+                }}
+              >
                 Puzzle #{activePuzzle.number} · {today}
               </p>
             </div>
@@ -613,9 +744,7 @@ function SuccessState({
                     fontSize: '0.6rem',
                     fontFamily: "'Nunito', sans-serif",
                     fontWeight: 700,
-                    color: i < hintsUsed
-                      ? (i < 2 ? '#D97706' : '#DC2626')
-                      : '#059669',
+                    color: i < hintsUsed ? (i < 2 ? '#D97706' : '#DC2626') : '#059669',
                   }}
                 >
                   {i < hintsUsed ? 'used' : 'skip'}
@@ -627,19 +756,31 @@ function SuccessState({
           {/* Explicit count + time */}
           <div
             className="rounded-2xl px-4 py-3 mb-4 text-center"
-            style={{ background: isDark ? '#261845' : '#F9F7FF', border: `1.5px solid ${isDark ? '#4C3580' : '#EDE9FE'}` }}
+            style={{
+              background: isDark ? '#261845' : '#F9F7FF',
+              border: `1.5px solid ${isDark ? '#4C3580' : '#EDE9FE'}`,
+            }}
           >
-            <p style={{
-              fontFamily: "'Fredoka One', cursive",
-              fontSize: '1.1rem',
-              color: hintsUsed === 0 ? '#059669' : hintsUsed <= 2 ? '#D97706' : '#DC2626',
-              marginBottom: 2,
-            }}>
+            <p
+              style={{
+                fontFamily: "'Fredoka One', cursive",
+                fontSize: '1.1rem',
+                color: hintsUsed === 0 ? '#059669' : hintsUsed <= 2 ? '#D97706' : '#DC2626',
+                marginBottom: 2,
+              }}
+            >
               {hintsUsed === 0
                 ? '✨ No hints used — pure genius!'
                 : `💡 ${hintsUsed} of 4 hints used`}
             </p>
-            <p style={{ fontSize: '0.8rem', color: T.textMuted, fontFamily: "'Nunito', sans-serif", fontWeight: 600 }}>
+            <p
+              style={{
+                fontSize: '0.8rem',
+                color: T.textMuted,
+                fontFamily: "'Nunito', sans-serif",
+                fontWeight: 600,
+              }}
+            >
               ⏱️ {solveTimeStr} &nbsp;·&nbsp; 🔥 {displayData.streak}-day streak
             </p>
           </div>
@@ -647,21 +788,32 @@ function SuccessState({
           {/* Callout preview */}
           <div
             className="rounded-2xl px-4 py-3 mb-4 text-center"
-            style={{ background: isDark ? '#100820' : '#F5F0FF', border: `1.5px dashed ${isDark ? '#3D2A6B' : '#C4B5FD'}` }}
+            style={{
+              background: isDark ? '#100820' : '#F5F0FF',
+              border: `1.5px dashed ${isDark ? '#3D2A6B' : '#C4B5FD'}`,
+            }}
           >
-            <p style={{
-              fontFamily: "'Nunito', sans-serif",
-              fontWeight: 700,
-              fontSize: '0.9rem',
-              color: T.textSub,
-              lineHeight: 1.55,
-              marginBottom: 5,
-            }}>
+            <p
+              style={{
+                fontFamily: "'Nunito', sans-serif",
+                fontWeight: 700,
+                fontSize: '0.9rem',
+                color: T.textSub,
+                lineHeight: 1.55,
+                marginBottom: 5,
+              }}
+            >
               "{getFunCallout()}"
             </p>
             <div className="flex items-center justify-center gap-1">
               <ExternalLink size={11} style={{ color: '#7C3AED' }} />
-              <span style={{ fontFamily: "'Fredoka One', cursive", fontSize: '0.82rem', color: '#7C3AED' }}>
+              <span
+                style={{
+                  fontFamily: "'Fredoka One', cursive",
+                  fontSize: '0.82rem',
+                  color: '#7C3AED',
+                }}
+              >
                 thecrypticowl.com
               </span>
             </div>
@@ -686,11 +838,19 @@ function SuccessState({
                 : '0 4px 14px rgba(124,58,237,0.35)',
             }}
           >
-            {copied
-              ? <><Check size={17} /> Copied to clipboard!</>
-              : typeof navigator.share === 'function'
-              ? <><Share2 size={17} /> Share my result</>
-              : <><Copy size={17} /> Copy &amp; share result</>}
+            {copied ? (
+              <>
+                <Check size={17} /> Copied to clipboard!
+              </>
+            ) : typeof navigator.share === 'function' ? (
+              <>
+                <Share2 size={17} /> Share my result
+              </>
+            ) : (
+              <>
+                <Copy size={17} /> Copy &amp; share result
+              </>
+            )}
           </motion.button>
         </div>
       </motion.div>
@@ -701,19 +861,30 @@ function SuccessState({
         animate={{ opacity: 1, scale: 1 }}
         transition={{ delay: 0.45, type: 'spring', stiffness: 400 }}
         className="rounded-3xl p-5 border-2 text-center"
-        style={{ background: isDark ? '#1A0F35' : '#F5F0FF', borderColor: isDark ? '#4C3580' : '#C4B5FD' }}
+        style={{
+          background: isDark ? '#1A0F35' : '#F5F0FF',
+          borderColor: isDark ? '#4C3580' : '#C4B5FD',
+        }}
       >
-        <motion.div
-          animate={{ scale: [1, 1.15, 1] }}
-          transition={{ duration: 0.5, delay: 0.6 }}
-        >
-          <span style={{ fontFamily: "'Fredoka One', cursive", fontSize: '2rem', color: '#7C3AED' }}>
+        <motion.div animate={{ scale: [1, 1.15, 1] }} transition={{ duration: 0.5, delay: 0.6 }}>
+          <span
+            style={{ fontFamily: "'Fredoka One', cursive", fontSize: '2rem', color: '#7C3AED' }}
+          >
             +{xpEarned} XP
           </span>
         </motion.div>
-        <p style={{ fontSize: '0.85rem', color: isDark ? '#A78BFA' : '#5B21B6', fontWeight: 700, marginTop: 2 }}>
+        <p
+          style={{
+            fontSize: '0.85rem',
+            color: isDark ? '#A78BFA' : '#5B21B6',
+            fontWeight: 700,
+            marginTop: 2,
+          }}
+        >
           <Zap size={13} className="inline mr-1" />
-          {hintsUsed === 0 ? 'Perfect solve bonus!' : `${hintsUsed} hint${hintsUsed > 1 ? 's' : ''} used`}
+          {hintsUsed === 0
+            ? 'Perfect solve bonus!'
+            : `${hintsUsed} hint${hintsUsed > 1 ? 's' : ''} used`}
         </p>
         <div className="mt-3 grid grid-cols-3 gap-2">
           {[
@@ -722,10 +893,24 @@ function SuccessState({
             { emoji: '⚡', value: `${displayData.xp} XP`, label: levelTitle.split(' ')[0] },
           ].map((s, i) => (
             <div key={i}>
-              <p style={{ fontFamily: "'Fredoka One', cursive", fontSize: '1.2rem', color: '#7C3AED' }}>
+              <p
+                style={{
+                  fontFamily: "'Fredoka One', cursive",
+                  fontSize: '1.2rem',
+                  color: '#7C3AED',
+                }}
+              >
                 {s.emoji} {s.value}
               </p>
-              <p style={{ fontSize: '0.72rem', color: isDark ? '#9381CC' : '#9CA3AF', fontWeight: 600 }}>{s.label}</p>
+              <p
+                style={{
+                  fontSize: '0.72rem',
+                  color: isDark ? '#9381CC' : '#9CA3AF',
+                  fontWeight: 600,
+                }}
+              >
+                {s.label}
+              </p>
             </div>
           ))}
         </div>
@@ -736,7 +921,16 @@ function SuccessState({
         className="rounded-3xl p-6 border shadow-md"
         style={{ background: T.cardBg, borderColor: T.cardBorder }}
       >
-        <p style={{ fontSize: '0.78rem', color: T.textFaint, fontWeight: 700, marginBottom: 12, textTransform: 'uppercase', fontFamily: "'Nunito', sans-serif" }}>
+        <p
+          style={{
+            fontSize: '0.78rem',
+            color: T.textFaint,
+            fontWeight: 700,
+            marginBottom: 12,
+            textTransform: 'uppercase',
+            fontFamily: "'Nunito', sans-serif",
+          }}
+        >
           The Answer
         </p>
         <div className="flex gap-2 justify-center mb-4">
@@ -747,7 +941,12 @@ function SuccessState({
               animate={{ scale: 1, rotate: 0 }}
               transition={{ delay: 0.1 + i * 0.08, type: 'spring', stiffness: 400 }}
               className="w-12 h-12 rounded-xl flex items-center justify-center shadow-sm"
-              style={{ background: 'linear-gradient(135deg, #7C3AED, #5B21B6)', color: 'white', fontFamily: "'Fredoka One', cursive", fontSize: '1.4rem' }}
+              style={{
+                background: 'linear-gradient(135deg, #7C3AED, #5B21B6)',
+                color: 'white',
+                fontFamily: "'Fredoka One', cursive",
+                fontSize: '1.4rem',
+              }}
             >
               {l}
             </motion.div>
@@ -755,20 +954,42 @@ function SuccessState({
         </div>
 
         <div className="mt-5">
-          <p style={{ fontSize: '0.78rem', color: T.textFaint, fontWeight: 700, marginBottom: 10, textTransform: 'uppercase', fontFamily: "'Nunito', sans-serif" }}>
+          <p
+            style={{
+              fontSize: '0.78rem',
+              color: T.textFaint,
+              fontWeight: 700,
+              marginBottom: 10,
+              textTransform: 'uppercase',
+              fontFamily: "'Nunito', sans-serif",
+            }}
+          >
             Full Breakdown
           </p>
           <div
             className="rounded-2xl p-4 mb-4 text-center"
-            style={{ background: isDark ? '#261845' : '#F9F7FF', border: `2px dashed ${isDark ? '#4C3580' : '#C4B5FD'}` }}
+            style={{
+              background: isDark ? '#261845' : '#F9F7FF',
+              border: `2px dashed ${isDark ? '#4C3580' : '#C4B5FD'}`,
+            }}
           >
-            <p style={{ fontFamily: "'Nunito', sans-serif", fontWeight: 700, fontSize: '1rem', color: T.text, lineHeight: 1.9 }}>
+            <p
+              style={{
+                fontFamily: "'Nunito', sans-serif",
+                fontWeight: 700,
+                fontSize: '1rem',
+                color: T.text,
+                lineHeight: 1.9,
+              }}
+            >
               {activePuzzle.clueParts.map((part, i) =>
                 part.type ? (
                   <span
                     key={i}
                     style={{
-                      background: isDark ? PART_STYLES[part.type].bgDark : PART_STYLES[part.type].bg,
+                      background: isDark
+                        ? PART_STYLES[part.type].bgDark
+                        : PART_STYLES[part.type].bg,
                       color: PART_STYLES[part.type].color,
                       border: `2px solid ${PART_STYLES[part.type].border}`,
                       borderRadius: 8,
@@ -798,15 +1019,29 @@ function SuccessState({
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: 0.5 + i * 0.1 }}
                     className="flex items-center gap-3 rounded-xl p-3"
-                    style={{ background: isDark ? style.bgDark : style.bg, border: `1.5px solid ${style.border}` }}
+                    style={{
+                      background: isDark ? style.bgDark : style.bg,
+                      border: `1.5px solid ${style.border}`,
+                    }}
                   >
                     <span
                       className="rounded-full px-2.5 py-0.5 text-xs font-bold flex-shrink-0"
-                      style={{ background: style.border, color: 'white', fontFamily: "'Nunito', sans-serif" }}
+                      style={{
+                        background: style.border,
+                        color: 'white',
+                        fontFamily: "'Nunito', sans-serif",
+                      }}
                     >
                       {style.label}
                     </span>
-                    <span style={{ fontSize: '0.85rem', color: style.color, fontFamily: "'Nunito', sans-serif", fontWeight: 600 }}>
+                    <span
+                      style={{
+                        fontSize: '0.85rem',
+                        color: style.color,
+                        fontFamily: "'Nunito', sans-serif",
+                        fontWeight: 600,
+                      }}
+                    >
                       {part.text}
                     </span>
                   </motion.div>
@@ -817,15 +1052,29 @@ function SuccessState({
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.5 + activePuzzle.clueParts.filter(p => p.type).length * 0.1 }}
               className="flex items-center gap-3 rounded-xl p-3"
-              style={{ background: isDark ? PART_STYLES.wordplay.bgDark : PART_STYLES.wordplay.bg, border: `1.5px solid ${PART_STYLES.wordplay.border}` }}
+              style={{
+                background: isDark ? PART_STYLES.wordplay.bgDark : PART_STYLES.wordplay.bg,
+                border: `1.5px solid ${PART_STYLES.wordplay.border}`,
+              }}
             >
               <span
                 className="rounded-full px-2.5 py-0.5 text-xs font-bold flex-shrink-0"
-                style={{ background: PART_STYLES.wordplay.border, color: 'white', fontFamily: "'Nunito', sans-serif" }}
+                style={{
+                  background: PART_STYLES.wordplay.border,
+                  color: 'white',
+                  fontFamily: "'Nunito', sans-serif",
+                }}
               >
                 Answer
               </span>
-              <span style={{ fontSize: '0.85rem', color: PART_STYLES.wordplay.color, fontFamily: "'Nunito', sans-serif", fontWeight: 600 }}>
+              <span
+                style={{
+                  fontSize: '0.85rem',
+                  color: PART_STYLES.wordplay.color,
+                  fontFamily: "'Nunito', sans-serif",
+                  fontWeight: 600,
+                }}
+              >
                 {activePuzzle.answer} ✓
               </span>
             </motion.div>
@@ -834,7 +1083,13 @@ function SuccessState({
       </div>
 
       {/* Clue feedback — card variant in success state */}
-      <ClueReactionWidget puzzleNumber={activePuzzle.number} userId={user?.id} puzzleId={puzzleId} isDark={isDark} variant="card" />
+      <ClueReactionWidget
+        puzzleNumber={activePuzzle.number}
+        userId={user?.id}
+        puzzleId={puzzleId}
+        isDark={isDark}
+        variant="card"
+      />
 
       {/* Next puzzle countdown */}
       <NextPuzzleCountdown isDark={isDark} />
@@ -868,10 +1123,10 @@ function WrongFeedback({
   isDark: boolean;
 }) {
   const messages = [
-    "Hmm… not quite! Try again? 🤔",
-    "Ooh, close but no cigar! Give it another go! 🎯",
+    'Hmm… not quite! Try again? 🤔',
+    'Ooh, close but no cigar! Give it another go! 🎯',
     "Not this time — but you're thinking the right way! 💡",
-    "Keep going! The answer is closer than you think! 🔍",
+    'Keep going! The answer is closer than you think! 🔍',
   ];
   const msg = messages[Math.floor(Math.random() * messages.length)];
 
@@ -888,14 +1143,32 @@ function WrongFeedback({
     >
       <Mascot mood="wrong" size={48} animate={false} />
       <div className="flex-1">
-        <p style={{ fontFamily: "'Fredoka One', cursive", fontSize: '0.95rem', color: '#BE123C', marginBottom: 2 }}>
+        <p
+          style={{
+            fontFamily: "'Fredoka One', cursive",
+            fontSize: '0.95rem',
+            color: '#BE123C',
+            marginBottom: 2,
+          }}
+        >
           Not quite!
         </p>
-        <p style={{ fontSize: '0.83rem', color: isDark ? '#FCA5A5' : '#9F1239', fontFamily: "'Nunito', sans-serif", fontWeight: 600 }}>
+        <p
+          style={{
+            fontSize: '0.83rem',
+            color: isDark ? '#FCA5A5' : '#9F1239',
+            fontFamily: "'Nunito', sans-serif",
+            fontWeight: 600,
+          }}
+        >
           "{attempt.toUpperCase()}" — {msg}
         </p>
       </div>
-      <button onClick={onDismiss} style={{ color: '#FDA4AF' }} className="hover:text-[#FB7185] transition-colors mt-0.5">
+      <button
+        onClick={onDismiss}
+        style={{ color: '#FDA4AF' }}
+        className="hover:text-[#FB7185] transition-colors mt-0.5"
+      >
         ✕
       </button>
     </motion.div>
@@ -904,7 +1177,13 @@ function WrongFeedback({
 
 // ─── ALREADY SOLVED BANNER ���───────────────────────────────────────────────────
 
-function AlreadySolvedBanner({ isDark, onSolvePractice: _onSolvePractice }: { isDark: boolean; onSolvePractice: () => void }) {
+function AlreadySolvedBanner({
+  isDark,
+  onSolvePractice: _onSolvePractice,
+}: {
+  isDark: boolean;
+  onSolvePractice: () => void;
+}) {
   return (
     <motion.div
       initial={{ opacity: 0, y: -8 }}
@@ -917,7 +1196,14 @@ function AlreadySolvedBanner({ isDark, onSolvePractice: _onSolvePractice }: { is
         <p style={{ fontFamily: "'Fredoka One', cursive", fontSize: '0.95rem', color: '#059669' }}>
           You've already solved today's puzzle!
         </p>
-        <p style={{ fontSize: '0.82rem', color: isDark ? '#6EE7B7' : '#065F46', fontFamily: "'Nunito', sans-serif", fontWeight: 600 }}>
+        <p
+          style={{
+            fontSize: '0.82rem',
+            color: isDark ? '#6EE7B7' : '#065F46',
+            fontFamily: "'Nunito', sans-serif",
+            fontWeight: 600,
+          }}
+        >
           Come back tomorrow for a new clue, or practice again below.
         </p>
       </div>
@@ -1012,14 +1298,20 @@ export function Puzzle() {
   const T = getTheme(isDark);
   const { user } = useAuth();
   const alreadySolved = isArchive ? false : hasSolvedToday();
-  const today = new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
+  const today = new Date().toLocaleDateString('en-GB', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+  });
 
   // Fetch today's puzzle UUID from Supabase so we can write solve records and reactions.
   // Game logic stays on the hardcoded PUZZLE constant; this is purely for the DB foreign key.
   useEffect(() => {
     if (isArchive) return;
     const isoDate = new Date().toISOString().split('T')[0];
-    fetchPuzzleByDate(isoDate).then(p => { if (p) setPuzzleId(p.id); });
+    fetchPuzzleByDate(isoDate).then(p => {
+      if (p) setPuzzleId(p.id);
+    });
   }, [isArchive]);
 
   // Loading state for archive puzzles
@@ -1027,11 +1319,21 @@ export function Puzzle() {
     return (
       <div className="max-w-2xl mx-auto px-4 py-20 text-center">
         <div className="flex justify-center mb-6">
-          <Mascot mood="thinking" size={90} speechBubble="Loading puzzle..." bubbleDirection="right" animate />
+          <Mascot
+            mood="thinking"
+            size={90}
+            speechBubble="Loading puzzle..."
+            bubbleDirection="right"
+            animate
+          />
         </div>
         <div className="flex gap-2 justify-center">
           {[...Array(4)].map((_, i) => (
-            <div key={i} className="w-10 h-10 rounded-xl animate-pulse" style={{ background: isDark ? '#261845' : '#EDE9FE' }} />
+            <div
+              key={i}
+              className="w-10 h-10 rounded-xl animate-pulse"
+              style={{ background: isDark ? '#261845' : '#EDE9FE' }}
+            />
           ))}
         </div>
       </div>
@@ -1040,18 +1342,51 @@ export function Puzzle() {
 
   if (archiveNotFound) {
     return (
-      <div className="max-w-2xl mx-auto px-4 py-16 text-center" style={{ fontFamily: "'Nunito', sans-serif" }}>
+      <div
+        className="max-w-2xl mx-auto px-4 py-16 text-center"
+        style={{ fontFamily: "'Nunito', sans-serif" }}
+      >
         <div className="flex justify-center mb-6">
-          <Mascot mood="thinking" size={90} speechBubble="Puzzle not found!" bubbleDirection="right" animate />
+          <Mascot
+            mood="thinking"
+            size={90}
+            speechBubble="Puzzle not found!"
+            bubbleDirection="right"
+            animate
+          />
         </div>
-        <h2 style={{ fontFamily: "'Fredoka One', cursive", fontSize: '1.6rem', color: isDark ? '#C4B5FD' : '#5B21B6', marginBottom: 8 }}>
+        <h2
+          style={{
+            fontFamily: "'Fredoka One', cursive",
+            fontSize: '1.6rem',
+            color: isDark ? '#C4B5FD' : '#5B21B6',
+            marginBottom: 8,
+          }}
+        >
           Puzzle #{requestedNumber} not found
         </h2>
-        <p style={{ color: isDark ? '#9381CC' : '#6B7280', fontWeight: 600, fontSize: '0.95rem', lineHeight: 1.6, maxWidth: 380, margin: '0 auto 24px' }}>
+        <p
+          style={{
+            color: isDark ? '#9381CC' : '#6B7280',
+            fontWeight: 600,
+            fontSize: '0.95rem',
+            lineHeight: 1.6,
+            maxWidth: 380,
+            margin: '0 auto 24px',
+          }}
+        >
           This puzzle hasn't been published yet, or the number is incorrect.
         </p>
-        <a href="/puzzle" className="inline-flex items-center gap-2 px-6 py-3 rounded-full font-bold"
-          style={{ background: 'linear-gradient(135deg, #7C3AED, #5B21B6)', color: 'white', fontFamily: "'Nunito', sans-serif", fontWeight: 800 }}>
+        <a
+          href="/puzzle"
+          className="inline-flex items-center gap-2 px-6 py-3 rounded-full font-bold"
+          style={{
+            background: 'linear-gradient(135deg, #7C3AED, #5B21B6)',
+            color: 'white',
+            fontFamily: "'Nunito', sans-serif",
+            fontWeight: 800,
+          }}
+        >
           ← Play Today's Puzzle
         </a>
       </div>
@@ -1121,10 +1456,24 @@ export function Puzzle() {
           >
             <div className="flex items-start justify-between mb-5">
               <div>
-                <p style={{ fontFamily: "'Fredoka One', cursive", fontSize: '0.85rem', color: '#7C3AED', marginBottom: 2 }}>
+                <p
+                  style={{
+                    fontFamily: "'Fredoka One', cursive",
+                    fontSize: '0.85rem',
+                    color: '#7C3AED',
+                    marginBottom: 2,
+                  }}
+                >
                   🧩 CRYPTIC #{activePuzzle.number}
                 </p>
-                <p style={{ fontSize: '0.8rem', color: T.textFaint, fontWeight: 600, fontFamily: "'Nunito', sans-serif" }}>
+                <p
+                  style={{
+                    fontSize: '0.8rem',
+                    color: T.textFaint,
+                    fontWeight: 600,
+                    fontFamily: "'Nunito', sans-serif",
+                  }}
+                >
                   {today}
                 </p>
               </div>
@@ -1170,7 +1519,12 @@ export function Puzzle() {
               </div>
 
               {/* Clue feedback */}
-              <ClueReactionWidget puzzleNumber={activePuzzle.number} userId={user?.id} puzzleId={puzzleId} isDark={isDark} />
+              <ClueReactionWidget
+                puzzleNumber={activePuzzle.number}
+                userId={user?.id}
+                puzzleId={puzzleId}
+                isDark={isDark}
+              />
 
               {/* Answer boxes */}
               <div className="flex gap-2">
@@ -1184,7 +1538,13 @@ export function Puzzle() {
                       className="w-11 h-11 rounded-xl border-2 flex items-center justify-center"
                       style={{
                         borderColor: char ? '#7C3AED' : isDark ? '#3D2A6B' : '#E0E7FF',
-                        background: char ? (isDark ? '#261845' : '#F5F0FF') : (isDark ? '#1A1035' : '#FAFAFA'),
+                        background: char
+                          ? isDark
+                            ? '#261845'
+                            : '#F5F0FF'
+                          : isDark
+                            ? '#1A1035'
+                            : '#FAFAFA',
                       }}
                     >
                       <span
@@ -1206,7 +1566,11 @@ export function Puzzle() {
           {/* Wrong attempt feedback */}
           <AnimatePresence>
             {wrongAttempt && (
-              <WrongFeedback attempt={wrongAttempt} onDismiss={() => setWrongAttempt(null)} isDark={isDark} />
+              <WrongFeedback
+                attempt={wrongAttempt}
+                onDismiss={() => setWrongAttempt(null)}
+                isDark={isDark}
+              />
             )}
           </AnimatePresence>
 
@@ -1248,8 +1612,15 @@ export function Puzzle() {
                   background:
                     answer.length === activePuzzle.letterCount
                       ? 'linear-gradient(135deg, #7C3AED, #5B21B6)'
-                      : isDark ? '#261845' : '#E5E7EB',
-                  color: answer.length === activePuzzle.letterCount ? 'white' : isDark ? '#4C3580' : '#9CA3AF',
+                      : isDark
+                        ? '#261845'
+                        : '#E5E7EB',
+                  color:
+                    answer.length === activePuzzle.letterCount
+                      ? 'white'
+                      : isDark
+                        ? '#4C3580'
+                        : '#9CA3AF',
                   fontFamily: "'Nunito', sans-serif",
                   fontWeight: 800,
                 }}
@@ -1283,7 +1654,9 @@ export function Puzzle() {
                     <span
                       key={i}
                       className="w-1.5 h-1.5 rounded-full"
-                      style={{ background: i < hintsUnlocked ? '#F97316' : isDark ? '#92400E' : '#FED7AA' }}
+                      style={{
+                        background: i < hintsUnlocked ? '#F97316' : isDark ? '#92400E' : '#FED7AA',
+                      }}
                     />
                   ))}
                 </span>
@@ -1294,13 +1667,15 @@ export function Puzzle() {
           {/* Hints */}
           <AnimatePresence>
             {visibleHints.length > 0 && (
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                className="space-y-3"
-              >
+              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-3">
                 <div className="flex items-center justify-between">
-                  <h3 style={{ fontFamily: "'Fredoka One', cursive", fontSize: '1rem', color: isDark ? '#C4B5FD' : '#1E1B4B' }}>
+                  <h3
+                    style={{
+                      fontFamily: "'Fredoka One', cursive",
+                      fontSize: '1rem',
+                      color: isDark ? '#C4B5FD' : '#1E1B4B',
+                    }}
+                  >
                     💡 Hints Unlocked ({hintsUnlocked}/{activePuzzle.hints.length})
                   </h3>
                   {visibleHints.length > 1 && (
@@ -1335,7 +1710,15 @@ export function Puzzle() {
           </AnimatePresence>
         </div>
       ) : (
-        <SuccessState hintsUsed={hintsUnlocked} wrongAttemptsCount={wrongAttemptsCount} solveTime={solveTime} puzzleId={puzzleId} onReset={handleReset} isDark={isDark} activePuzzle={activePuzzle} />
+        <SuccessState
+          hintsUsed={hintsUnlocked}
+          wrongAttemptsCount={wrongAttemptsCount}
+          solveTime={solveTime}
+          puzzleId={puzzleId}
+          onReset={handleReset}
+          isDark={isDark}
+          activePuzzle={activePuzzle}
+        />
       )}
 
       {/* Mobile sticky input bar */}

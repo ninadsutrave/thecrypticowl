@@ -4,7 +4,6 @@ on:
   push:
     branches: [master]
 
-# Cancel in-progress runs so a rapid second merge doesn't race with the first
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
@@ -13,9 +12,7 @@ env:
   NODE_VERSION: '20'
 
 jobs:
-  # ── Checks + Build ────────────────────────────────────────────────────────
-  # Run all checks again here so nothing broken can reach production,
-  # even if branch protection was bypassed or a direct push was made.
+  # ── Build ────────────────────────────────────────────────────────────────
   build:
     name: Lint, Format, Type-check & Build
     runs-on: ubuntu-latest
@@ -24,7 +21,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup Node ${{ env.NODE_VERSION }}
+      - name: Setup Node
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
@@ -33,10 +30,10 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Lint (ESLint)
+      - name: Lint
         run: npm run lint
 
-      - name: Format check (Prettier)
+      - name: Format check
         run: npm run format:check
 
       - name: Type-check
@@ -55,12 +52,12 @@ jobs:
           path: dist/
           retention-days: 1
 
-  # ── Deploy to AWS ─────────────────────────────────────────────────────────
+  # ── Deploy ───────────────────────────────────────────────────────────────
   deploy:
     name: Deploy → S3 / CloudFront
     needs: build
     runs-on: ubuntu-latest
-    environment: production    # ties to GitHub Environment for approval gates / secrets
+    environment: production
 
     steps:
       - name: Download dist artifact
@@ -76,26 +73,24 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ secrets.AWS_REGION }}
 
-      # Vite hashes all asset filenames → safe to cache forever
-      - name: Sync hashed assets → S3 (immutable, 1 year)
+      - name: Sync assets → S3 (immutable cache)
         run: |
           aws s3 sync dist/assets "s3://${{ secrets.S3_BUCKET_NAME }}/assets" \
             --cache-control "public,max-age=31536000,immutable" \
             --delete
 
-      # index.html and any root-level files must never be cached
-      - name: Sync root files → S3 (no-cache)
+      - name: Sync root → S3 (no cache)
         run: |
           aws s3 sync dist "s3://${{ secrets.S3_BUCKET_NAME }}" \
             --exclude "assets/*" \
             --cache-control "no-cache,no-store,must-revalidate" \
             --delete
 
-      - name: Invalidate CloudFront cache
+      - name: Invalidate CloudFront (index only)
         run: |
-          INVALIDATION_ID=$(aws cloudfront create-invalidation \
+          aws cloudfront create-invalidation \
             --distribution-id "${{ secrets.CLOUDFRONT_DISTRIBUTION_ID }}" \
-            --paths "/*" \
-            --query 'Invalidation.Id' \
-            --output text)
-          echo "Invalidation created: $INVALIDATION_ID"
+            --paths "/index.html" "/"
+
+      - name: Deployment success
+        run: echo "🚀 Deployment completed successfully"

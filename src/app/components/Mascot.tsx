@@ -17,7 +17,12 @@ function OwlSVG({ mood = 'default' }: { mood: MascotMood }) {
   const isThinking = mood === 'thinking';
 
   return (
-    <svg viewBox="0 0 100 118" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
+    <svg
+      viewBox="0 0 100 118"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      className="w-full h-full"
+    >
       {/* Ear tufts */}
       <ellipse cx="31" cy="26" rx="8" ry="14" fill="#A78BFA" transform="rotate(-22 31 26)" />
       <ellipse cx="69" cy="26" rx="8" ry="14" fill="#A78BFA" transform="rotate(22 69 26)" />
@@ -31,8 +36,22 @@ function OwlSVG({ mood = 'default' }: { mood: MascotMood }) {
       <ellipse cx="50" cy="82" rx="19" ry="24" fill="#EDE9FE" />
 
       {/* Belly texture lines */}
-      <path d="M 43 74 Q 50 71 57 74" stroke="#C4B5FD" strokeWidth="1.2" strokeLinecap="round" fill="none" opacity="0.6" />
-      <path d="M 42 80 Q 50 77 58 80" stroke="#C4B5FD" strokeWidth="1.2" strokeLinecap="round" fill="none" opacity="0.6" />
+      <path
+        d="M 43 74 Q 50 71 57 74"
+        stroke="#C4B5FD"
+        strokeWidth="1.2"
+        strokeLinecap="round"
+        fill="none"
+        opacity="0.6"
+      />
+      <path
+        d="M 42 80 Q 50 77 58 80"
+        stroke="#C4B5FD"
+        strokeWidth="1.2"
+        strokeLinecap="round"
+        fill="none"
+        opacity="0.6"
+      />
 
       {/* Detective hat brim */}
       <rect x="18" y="34" width="64" height="7" rx="3.5" fill="#2D1B69" />
@@ -44,11 +63,33 @@ function OwlSVG({ mood = 'default' }: { mood: MascotMood }) {
       <rect x="27" y="30" width="46" height="6" fill="#7C3AED" rx="1.5" />
 
       {/* Hat shine */}
-      <path d="M 33 14 Q 38 12 43 15" stroke="white" strokeWidth="1.5" strokeLinecap="round" fill="none" opacity="0.25" />
+      <path
+        d="M 33 14 Q 38 12 43 15"
+        stroke="white"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        fill="none"
+        opacity="0.25"
+      />
 
       {/* Magnifying glass on belt/body */}
-      <circle cx="82" cy="80" r="9" stroke="#FCD34D" strokeWidth="2.5" fill="rgba(252,211,77,0.15)" />
-      <line x1="88" y1="87" x2="94" y2="93" stroke="#FCD34D" strokeWidth="2.5" strokeLinecap="round" />
+      <circle
+        cx="82"
+        cy="80"
+        r="9"
+        stroke="#FCD34D"
+        strokeWidth="2.5"
+        fill="rgba(252,211,77,0.15)"
+      />
+      <line
+        x1="88"
+        y1="87"
+        x2="94"
+        y2="93"
+        stroke="#FCD34D"
+        strokeWidth="2.5"
+        strokeLinecap="round"
+      />
 
       {/* Left eye white */}
       <circle cx="37" cy="55" r="12" fill="white" />
@@ -56,11 +97,27 @@ function OwlSVG({ mood = 'default' }: { mood: MascotMood }) {
 
       {/* Right eye white */}
       {!isWinking && <circle cx="63" cy="55" r="12" fill="white" />}
-      {!isWinking && <circle cx="63" cy="55" r="12" fill="none" stroke="#7C3AED" strokeWidth="1.5" opacity="0.3" />}
+      {!isWinking && (
+        <circle
+          cx="63"
+          cy="55"
+          r="12"
+          fill="none"
+          stroke="#7C3AED"
+          strokeWidth="1.5"
+          opacity="0.3"
+        />
+      )}
 
       {/* Eye irises and pupils - LEFT */}
       {isHappy ? (
-        <path d="M 26 55 Q 37 46 48 55" stroke="#1E1B4B" strokeWidth="3.5" strokeLinecap="round" fill="none" />
+        <path
+          d="M 26 55 Q 37 46 48 55"
+          stroke="#1E1B4B"
+          strokeWidth="3.5"
+          strokeLinecap="round"
+          fill="none"
+        />
       ) : isSad ? (
         <>
           <circle cx="37" cy="56" r="7.5" fill="#FCD34D" />
@@ -70,16 +127,28 @@ function OwlSVG({ mood = 'default' }: { mood: MascotMood }) {
       ) : (
         <>
           <circle cx="37" cy="55" r="7.5" fill="#FCD34D" />
-          <circle cx={isThinking ? "36" : "37"} cy="55" r="4" fill="#1E1B4B" />
-          <circle cx={isThinking ? "38" : "39"} cy="53" r="1.5" fill="white" />
+          <circle cx={isThinking ? '36' : '37'} cy="55" r="4" fill="#1E1B4B" />
+          <circle cx={isThinking ? '38' : '39'} cy="53" r="1.5" fill="white" />
         </>
       )}
 
       {/* Eye iris and pupil - RIGHT */}
       {isHappy ? (
-        <path d="M 52 55 Q 63 46 74 55" stroke="#1E1B4B" strokeWidth="3.5" strokeLinecap="round" fill="none" />
+        <path
+          d="M 52 55 Q 63 46 74 55"
+          stroke="#1E1B4B"
+          strokeWidth="3.5"
+          strokeLinecap="round"
+          fill="none"
+        />
       ) : isWinking ? (
-        <path d="M 52 55 Q 63 48 74 55" stroke="#1E1B4B" strokeWidth="3.5" strokeLinecap="round" fill="none" />
+        <path
+          d="M 52 55 Q 63 48 74 55"
+          stroke="#1E1B4B"
+          strokeWidth="3.5"
+          strokeLinecap="round"
+          fill="none"
+        />
       ) : isSad ? (
         <>
           <circle cx="63" cy="56" r="7.5" fill="#FCD34D" />
@@ -96,14 +165,32 @@ function OwlSVG({ mood = 'default' }: { mood: MascotMood }) {
 
       {/* Thinking eyebrow */}
       {isThinking && (
-        <path d="M 28 44 Q 37 40 46 44" stroke="#7C3AED" strokeWidth="2" strokeLinecap="round" fill="none" />
+        <path
+          d="M 28 44 Q 37 40 46 44"
+          stroke="#7C3AED"
+          strokeWidth="2"
+          strokeLinecap="round"
+          fill="none"
+        />
       )}
 
       {/* Sad eyebrows */}
       {isSad && (
         <>
-          <path d="M 28 45 Q 37 42 46 46" stroke="#7C3AED" strokeWidth="2" strokeLinecap="round" fill="none" />
-          <path d="M 54 46 Q 63 42 72 45" stroke="#7C3AED" strokeWidth="2" strokeLinecap="round" fill="none" />
+          <path
+            d="M 28 45 Q 37 42 46 46"
+            stroke="#7C3AED"
+            strokeWidth="2"
+            strokeLinecap="round"
+            fill="none"
+          />
+          <path
+            d="M 54 46 Q 63 42 72 45"
+            stroke="#7C3AED"
+            strokeWidth="2"
+            strokeLinecap="round"
+            fill="none"
+          />
         </>
       )}
 
@@ -111,12 +198,24 @@ function OwlSVG({ mood = 'default' }: { mood: MascotMood }) {
       {isHappy ? (
         <>
           <polygon points="50,65 43,73 57,73" fill="#F97316" />
-          <path d="M 44 72 Q 50 78 56 72" stroke="#EA580C" strokeWidth="1.5" fill="#FED7AA" strokeLinecap="round" />
+          <path
+            d="M 44 72 Q 50 78 56 72"
+            stroke="#EA580C"
+            strokeWidth="1.5"
+            fill="#FED7AA"
+            strokeLinecap="round"
+          />
         </>
       ) : isSad ? (
         <>
           <polygon points="50,67 44,72 56,72" fill="#F97316" />
-          <path d="M 44 75 Q 50 71 56 75" stroke="#EA580C" strokeWidth="1.5" fill="none" strokeLinecap="round" />
+          <path
+            d="M 44 75 Q 50 71 56 75"
+            stroke="#EA580C"
+            strokeWidth="1.5"
+            fill="none"
+            strokeLinecap="round"
+          />
         </>
       ) : (
         <polygon points="50,65 43,73 57,73" fill="#F97316" />
@@ -139,9 +238,15 @@ function OwlSVG({ mood = 'default' }: { mood: MascotMood }) {
       {/* Celebrating stars */}
       {isHappy && (
         <>
-          <text x="8" y="42" fontSize="10" opacity="0.85">✨</text>
-          <text x="78" y="38" fontSize="8" opacity="0.85">⭐</text>
-          <text x="72" y="55" fontSize="7" opacity="0.7">✨</text>
+          <text x="8" y="42" fontSize="10" opacity="0.85">
+            ✨
+          </text>
+          <text x="78" y="38" fontSize="8" opacity="0.85">
+            ⭐
+          </text>
+          <text x="72" y="55" fontSize="7" opacity="0.7">
+            ✨
+          </text>
         </>
       )}
 
@@ -164,13 +269,14 @@ export function Mascot({
   bubbleDirection = 'right',
   animate = true,
 }: MascotProps) {
-  const bounceAnimation = mood === 'celebrating'
-    ? { y: [0, -12, 0, -8, 0], transition: { duration: 0.7, repeat: Infinity, repeatDelay: 1.5 } }
-    : mood === 'wrong'
-    ? { x: [0, -6, 6, -4, 4, 0], transition: { duration: 0.5 } }
-    : animate
-    ? { y: [0, -4, 0], transition: { duration: 3, repeat: Infinity, ease: 'easeInOut' } }
-    : {};
+  const bounceAnimation =
+    mood === 'celebrating'
+      ? { y: [0, -12, 0, -8, 0], transition: { duration: 0.7, repeat: Infinity, repeatDelay: 1.5 } }
+      : mood === 'wrong'
+        ? { x: [0, -6, 6, -4, 4, 0], transition: { duration: 0.5 } }
+        : animate
+          ? { y: [0, -4, 0], transition: { duration: 3, repeat: Infinity, ease: 'easeInOut' } }
+          : {};
 
   return (
     <div className="relative inline-flex items-center">
@@ -180,7 +286,14 @@ export function Mascot({
             className="relative bg-white border-2 border-[#C4B5FD] rounded-2xl px-4 py-3 shadow-lg max-w-[200px]"
             style={{ borderRadius: '18px 18px 4px 18px' }}
           >
-            <p style={{ fontFamily: "'Nunito', sans-serif", fontSize: '0.82rem', color: '#4C1D95', lineHeight: '1.4' }}>
+            <p
+              style={{
+                fontFamily: "'Nunito', sans-serif",
+                fontSize: '0.82rem',
+                color: '#4C1D95',
+                lineHeight: '1.4',
+              }}
+            >
               {speechBubble}
             </p>
           </div>
@@ -189,6 +302,7 @@ export function Mascot({
 
       <motion.div
         style={{ width: size, height: size }}
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         animate={bounceAnimation as any}
         className="flex-shrink-0"
       >
@@ -201,7 +315,14 @@ export function Mascot({
             className="relative bg-white border-2 border-[#C4B5FD] rounded-2xl px-4 py-3 shadow-lg max-w-[220px]"
             style={{ borderRadius: '18px 18px 18px 4px' }}
           >
-            <p style={{ fontFamily: "'Nunito', sans-serif", fontSize: '0.82rem', color: '#4C1D95', lineHeight: '1.4' }}>
+            <p
+              style={{
+                fontFamily: "'Nunito', sans-serif",
+                fontSize: '0.82rem',
+                color: '#4C1D95',
+                lineHeight: '1.4',
+              }}
+            >
               {speechBubble}
             </p>
           </div>

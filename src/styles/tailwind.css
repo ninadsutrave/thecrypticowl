@@ -13,18 +13,18 @@
 }
 
 /* Radix Tabs active state */
-[role="tab"][data-state="active"] {
-  background: #7C3AED !important;
+[role='tab'][data-state='active'] {
+  background: #7c3aed !important;
   color: white !important;
 }
 
-[role="tab"][data-state="inactive"] {
-  color: #6D28D9;
+[role='tab'][data-state='inactive'] {
+  color: #6d28d9;
 }
 
 /* Dark mode Radix Tabs */
-.dark [role="tab"][data-state="inactive"] {
-  color: #C4B5FD;
+.dark [role='tab'][data-state='inactive'] {
+  color: #c4b5fd;
   background: transparent;
 }
 
@@ -56,11 +56,11 @@ main {
 
 /* Selection color */
 ::selection {
-  background: #7C3AED33;
-  color: #5B21B6;
+  background: #7c3aed33;
+  color: #5b21b6;
 }
 
 .dark ::selection {
-  background: #A78BFA44;
-  color: #EDE9FE;
+  background: #a78bfa44;
+  color: #ede9fe;
 }

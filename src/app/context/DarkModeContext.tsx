@@ -21,7 +21,9 @@ export function DarkModeProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     try {
       localStorage.setItem('tco-dark', String(isDark));
-    } catch {}
+    } catch {
+      /* localStorage unavailable (e.g. private browsing) */
+    }
     document.documentElement.classList.toggle('dark', isDark);
   }, [isDark]);
 
@@ -32,6 +34,7 @@ export function DarkModeProvider({ children }: { children: ReactNode }) {
   );
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
 export function useDarkMode() {
   return useContext(DarkModeContext);
 }

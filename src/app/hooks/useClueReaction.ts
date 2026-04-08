@@ -22,7 +22,9 @@ function persistReaction(puzzleNumber: number, reaction: Reaction) {
   }
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(all));
-  } catch {}
+  } catch {
+    /* localStorage unavailable */
+  }
 }
 
 /**
@@ -37,11 +39,7 @@ function persistReaction(puzzleNumber: number, reaction: Reaction) {
  * puzzleId      — UUID from the DB; required for Supabase writes.
  *                 Omit when using the local fallback puzzle (no UUID available).
  */
-export function useClueReaction(
-  puzzleNumber: number,
-  userId?: string,
-  puzzleId?: string
-) {
+export function useClueReaction(puzzleNumber: number, userId?: string, puzzleId?: string) {
   const [reaction, setReaction] = useState<Reaction>(
     () => getStoredReactions()[puzzleNumber] ?? null
   );

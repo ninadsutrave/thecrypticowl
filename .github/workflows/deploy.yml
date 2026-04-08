@@ -1,12 +1,10 @@
-name: CI / Deploy
+name: Deploy
 
 on:
   push:
-    branches: [main]
-  pull_request:
-    branches: [main]
+    branches: [master]
 
-# Cancel in-progress runs on the same branch so stale deploys never win
+# Cancel in-progress runs so a rapid second merge doesn't race with the first
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
@@ -15,9 +13,11 @@ env:
   NODE_VERSION: '20'
 
 jobs:
-  # ── Build & type-check ────────────────────────────────────────────────────
+  # ── Checks + Build ────────────────────────────────────────────────────────
+  # Run all checks again here so nothing broken can reach production,
+  # even if branch protection was bypassed or a direct push was made.
   build:
-    name: Type-check & Build
+    name: Lint, Format, Type-check & Build
     runs-on: ubuntu-latest
 
     steps:
@@ -33,6 +33,12 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Lint (ESLint)
+        run: npm run lint
+
+      - name: Format check (Prettier)
+        run: npm run format:check
+
       - name: Type-check
         run: npm run typecheck
 
@@ -42,9 +48,7 @@ jobs:
           VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
           VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
 
-      # Only upload the artifact on pushes to main (PRs just validate the build)
       - name: Upload dist artifact
-        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
         uses: actions/upload-artifact@v4
         with:
           name: dist
@@ -55,7 +59,6 @@ jobs:
   deploy:
     name: Deploy → S3 / CloudFront
     needs: build
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     runs-on: ubuntu-latest
     environment: production    # ties to GitHub Environment for approval gates / secrets
 

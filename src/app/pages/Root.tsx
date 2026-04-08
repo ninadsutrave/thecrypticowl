@@ -1,6 +1,17 @@
 import { Outlet, NavLink, useLocation } from 'react-router';
-import { Menu, X, BookOpen, Puzzle as PuzzleNavIcon, Home, Sun, Moon, History, Lock } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import {
+  Menu,
+  X,
+  BookOpen,
+  Puzzle as PuzzleNavIcon,
+  Home,
+  Sun,
+  Moon,
+  History,
+  Lock,
+  LogOut,
+} from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useDarkMode } from '../context/DarkModeContext';
 import { getTheme } from '../theme';
@@ -33,16 +44,32 @@ function OwlLogoMini() {
 
 export function Root() {
   const [menuOpen, setMenuOpen] = useState(false);
+  const [avatarDropdown, setAvatarDropdown] = useState(false);
+  const avatarRef = useRef<HTMLDivElement>(null);
   const { isDark, toggle: toggleDark } = useDarkMode();
   const T = getTheme(isDark);
   const { count: streak, refresh: refreshStreak } = useStreak();
   const { user, isSignedIn, signOut } = useAuth();
   const location = useLocation();
 
-  // Close mobile menu and refresh streak on route change
+  // Close avatar dropdown on outside click
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (avatarRef.current && !avatarRef.current.contains(e.target as Node)) {
+        setAvatarDropdown(false);
+      }
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, []);
+
+  // Close mobile menu, avatar dropdown, and refresh streak on route change
   useEffect(() => {
     setMenuOpen(false);
+    setAvatarDropdown(false);
     refreshStreak();
+    // refreshStreak identity is stable across renders; location.pathname is the only trigger
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [location.pathname]);
 
   const navLinks = [
@@ -97,9 +124,7 @@ export function Root() {
                 })}
               >
                 {label}
-                {requiresAuth && !isSignedIn && (
-                  <Lock size={11} style={{ opacity: 0.6 }} />
-                )}
+                {requiresAuth && !isSignedIn && <Lock size={11} style={{ opacity: 0.6 }} />}
               </NavLink>
             ))}
           </div>
@@ -136,27 +161,95 @@ export function Root() {
               </span>
             </motion.div>
 
-            {/* Auth: avatar or sign-in nudge */}
+            {/* Auth: avatar dropdown or sign-in nudge */}
             <div className="hidden md:flex">
               {isSignedIn && user ? (
-                <div className="flex items-center gap-2">
-                  <NavLink to="/history" className="no-underline">
-                    <motion.img
+                <div className="relative" ref={avatarRef}>
+                  <motion.button
+                    onClick={() => setAvatarDropdown(v => !v)}
+                    whileHover={{ scale: 1.08 }}
+                    whileTap={{ scale: 0.92 }}
+                    title={user.name}
+                    style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer' }}
+                  >
+                    <img
                       src={user.picture}
                       alt={user.name}
-                      className="w-8 h-8 rounded-full"
+                      className="w-8 h-8 rounded-full block"
                       style={{ border: `2px solid ${isDark ? '#4C3580' : '#C4B5FD'}` }}
-                      whileHover={{ scale: 1.1 }}
-                      whileTap={{ scale: 0.9 }}
-                      title={user.name}
                     />
-                  </NavLink>
+                  </motion.button>
+
+                  <AnimatePresence>
+                    {avatarDropdown && (
+                      <motion.div
+                        initial={{ opacity: 0, scale: 0.92, y: -6 }}
+                        animate={{ opacity: 1, scale: 1, y: 0 }}
+                        exit={{ opacity: 0, scale: 0.92, y: -6 }}
+                        transition={{ duration: 0.15 }}
+                        className="absolute right-0 mt-2 w-48 rounded-2xl border shadow-xl overflow-hidden z-50"
+                        style={{ background: T.cardBg, borderColor: T.cardBorder }}
+                      >
+                        <div className="px-4 py-3 border-b" style={{ borderColor: T.cardBorder }}>
+                          <p
+                            style={{
+                              fontWeight: 700,
+                              fontSize: '0.88rem',
+                              color: T.text,
+                              margin: 0,
+                              overflow: 'hidden',
+                              textOverflow: 'ellipsis',
+                              whiteSpace: 'nowrap',
+                            }}
+                          >
+                            {user.name}
+                          </p>
+                          <p
+                            style={{
+                              fontSize: '0.75rem',
+                              color: T.textMuted,
+                              margin: 0,
+                              overflow: 'hidden',
+                              textOverflow: 'ellipsis',
+                              whiteSpace: 'nowrap',
+                            }}
+                          >
+                            {user.email}
+                          </p>
+                        </div>
+                        <NavLink
+                          to="/history"
+                          onClick={() => setAvatarDropdown(false)}
+                          className="flex items-center gap-2.5 px-4 py-2.5 text-sm no-underline font-semibold transition-colors hover:opacity-80"
+                          style={{
+                            color: isDark ? '#C4B5FD' : '#5B21B6',
+                            fontFamily: "'Nunito', sans-serif",
+                          }}
+                        >
+                          <History size={14} /> My History
+                        </NavLink>
+                        <button
+                          onClick={() => {
+                            setAvatarDropdown(false);
+                            signOut();
+                          }}
+                          className="flex items-center gap-2.5 w-full px-4 py-2.5 text-sm font-semibold border-t transition-colors hover:opacity-80"
+                          style={{
+                            color: '#EF4444',
+                            borderColor: T.cardBorder,
+                            background: 'none',
+                            fontFamily: "'Nunito', sans-serif",
+                            cursor: 'pointer',
+                          }}
+                        >
+                          <LogOut size={14} /> Sign out
+                        </button>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
                 </div>
               ) : (
-                <NavLink
-                  to="/history"
-                  className="no-underline"
-                >
+                <NavLink to="/history" className="no-underline">
                   <motion.div
                     className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-bold border"
                     style={{
@@ -275,14 +368,31 @@ export function Root() {
                   transition={{ delay: navLinks.length * 0.05, duration: 0.2 }}
                 >
                   {isSignedIn && user ? (
-                    <div className="flex items-center gap-3 px-4 py-3 rounded-2xl" style={{ background: isDark ? '#261845' : '#F5F0FF' }}>
+                    <div
+                      className="flex items-center gap-3 px-4 py-3 rounded-2xl"
+                      style={{ background: isDark ? '#261845' : '#F5F0FF' }}
+                    >
                       <img src={user.picture} alt={user.name} className="w-7 h-7 rounded-full" />
-                      <span style={{ color: isDark ? '#C4B5FD' : '#6D28D9', fontWeight: 700, fontSize: '0.9rem', flex: 1 }}>
+                      <span
+                        style={{
+                          color: isDark ? '#C4B5FD' : '#6D28D9',
+                          fontWeight: 700,
+                          fontSize: '0.9rem',
+                          flex: 1,
+                        }}
+                      >
                         {user.name}
                       </span>
                       <button
-                        onClick={() => { signOut(); setMenuOpen(false); }}
-                        style={{ color: isDark ? '#9381CC' : '#9CA3AF', fontSize: '0.8rem', fontWeight: 600 }}
+                        onClick={() => {
+                          signOut();
+                          setMenuOpen(false);
+                        }}
+                        style={{
+                          color: isDark ? '#9381CC' : '#9CA3AF',
+                          fontSize: '0.8rem',
+                          fontWeight: 600,
+                        }}
                       >
                         Sign out
                       </button>
@@ -311,7 +421,10 @@ export function Root() {
                   transition={{ delay: (navLinks.length + 1) * 0.05, duration: 0.2 }}
                 >
                   <button
-                    onClick={() => { toggleDark(); setMenuOpen(false); }}
+                    onClick={() => {
+                      toggleDark();
+                      setMenuOpen(false);
+                    }}
                     className="flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-semibold w-full transition-all"
                     style={{
                       background: isDark ? '#261845' : '#F5F0FF',

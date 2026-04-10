@@ -18,11 +18,7 @@ import { useDarkMode } from '../context/DarkModeContext';
 import { getTheme } from '../theme';
 import { useStreak } from '../hooks/useStreak';
 import { useAuth } from '../context/AuthContext';
-import {
-  fetchAppLikesCount,
-  addAppLike,
-  isSupabaseConfigured,
-} from '../../lib/supabase';
+import { fetchAppLikesCount, addAppLike, isSupabaseConfigured } from '../../lib/supabase';
 
 function LikeButton({ isDark }: { isDark: boolean }) {
   const [liked, setLiked] = useState(() => {
@@ -72,7 +68,7 @@ function LikeButton({ isDark }: { isDark: boolean }) {
         <span
           className="ml-1.5 px-1.5 py-0.5 rounded-full text-[0.65rem] font-black"
           style={{
-            background: isDark ? '#1A1035' : (liked ? 'white' : '#EDE9FE'),
+            background: isDark ? '#1A1035' : liked ? 'white' : '#EDE9FE',
             color: activePurple,
           }}
         >

@@ -1,13 +1,7 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useNavigate } from 'react-router';
-import {
-  Send,
-  ArrowLeft,
-  Info,
-  CheckCircle2,
-  AlertCircle,
-} from 'lucide-react';
+import { Send, ArrowLeft, Info, CheckCircle2, AlertCircle } from 'lucide-react';
 import { useDarkMode } from '../context/DarkModeContext';
 import { getTheme } from '../theme';
 import { useAuth } from '../context/AuthContext';
@@ -173,7 +167,10 @@ export function SubmitClue() {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-2">
-                    <label className="text-sm font-black uppercase tracking-wider" style={{ color: T.textMuted }}>
+                    <label
+                      className="text-sm font-black uppercase tracking-wider"
+                      style={{ color: T.textMuted }}
+                    >
                       Clue Text
                     </label>
                     <textarea
@@ -189,7 +186,10 @@ export function SubmitClue() {
 
                   <div className="space-y-6">
                     <div className="space-y-2">
-                      <label className="text-sm font-black uppercase tracking-wider" style={{ color: T.textMuted }}>
+                      <label
+                        className="text-sm font-black uppercase tracking-wider"
+                        style={{ color: T.textMuted }}
+                      >
                         Answer
                       </label>
                       <input
@@ -204,7 +204,10 @@ export function SubmitClue() {
                     </div>
 
                     <div className="space-y-2">
-                      <label className="text-sm font-black uppercase tracking-wider" style={{ color: T.textMuted }}>
+                      <label
+                        className="text-sm font-black uppercase tracking-wider"
+                        style={{ color: T.textMuted }}
+                      >
                         Pattern
                       </label>
                       <input
@@ -222,7 +225,10 @@ export function SubmitClue() {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-2">
-                    <label className="text-sm font-black uppercase tracking-wider" style={{ color: T.textMuted }}>
+                    <label
+                      className="text-sm font-black uppercase tracking-wider"
+                      style={{ color: T.textMuted }}
+                    >
                       Primary Wordplay Type
                     </label>
                     <select
@@ -241,7 +247,10 @@ export function SubmitClue() {
                   </div>
 
                   <div className="space-y-2">
-                    <label className="text-sm font-black uppercase tracking-wider" style={{ color: T.textMuted }}>
+                    <label
+                      className="text-sm font-black uppercase tracking-wider"
+                      style={{ color: T.textMuted }}
+                    >
                       Definition Text
                     </label>
                     <input
@@ -257,7 +266,10 @@ export function SubmitClue() {
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-sm font-black uppercase tracking-wider" style={{ color: T.textMuted }}>
+                  <label
+                    className="text-sm font-black uppercase tracking-wider"
+                    style={{ color: T.textMuted }}
+                  >
                     Wordplay Summary
                   </label>
                   <input
@@ -273,7 +285,10 @@ export function SubmitClue() {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-2">
-                    <label className="text-sm font-black uppercase tracking-wider" style={{ color: T.textMuted }}>
+                    <label
+                      className="text-sm font-black uppercase tracking-wider"
+                      style={{ color: T.textMuted }}
+                    >
                       Fodder (Optional)
                     </label>
                     <input
@@ -287,7 +302,10 @@ export function SubmitClue() {
                   </div>
 
                   <div className="space-y-2">
-                    <label className="text-sm font-black uppercase tracking-wider" style={{ color: T.textMuted }}>
+                    <label
+                      className="text-sm font-black uppercase tracking-wider"
+                      style={{ color: T.textMuted }}
+                    >
                       Indicator (Optional)
                     </label>
                     <input
@@ -302,7 +320,10 @@ export function SubmitClue() {
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-sm font-black uppercase tracking-wider" style={{ color: T.textMuted }}>
+                  <label
+                    className="text-sm font-black uppercase tracking-wider"
+                    style={{ color: T.textMuted }}
+                  >
                     Detailed Explanation
                   </label>
                   <textarea
@@ -318,12 +339,16 @@ export function SubmitClue() {
 
                 <div
                   className="p-4 rounded-2xl flex items-start gap-3"
-                  style={{ background: isDark ? '#1A1035' : '#F5F3FF', border: `1px dashed ${isDark ? '#4C3580' : '#C4B5FD'}` }}
+                  style={{
+                    background: isDark ? '#1A1035' : '#F5F3FF',
+                    border: `1px dashed ${isDark ? '#4C3580' : '#C4B5FD'}`,
+                  }}
                 >
                   <Info size={18} style={{ color: '#7C3AED', marginTop: 2 }} />
                   <p style={{ fontSize: '0.8rem', color: T.textMuted, margin: 0 }}>
-                    By submitting, you agree that your clue may be edited for fairness and style before publication.
-                    Accepted clues will appear in the daily rotation with your name/email as the author.
+                    By submitting, you agree that your clue may be edited for fairness and style
+                    before publication. Accepted clues will appear in the daily rotation with your
+                    name/email as the author.
                   </p>
                 </div>
 

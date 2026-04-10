@@ -30,7 +30,7 @@ export function Privacy() {
     {
       title: 'Third-Party Services',
       content:
-        "Our backend infrastructure is powered by Supabase (a secure database-as-a-service) and Google Cloud. Your authentication is handled by Google OAuth. We encourage you to review their respective privacy policies to understand how they process your information.",
+        'Our backend infrastructure is powered by Supabase (a secure database-as-a-service) and Google Cloud. Your authentication is handled by Google OAuth. We encourage you to review their respective privacy policies to understand how they process your information.',
     },
     {
       title: 'Analytics',
@@ -41,8 +41,8 @@ export function Privacy() {
       title: 'Contact',
       content: (
         <>
-          If you have any questions, concerns, or requests regarding your data, please contact
-          Ninad Sutrave at ninadsutrave@gmail.com or visit{' '}
+          If you have any questions, concerns, or requests regarding your data, please contact Ninad
+          Sutrave at ninadsutrave@gmail.com or visit{' '}
           <a
             href="https://ninadsutrave.in"
             target="_blank"

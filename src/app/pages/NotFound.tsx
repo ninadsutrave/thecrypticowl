@@ -21,19 +21,24 @@ export function NotFound() {
       >
         <div className="mb-8 relative">
           <motion.div
-            animate={{ 
+            animate={{
               rotate: [0, -10, 10, -10, 0],
-              y: [0, -5, 0]
+              y: [0, -5, 0],
             }}
-            transition={{ 
-              duration: 4, 
-              repeat: Infinity, 
-              ease: "easeInOut" 
+            transition={{
+              duration: 4,
+              repeat: Infinity,
+              ease: 'easeInOut',
             }}
           >
-            <Mascot mood="thinking" size={160} speechBubble="Whooops! Where am I?" bubbleDirection="right" />
+            <Mascot
+              mood="thinking"
+              size={160}
+              speechBubble="Whooops! Where am I?"
+              bubbleDirection="right"
+            />
           </motion.div>
-          <div 
+          <div
             className="absolute -bottom-4 left-1/2 -translate-x-1/2 w-32 h-4 blur-xl rounded-full opacity-20"
             style={{ background: isDark ? '#A78BFA' : '#5B21B6' }}
           />
@@ -50,7 +55,7 @@ export function NotFound() {
         >
           404
         </h1>
-        
+
         <h2
           style={{
             fontFamily: "'Fredoka One', cursive",
@@ -71,7 +76,8 @@ export function NotFound() {
             lineHeight: 1.6,
           }}
         >
-          Ollie looked everywhere, but this page seems to have vanished into thin air. Perhaps it's an anagram we can't solve?
+          Ollie looked everywhere, but this page seems to have vanished into thin air. Perhaps it's
+          an anagram we can't solve?
         </p>
 
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4">

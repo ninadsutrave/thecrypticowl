@@ -1,12 +1,13 @@
 import { useNavigate } from 'react-router';
 import { motion } from 'motion/react';
 import { Mascot } from '../components/Mascot';
-import { BookOpen, Zap, ChevronRight, Trophy, Clock, Star } from 'lucide-react';
+import { BookOpen, Zap, ChevronRight, Trophy, Clock, Star, Send } from 'lucide-react';
 import { useDarkMode } from '../context/DarkModeContext';
 import { getTheme } from '../theme';
 import { useStreak, getLevelTitle, getXPToNextLevel } from '../hooks/useStreak';
 import { useEffect, useState } from 'react';
 import { fetchPuzzleByDate } from '../../lib/supabase';
+import { useAuth } from '../context/AuthContext';
 
 // ─── FLOATING BG ──────────────────────────────────────────────────────────────
 
@@ -818,13 +819,30 @@ function BottomCTA({ onNavigate, isDark: _isDark }: { onNavigate: () => void; is
 export function Home() {
   const navigate = useNavigate();
   const { isDark } = useDarkMode();
+  const { isSignedIn } = useAuth();
   const T = getTheme(isDark);
   const [todaysPuzzle, setTodaysPuzzle] = useState<TodayPuzzleData>(FALLBACK_PUZZLE);
 
   useEffect(() => {
     const isoDate = new Date().toISOString().split('T')[0];
+    const cacheKey = `tco-puzzle-${isoDate}`;
+    const cached = localStorage.getItem(cacheKey);
+
+    if (cached) {
+      try {
+        const p = JSON.parse(cached);
+        setTodaysPuzzle({ number: p.number, clue: p.clue_text, letterCount: p.answer_length });
+        return;
+      } catch {
+        localStorage.removeItem(cacheKey);
+      }
+    }
+
     fetchPuzzleByDate(isoDate).then(p => {
-      if (p) setTodaysPuzzle({ number: p.number, clue: p.clue_text, letterCount: p.answer_length });
+      if (p) {
+        setTodaysPuzzle({ number: p.number, clue: p.clue_text, letterCount: p.answer_length });
+        localStorage.setItem(cacheKey, JSON.stringify(p));
+      }
     });
   }, []);
 
@@ -879,6 +897,51 @@ export function Home() {
             needed!
           </p>
         </motion.div>
+
+        {/* ── Submission Prompt ────────────────────────────────────── */}
+        {!isSignedIn && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="mb-12 rounded-3xl p-6 border text-center flex flex-col md:flex-row items-center justify-between gap-6"
+            style={{
+              background: isDark ? '#1A1035' : '#F5F3FF',
+              borderColor: isDark ? '#4C3580' : '#C4B5FD',
+            }}
+          >
+            <div className="flex items-center gap-4 text-left">
+              <div
+                className="w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0"
+                style={{ background: isDark ? '#2D1B69' : 'white' }}
+              >
+                <Send size={24} style={{ color: '#7C3AED' }} />
+              </div>
+              <div>
+                <h3
+                  style={{
+                    fontFamily: "'Fredoka One', cursive",
+                    fontSize: '1.1rem',
+                    color: isDark ? '#F0EAFF' : '#1E1B4B',
+                  }}
+                >
+                  Become a Contributor!
+                </h3>
+                <p style={{ color: T.textMuted, fontSize: '0.85rem', margin: 0 }}>
+                  Sign in to submit your own cryptic clues for our daily rotation.
+                </p>
+              </div>
+            </div>
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => navigate('/history')}
+              className="px-6 py-3 rounded-2xl font-bold text-white whitespace-nowrap"
+              style={{ background: 'linear-gradient(135deg, #7C3AED 0%, #5B21B6 100%)' }}
+            >
+              Sign In to Start
+            </motion.button>
+          </motion.div>
+        )}
 
         {/* TODAY'S PUZZLE — front and centre */}
         <TodaysPuzzleHero

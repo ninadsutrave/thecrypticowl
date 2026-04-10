@@ -17,24 +17,32 @@ const MAX_ATTEMPTS = 3;
 // GEMINI CLIENT (Node 20 native fetch)
 // =========================
 
-async function callGemini(prompt) {
+async function callGemini(prompt, systemInstruction = "") {
+  const body = {
+    contents: [
+      {
+        role: "user",
+        parts: [{ text: prompt }],
+      },
+    ],
+    generationConfig: {
+      temperature: 0.9,
+      responseMimeType: "application/json",
+    },
+  };
+
+  if (systemInstruction) {
+    body.system_instruction = {
+      parts: [{ text: systemInstruction }],
+    };
+  }
+
   const res = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent?key=${GEMINI_API_KEY}`,
+    `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`,
     {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        contents: [
-          {
-            role: "user",
-            parts: [{ text: prompt }],
-          },
-        ],
-        generationConfig: {
-          temperature: 0.7,
-          responseMimeType: "application/json",
-        },
-      }),
+      body: JSON.stringify(body),
     }
   );
 
@@ -49,7 +57,9 @@ async function callGemini(prompt) {
   if (!text) throw new Error("Empty LLM response");
 
   try {
-    return JSON.parse(text);
+    // Basic cleanup in case Gemini wraps JSON in markdown code blocks
+    const cleanText = text.replace(/```json\n?|\n?```/g, "").trim();
+    return JSON.parse(cleanText);
   } catch (e) {
     throw new Error(`Invalid JSON from Gemini: ${text}`);
   }
@@ -59,70 +69,57 @@ async function callGemini(prompt) {
 // LEXICAL PLANNER PROMPT
 // =========================
 
+const LEXICAL_SYSTEM = `You are an expert British cryptic crossword compiler. 
+Your goal is to select a high-quality word that is suitable for a daily cryptic clue.
+Avoid proper nouns, acronyms, and overly obscure words.
+The word should have a clear dictionary definition and be amenable to at least one standard cryptic mechanism (anagram, container, hidden, reversal, charade).`;
+
 function lexicalPrompt() {
-  return `
-You are a cryptic crossword setter.
-
-Return ONLY valid JSON:
-
+  return `Select a single English word between 4 and 10 letters.
+Return ONLY valid JSON in this format:
 {
   "answer": "UPPERCASEWORD",
-  "definition": "dictionary definition",
-  "type": "anagram|charade|hidden|reversal|container",
+  "definition": "A clear, concise dictionary definition",
+  "type": "anagram|charade|hidden|reversal|container|homophone",
   "difficulty": "easy|medium|hard"
-}
-
-RULES:
-- real English word only
-- NO proper nouns
-- must be solvable via cryptic construction
-- avoid obscure vocabulary
-`;
+}`;
 }
 
 // =========================
 // CLUE GENERATOR PROMPT
 // =========================
 
+const CLUE_SYSTEM = `You are a world-class British cryptic crossword setter (Ximenean style).
+You write elegant, fair, and clever clues with smooth surface readings.
+A cryptic clue consists of two parts: a definition and a wordplay mechanism.
+The definition must be at either the very beginning or the very end of the clue.
+The wordplay must lead precisely to the letters of the answer.`;
+
 function cluePrompt(lexical) {
-  return `
-You are an elite British cryptic crossword setter operating at championship level.
-
-Generate EXACTLY ONE cryptic clue.
-
-INPUT:
-Answer: ${lexical.answer}
+  return `Generate a professional cryptic clue for the word "${lexical.answer}".
+Mechanism: ${lexical.type}
 Definition: ${lexical.definition}
-Type: ${lexical.type}
 
-RULES:
-- NEVER change the answer
-- STRICT Ximenean fairness required
-- Must include precise definition + fair wordplay
+STRICT RULES:
+1. The definition must be at the START or END of the clue.
+2. Use standard British cryptic crossword indicators (e.g., "broken" for anagram, "back" for reversal).
+3. The surface reading must be a natural-sounding English sentence.
+4. Do NOT include the answer in the clue text.
+5. Provide a clear wordplay breakdown.
 
-Allowed mechanisms:
-anagram, charade, container, hidden, reversal, homophone
-
-STANDARD ABBREVIATIONS ONLY:
-- Directions: N S E W NE NW SE SW
-- Roman numerals: I V X L C D M
-- Tennis: LOVE = O
-- Left = L, Right = R
-- NATO phonetic alphabet allowed
-
-OUTPUT STRICT JSON:
+OUTPUT FORMAT (JSON):
 {
-  "clue": "",
-  "definition": "",
-  "wordplay": {
-    "type": "",
-    "indicator": "",
-    "components": "",
-    "construction": ""
-  },
-  "surface": ""
-}
-`;
+  "clue": "The full clue text",
+  "definition": "The exact part of the clue that is the definition",
+  "wordplay_summary": "A concise explanation (e.g., 'Anagram (broken) of PEARS')",
+  "clue_parts": [
+    { "text": "Part of clue", "type": "definition|indicator|fodder|link|null" }
+  ],
+  "hints": [
+    { "id": 1, "title": "Definition Location", "text": "...", "highlight": "...", "mascot_comment": "..." },
+    { "id": 2, "title": "Mechanism", "text": "...", "highlight": "...", "mascot_comment": "..." }
+  ]
+}`;
 }
 
 // =========================
@@ -134,14 +131,15 @@ function judge(clueObj, lexical) {
 
   if (!clueObj?.clue) errors.push("missing_clue");
   if (!clueObj?.definition) errors.push("missing_definition");
-  if (!clueObj?.wordplay) errors.push("missing_wordplay");
+  if (!clueObj?.clue_parts || !Array.isArray(clueObj.clue_parts))
+    errors.push("missing_clue_parts");
 
-  // hard constraint: answer must appear (weak heuristic safety check)
+  // Ensure answer is not in clue
   if (
     clueObj?.clue &&
-    !clueObj.clue.toUpperCase().includes(lexical.answer)
+    clueObj.clue.toUpperCase().includes(lexical.answer.toUpperCase())
   ) {
-    errors.push("answer_not_in_clue_text");
+    errors.push("answer_leak_in_clue");
   }
 
   return {
@@ -158,19 +156,26 @@ async function generateValidClue() {
   for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
     console.log(`Attempt ${attempt}`);
 
-    const lexical = await callGemini(lexicalPrompt());
-    const clue = await callGemini(cluePrompt(lexical));
+    try {
+      const lexical = await callGemini(lexicalPrompt(), LEXICAL_SYSTEM);
+      console.log(`Lexical chosen: ${lexical.answer}`);
 
-    const verdict = judge(clue, lexical);
+      const clue = await callGemini(cluePrompt(lexical), CLUE_SYSTEM);
+      console.log(`Clue generated: ${clue.clue}`);
 
-    if (verdict.valid) {
-      return { lexical, clue };
+      const verdict = judge(clue, lexical);
+
+      if (verdict.valid) {
+        return { lexical, clue };
+      }
+
+      console.log("Rejected:", verdict.errors);
+    } catch (e) {
+      console.error(`Attempt ${attempt} failed:`, e.message);
     }
-
-    console.log("Rejected:", verdict.errors);
   }
 
-  throw new Error("Failed after max attempts");
+  throw new Error("Failed to generate a valid clue after max attempts");
 }
 
 // =========================
@@ -184,7 +189,15 @@ async function writeToSupabase(lexical, clue) {
     answer_pattern: String(lexical.answer.length),
     primary_type: lexical.type,
     definition_text: lexical.definition,
-    wordplay_summary: clue.surface,
+    wordplay_summary: clue.wordplay_summary,
+    clue_parts: clue.clue_parts,
+    hints: clue.hints.map((h) => ({
+      ...h,
+      color: h.color || "#7C3AED",
+      bg: h.bg || "#F5F3FF",
+      bg_dark: h.bg_dark || "#1A0F35",
+      border: h.border || "#C4B5FD",
+    })),
     difficulty: lexical.difficulty || "medium",
   });
 

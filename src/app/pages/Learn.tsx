@@ -643,8 +643,8 @@ export function Learn() {
   return (
     <div className="max-w-4xl mx-auto px-4 pb-20">
       {/* Header */}
-      <div className="py-8 text-center">
-        <div className="flex justify-center mb-4">
+      <div className="pt-12 pb-8 text-center">
+        <div className="flex justify-center mb-6">
           <Mascot
             mood="thinking"
             size={90}

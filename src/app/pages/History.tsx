@@ -4,12 +4,13 @@ import {
   Trophy,
   Zap,
   Lock,
-  LogOut,
   Calendar,
   Puzzle as PuzzleIcon,
   ChevronRight,
   BookOpen,
   RefreshCw,
+  LogOut,
+  Send,
 } from 'lucide-react';
 import { useDarkMode } from '../context/DarkModeContext';
 import { getTheme } from '../theme';
@@ -70,7 +71,7 @@ function SignInGate({ isDark }: { isDark: boolean }) {
     { icon: '📅', label: 'Browse the full puzzle archive' },
     { icon: '📊', label: 'Track your solve history & stats' },
     { icon: '🔥', label: 'Keep your streak across devices' },
-    { icon: '🏅', label: 'See your XP and level progression' },
+    { icon: '🦉', label: 'Submit your own clues for review!' },
   ];
 
   return (
@@ -822,6 +823,7 @@ export function History() {
   const { user, signOut, isSignedIn } = useAuth();
   const localStreak = useStreak();
   const levelTitle = getLevelTitle(localStreak.level);
+  const navigate = useNavigate();
 
   // Remote data state
   const [solveHistory, setSolveHistory] = useState<DbSolveRecord[]>([]);
@@ -1062,6 +1064,60 @@ export function History() {
         {!loading && solveHistory.length > 0 && (
           <SolveInsights solveHistory={solveHistory} isDark={isDark} />
         )}
+
+        {/* ── Submit a Clue ────────────────────────────────────────── */}
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.18, duration: 0.4 }}
+          className="mb-6"
+        >
+          <div
+            className="rounded-3xl border p-5 relative overflow-hidden group cursor-pointer"
+            style={{
+              background: isDark
+                ? 'linear-gradient(135deg, #1A1035 0%, #261845 100%)'
+                : 'linear-gradient(135deg, #F5F3FF 0%, #EDE9FE 100%)',
+              borderColor: isDark ? '#4C3580' : '#C4B5FD',
+            }}
+            onClick={() => navigate('/submit')}
+          >
+            <div className="relative z-10 flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <div
+                  className="w-12 h-12 rounded-2xl flex items-center justify-center"
+                  style={{ background: isDark ? '#2D1B69' : 'white' }}
+                >
+                  <Send size={22} style={{ color: '#7C3AED' }} />
+                </div>
+                <div>
+                  <h3
+                    style={{
+                      fontFamily: "'Fredoka One', cursive",
+                      fontSize: '1.1rem',
+                      color: isDark ? '#F0EAFF' : '#1E1B4B',
+                      margin: 0,
+                    }}
+                  >
+                    Submit a Clue
+                  </h3>
+                  <p style={{ color: T.textMuted, fontSize: '0.85rem', margin: 0 }}>
+                    Contribute your own cryptic clues to the community!
+                  </p>
+                </div>
+              </div>
+              <ChevronRight size={20} style={{ color: T.textFaint }} />
+            </div>
+
+            {/* Decorative owl wing */}
+            <div
+              className="absolute -right-4 -bottom-4 opacity-10 transition-transform group-hover:scale-110 group-hover:-rotate-12"
+              style={{ color: '#7C3AED' }}
+            >
+              <Mascot mood="celebrating" size={100} />
+            </div>
+          </div>
+        </motion.div>
 
         {/* ── Solve history ────────────────────────────────────────── */}
         <motion.div

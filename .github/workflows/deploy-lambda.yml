@@ -36,7 +36,14 @@ jobs:
         run: |
           aws lambda update-function-code \
             --function-name ${{ secrets.LAMBDA_FUNCTION_NAME }} \
-            --zip-file fileb://function.zip
+            --zip-file fileb://function.zip || \
+          aws lambda create-function \
+            --function-name ${{ secrets.LAMBDA_FUNCTION_NAME }} \
+            --runtime nodejs20.x \
+            --role ${{ secrets.LAMBDA_ROLE_ARN }} \
+            --handler index.handler \
+            --zip-file fileb://function.zip \
+            --environment "Variables={SUPABASE_URL=${{ secrets.SUPABASE_URL }},SUPABASE_SERVICE_ROLE_KEY=${{ secrets.SUPABASE_SERVICE_ROLE_KEY }},GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY }}}"
 
       - name: Cleanup
         run: rm function.zip

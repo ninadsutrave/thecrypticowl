@@ -1264,24 +1264,57 @@ export function Puzzle() {
   const requestedNumber = puzzleNumberParam ? parseInt(puzzleNumberParam, 10) : undefined;
   const isArchive = !!requestedNumber && requestedNumber !== PUZZLE.number;
 
-  // For archive puzzles: load from Supabase
-  const [archivePuzzle, setArchivePuzzle] = useState<ActivePuzzle | null>(null);
-  const [archiveLoading, setArchiveLoading] = useState(isArchive);
-  const [archiveNotFound, setArchiveNotFound] = useState(false);
+  // The puzzle to play: archive puzzle (if loaded) or today's hardcoded puzzle
+  const [activePuzzle, setActivePuzzle] = useState<ActivePuzzle | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [notFound, setNotFound] = useState(false);
 
   useEffect(() => {
-    if (!isArchive || !requestedNumber) return;
-    setArchiveLoading(true);
-    setArchiveNotFound(false);
-    fetchPuzzleByNumber(requestedNumber).then(p => {
-      if (p) setArchivePuzzle(mapDbPuzzle(p));
-      else setArchiveNotFound(true);
-      setArchiveLoading(false);
-    });
-  }, [requestedNumber, isArchive]);
+    setLoading(true);
+    setNotFound(false);
 
-  // The puzzle to play: archive puzzle (if loaded) or today's hardcoded puzzle
-  const activePuzzle: ActivePuzzle = archivePuzzle ?? DEFAULT_PUZZLE;
+    if (isArchive && requestedNumber) {
+      fetchPuzzleByNumber(requestedNumber).then(p => {
+        if (p) {
+          setActivePuzzle(mapDbPuzzle(p));
+          setPuzzleId(p.id);
+        } else {
+          setNotFound(true);
+        }
+        setLoading(false);
+      });
+    } else {
+      // Fetch today's puzzle with caching
+      const isoDate = new Date().toISOString().split('T')[0];
+      const cacheKey = `tco-puzzle-${isoDate}`;
+      const cached = localStorage.getItem(cacheKey);
+
+      if (cached) {
+        try {
+          const p = JSON.parse(cached);
+          setActivePuzzle(mapDbPuzzle(p));
+          setPuzzleId(p.id);
+          setLoading(false);
+          return;
+        } catch {
+          localStorage.removeItem(cacheKey);
+        }
+      }
+
+      fetchPuzzleByDate(isoDate).then(p => {
+        if (p) {
+          setActivePuzzle(mapDbPuzzle(p));
+          setPuzzleId(p.id);
+          // Cache for the rest of the day
+          localStorage.setItem(cacheKey, JSON.stringify(p));
+        } else {
+          // Fallback to hardcoded if DB is empty/unconfigured
+          setActivePuzzle(DEFAULT_PUZZLE);
+        }
+        setLoading(false);
+      });
+    }
+  }, [requestedNumber, isArchive]);
 
   const [answer, setAnswer] = useState('');
   const [hintsUnlocked, setHintsUnlocked] = useState(0);
@@ -1307,40 +1340,11 @@ export function Puzzle() {
   // Fetch today's puzzle UUID from Supabase so we can write solve records and reactions.
   // Game logic stays on the hardcoded PUZZLE constant; this is purely for the DB foreign key.
   useEffect(() => {
-    if (isArchive) return;
-    const isoDate = new Date().toISOString().split('T')[0];
-    fetchPuzzleByDate(isoDate).then(p => {
-      if (p) setPuzzleId(p.id);
-    });
+    // Handled in the main loading effect above
   }, [isArchive]);
 
   // Loading state for archive puzzles
-  if (archiveLoading) {
-    return (
-      <div className="max-w-2xl mx-auto px-4 py-20 text-center">
-        <div className="flex justify-center mb-6">
-          <Mascot
-            mood="thinking"
-            size={90}
-            speechBubble="Loading puzzle..."
-            bubbleDirection="right"
-            animate
-          />
-        </div>
-        <div className="flex gap-2 justify-center">
-          {[...Array(4)].map((_, i) => (
-            <div
-              key={i}
-              className="w-10 h-10 rounded-xl animate-pulse"
-              style={{ background: isDark ? '#261845' : '#EDE9FE' }}
-            />
-          ))}
-        </div>
-      </div>
-    );
-  }
-
-  if (archiveNotFound) {
+  if (notFound) {
     return (
       <div
         className="max-w-2xl mx-auto px-4 py-16 text-center"
@@ -1411,7 +1415,7 @@ export function Puzzle() {
   };
 
   const handleSubmit = () => {
-    if (!answer.trim()) return;
+    if (!answer.trim() || !activePuzzle) return;
     if (answer.trim().toUpperCase() === activePuzzle.answer) {
       setSolveTime(Math.floor((Date.now() - startTime) / 1000));
       setIsCorrect(true);
@@ -1425,7 +1429,7 @@ export function Puzzle() {
   };
 
   const handleHint = () => {
-    if (hintsUnlocked < activePuzzle.hints.length) {
+    if (activePuzzle && hintsUnlocked < activePuzzle.hints.length) {
       setNewHintIndex(hintsUnlocked);
       setHintsUnlocked(prev => prev + 1);
       setWrongAttempt(null);
@@ -1440,7 +1444,7 @@ export function Puzzle() {
     setNewHintIndex(null);
   };
 
-  const visibleHints = activePuzzle.hints.slice(0, hintsUnlocked);
+  const visibleHints = activePuzzle?.hints.slice(0, hintsUnlocked) || [];
 
   return (
     <div className="max-w-2xl mx-auto px-4 pb-32 pt-6">
@@ -1456,26 +1460,41 @@ export function Puzzle() {
           >
             <div className="flex items-start justify-between mb-5">
               <div>
-                <p
-                  style={{
-                    fontFamily: "'Fredoka One', cursive",
-                    fontSize: '0.85rem',
-                    color: '#7C3AED',
-                    marginBottom: 2,
-                  }}
-                >
-                  🧩 CRYPTIC #{activePuzzle.number}
-                </p>
-                <p
-                  style={{
-                    fontSize: '0.8rem',
-                    color: T.textFaint,
-                    fontWeight: 600,
-                    fontFamily: "'Nunito', sans-serif",
-                  }}
-                >
-                  {today}
-                </p>
+                {loading ? (
+                  <div className="space-y-2 animate-pulse">
+                    <div
+                      className="h-4 w-32 rounded-md"
+                      style={{ background: isDark ? '#261845' : '#EDE9FE' }}
+                    />
+                    <div
+                      className="h-3 w-24 rounded-md"
+                      style={{ background: isDark ? '#1A0F35' : '#F5F3FF' }}
+                    />
+                  </div>
+                ) : (
+                  <>
+                    <p
+                      style={{
+                        fontFamily: "'Fredoka One', cursive",
+                        fontSize: '0.85rem',
+                        color: '#7C3AED',
+                        marginBottom: 2,
+                      }}
+                    >
+                      🧩 CRYPTIC #{activePuzzle?.number}
+                    </p>
+                    <p
+                      style={{
+                        fontSize: '0.8rem',
+                        color: T.textFaint,
+                        fontWeight: 600,
+                        fontFamily: "'Nunito', sans-serif",
+                      }}
+                    >
+                      {today}
+                    </p>
+                  </>
+                )}
               </div>
               <div className="flex items-center gap-2">
                 {/* Timer */}
@@ -1502,25 +1521,38 @@ export function Puzzle() {
               />
 
               <div
-                className="w-full rounded-2xl p-5 text-center"
+                className={`w-full rounded-2xl p-5 text-center ${loading ? 'animate-pulse' : ''}`}
                 style={{ background: T.clueBg, border: `2px solid ${T.clueAreaBorder}` }}
               >
-                <p
-                  style={{
-                    fontFamily: "'Nunito', sans-serif",
-                    fontWeight: 800,
-                    fontSize: 'clamp(1rem, 3vw, 1.2rem)',
-                    color: T.text,
-                    lineHeight: 1.7,
-                  }}
-                >
-                  "{activePuzzle.clue}"
-                </p>
+                {loading ? (
+                  <div className="flex flex-col items-center gap-3">
+                    <div
+                      className="h-5 w-full max-w-[400px] rounded-md"
+                      style={{ background: isDark ? '#261845' : '#EDE9FE' }}
+                    />
+                    <div
+                      className="h-5 w-3/4 max-w-[300px] rounded-md"
+                      style={{ background: isDark ? '#261845' : '#EDE9FE' }}
+                    />
+                  </div>
+                ) : (
+                  <p
+                    style={{
+                      fontFamily: "'Nunito', sans-serif",
+                      fontWeight: 800,
+                      fontSize: 'clamp(1rem, 3vw, 1.2rem)',
+                      color: T.text,
+                      lineHeight: 1.7,
+                    }}
+                  >
+                    "{activePuzzle?.clue}"
+                  </p>
+                )}
               </div>
 
               {/* Clue feedback */}
               <ClueReactionWidget
-                puzzleNumber={activePuzzle.number}
+                puzzleNumber={activePuzzle?.number || 0}
                 userId={user?.id}
                 puzzleId={puzzleId}
                 isDark={isDark}
@@ -1528,37 +1560,53 @@ export function Puzzle() {
 
               {/* Answer boxes */}
               <div className="flex gap-2">
-                {[...Array(activePuzzle.letterCount)].map((_, i) => {
-                  const char = answer[i];
-                  return (
-                    <motion.div
-                      key={i}
-                      animate={char ? { scale: [1, 1.15, 1] } : {}}
-                      transition={{ duration: 0.15 }}
-                      className="w-11 h-11 rounded-xl border-2 flex items-center justify-center"
-                      style={{
-                        borderColor: char ? '#7C3AED' : isDark ? '#3D2A6B' : '#E0E7FF',
-                        background: char
-                          ? isDark
-                            ? '#261845'
-                            : '#F5F0FF'
-                          : isDark
-                            ? '#1A1035'
-                            : '#FAFAFA',
-                      }}
-                    >
-                      <span
+                {loading ? (
+                  <div className="flex gap-2 animate-pulse">
+                    {[...Array(6)].map((_, i) => (
+                      <div
+                        key={i}
+                        className="w-11 h-11 rounded-xl border-2"
                         style={{
-                          fontFamily: "'Fredoka One', cursive",
-                          color: '#5B21B6',
-                          fontSize: '1.2rem',
+                          borderColor: isDark ? '#3D2A6B' : '#E0E7FF',
+                          background: isDark ? '#1A1035' : '#FAFAFA',
+                        }}
+                      />
+                    ))}
+                  </div>
+                ) : (
+                  activePuzzle &&
+                  [...Array(activePuzzle.letterCount)].map((_, i) => {
+                    const char = answer[i];
+                    return (
+                      <motion.div
+                        key={i}
+                        animate={char ? { scale: [1, 1.15, 1] } : {}}
+                        transition={{ duration: 0.15 }}
+                        className="w-11 h-11 rounded-xl border-2 flex items-center justify-center"
+                        style={{
+                          borderColor: char ? '#7C3AED' : isDark ? '#3D2A6B' : '#E0E7FF',
+                          background: char
+                            ? isDark
+                              ? '#261845'
+                              : '#F5F0FF'
+                            : isDark
+                              ? '#1A1035'
+                              : '#FAFAFA',
                         }}
                       >
-                        {char?.toUpperCase() || ''}
-                      </span>
-                    </motion.div>
-                  );
-                })}
+                        <span
+                          style={{
+                            fontFamily: "'Fredoka One', cursive",
+                            color: '#5B21B6',
+                            fontSize: '1.2rem',
+                          }}
+                        >
+                          {char?.toUpperCase() || ''}
+                        </span>
+                      </motion.div>
+                    );
+                  })
+                )}
               </div>
             </div>
           </div>
@@ -1583,11 +1631,12 @@ export function Puzzle() {
               <input
                 ref={inputRef}
                 type="text"
-                maxLength={activePuzzle.letterCount}
+                disabled={loading}
+                maxLength={activePuzzle?.letterCount || 0}
                 value={answer}
                 onChange={e => setAnswer(e.target.value.replace(/[^a-zA-Z]/g, ''))}
                 onKeyDown={e => e.key === 'Enter' && handleSubmit()}
-                placeholder="Enter your answer…"
+                placeholder={loading ? 'Loading…' : 'Enter your answer…'}
                 className="flex-1 py-3 px-4 rounded-2xl border-2 focus:outline-none transition-colors"
                 style={{
                   borderColor: isDark ? '#4C3580' : '#E0E7FF',
@@ -1606,17 +1655,17 @@ export function Puzzle() {
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 onClick={handleSubmit}
-                disabled={answer.length !== activePuzzle.letterCount}
+                disabled={loading || answer.length !== (activePuzzle?.letterCount || 0)}
                 className="px-5 py-3 rounded-2xl flex items-center gap-2 transition-all disabled:opacity-40"
                 style={{
                   background:
-                    answer.length === activePuzzle.letterCount
+                    !loading && answer.length === activePuzzle?.letterCount
                       ? 'linear-gradient(135deg, #7C3AED, #5B21B6)'
                       : isDark
                         ? '#261845'
                         : '#E5E7EB',
                   color:
-                    answer.length === activePuzzle.letterCount
+                    !loading && answer.length === activePuzzle?.letterCount
                       ? 'white'
                       : isDark
                         ? '#4C3580'
@@ -1634,7 +1683,7 @@ export function Puzzle() {
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.97 }}
               onClick={handleHint}
-              disabled={hintsUnlocked >= activePuzzle.hints.length}
+              disabled={loading || hintsUnlocked >= (activePuzzle?.hints.length || 0)}
               className="w-full py-3 rounded-2xl flex items-center justify-center gap-2 border-2 transition-all disabled:opacity-40"
               style={{
                 borderColor: isDark ? '#92400E' : '#FED7AA',
@@ -1645,22 +1694,28 @@ export function Puzzle() {
               }}
             >
               <Lightbulb size={16} />
-              {hintsUnlocked >= activePuzzle.hints.length
-                ? 'No more hints!'
-                : `Get Hint ${hintsUnlocked + 1} of ${activePuzzle.hints.length}`}
-              {hintsUnlocked > 0 && hintsUnlocked < activePuzzle.hints.length && (
-                <span className="ml-1 flex gap-1">
-                  {[...Array(activePuzzle.hints.length)].map((_, i) => (
-                    <span
-                      key={i}
-                      className="w-1.5 h-1.5 rounded-full"
-                      style={{
-                        background: i < hintsUnlocked ? '#F97316' : isDark ? '#92400E' : '#FED7AA',
-                      }}
-                    />
-                  ))}
-                </span>
-              )}
+              {loading
+                ? 'Fetching hints…'
+                : hintsUnlocked >= (activePuzzle?.hints.length || 0)
+                  ? 'No more hints!'
+                  : `Get Hint ${hintsUnlocked + 1} of ${activePuzzle?.hints.length}`}
+              {!loading &&
+                activePuzzle &&
+                hintsUnlocked > 0 &&
+                hintsUnlocked < activePuzzle.hints.length && (
+                  <span className="ml-1 flex gap-1">
+                    {[...Array(activePuzzle.hints.length)].map((_, i) => (
+                      <span
+                        key={i}
+                        className="w-1.5 h-1.5 rounded-full"
+                        style={{
+                          background:
+                            i < hintsUnlocked ? '#F97316' : isDark ? '#92400E' : '#FED7AA',
+                        }}
+                      />
+                    ))}
+                  </span>
+                )}
             </motion.button>
           </div>
 
@@ -1676,7 +1731,7 @@ export function Puzzle() {
                       color: isDark ? '#C4B5FD' : '#1E1B4B',
                     }}
                   >
-                    💡 Hints Unlocked ({hintsUnlocked}/{activePuzzle.hints.length})
+                    💡 Hints Unlocked ({hintsUnlocked}/{activePuzzle?.hints.length})
                   </h3>
                   {visibleHints.length > 1 && (
                     <button
@@ -1710,15 +1765,17 @@ export function Puzzle() {
           </AnimatePresence>
         </div>
       ) : (
-        <SuccessState
-          hintsUsed={hintsUnlocked}
-          wrongAttemptsCount={wrongAttemptsCount}
-          solveTime={solveTime}
-          puzzleId={puzzleId}
-          onReset={handleReset}
-          isDark={isDark}
-          activePuzzle={activePuzzle}
-        />
+        activePuzzle && (
+          <SuccessState
+            hintsUsed={hintsUnlocked}
+            wrongAttemptsCount={wrongAttemptsCount}
+            solveTime={solveTime}
+            puzzleId={puzzleId}
+            onReset={handleReset}
+            isDark={isDark}
+            activePuzzle={activePuzzle}
+          />
+        )
       )}
 
       {/* Mobile sticky input bar */}
@@ -1733,11 +1790,12 @@ export function Puzzle() {
         >
           <input
             type="text"
-            maxLength={activePuzzle.letterCount}
+            disabled={loading}
+            maxLength={activePuzzle?.letterCount || 0}
             value={answer}
             onChange={e => setAnswer(e.target.value.replace(/[^a-zA-Z]/g, ''))}
             onKeyDown={e => e.key === 'Enter' && handleSubmit()}
-            placeholder="Your answer…"
+            placeholder={loading ? '…' : 'Answer…'}
             className="flex-1 py-3 px-4 rounded-2xl border-2 focus:outline-none"
             style={{
               borderColor: isDark ? '#4C3580' : '#E0E7FF',
@@ -1751,7 +1809,7 @@ export function Puzzle() {
           />
           <button
             onClick={handleSubmit}
-            disabled={answer.length !== activePuzzle.letterCount}
+            disabled={loading || answer.length !== (activePuzzle?.letterCount || 0)}
             className="px-4 py-3 rounded-2xl disabled:opacity-40"
             style={{ background: 'linear-gradient(135deg, #7C3AED, #5B21B6)', color: 'white' }}
           >
@@ -1759,7 +1817,7 @@ export function Puzzle() {
           </button>
           <button
             onClick={handleHint}
-            disabled={hintsUnlocked >= activePuzzle.hints.length}
+            disabled={loading || hintsUnlocked >= (activePuzzle?.hints.length || 0)}
             className="px-4 py-3 rounded-2xl disabled:opacity-40"
             style={{
               background: isDark ? '#2A1505' : '#FFF7ED',

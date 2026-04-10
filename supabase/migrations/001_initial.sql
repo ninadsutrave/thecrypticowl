@@ -375,25 +375,28 @@ CREATE OR REPLACE FUNCTION record_solve(
   p_hints_used          SMALLINT,
   p_wrong_attempts      INTEGER,
   p_xp_earned           INTEGER,
-  p_solve_time_seconds  INTEGER DEFAULT NULL,
-  -- Client's local date (ISO "YYYY-MM-DD"). Prefer this over CURRENT_DATE so that users
-  -- in timezones ahead of UTC (e.g. IST = UTC+5:30) don't have their streak broken because
-  -- the DB thinks it's still "yesterday". Falls back to CURRENT_DATE if omitted.
-  p_client_date         DATE    DEFAULT NULL
+  p_solve_time_seconds  INTEGER DEFAULT NULL
 )
 RETURNS BOOLEAN
 LANGUAGE plpgsql
 SECURITY DEFINER
-SET search_path = public   -- locks the function to the public schema; prevents
-                           -- search_path-based privilege escalation attacks
+SET search_path = public
 AS $$
 DECLARE
-  v_today     DATE    := COALESCE(p_client_date, CURRENT_DATE);
+  v_today     DATE    := CURRENT_DATE;
   v_last      DATE;
   v_streak    INTEGER;
   v_best      INTEGER;
 BEGIN
-  -- Insert solve record; silently skip if already solved
+  -- 🔐 NEW: enforce caller identity (critical)
+  IF auth.uid() IS NULL OR auth.uid() <> p_user_id THEN
+    RAISE EXCEPTION 'unauthorized';
+  END IF;
+
+  IF p_xp_earned < 0 OR p_xp_earned > 50 THEN
+    RAISE EXCEPTION 'invalid xp';
+  END IF;
+
   INSERT INTO solve_history (
     user_id, clue_id, puzzle_number,
     hints_used, wrong_attempts, xp_earned, solve_time_seconds
@@ -404,60 +407,66 @@ BEGIN
   )
   ON CONFLICT (user_id, clue_id) DO NOTHING;
 
-  -- FOUND is set TRUE by INSERT when at least one row was inserted,
-  -- FALSE when ON CONFLICT suppressed the insert (already solved).
   IF NOT FOUND THEN
-    RETURN FALSE;  -- already recorded, nothing to update
+    RETURN FALSE;
   END IF;
 
-  -- Ensure user_stats row exists
   INSERT INTO user_stats (user_id)
   VALUES (p_user_id)
   ON CONFLICT (user_id) DO NOTHING;
 
-  -- Read current streak state
   SELECT last_solved, streak_count, best_streak
   INTO   v_last, v_streak, v_best
   FROM   user_stats
   WHERE  user_id = p_user_id;
 
-  -- Recalculate streak.
-  -- NULL-safe: v_last IS NULL on a brand-new user_stats row (just inserted above).
-  -- Without the IS NULL guard, CASE would fall through to ELSE anyway, but being
-  -- explicit makes the intent clear and avoids any surprises if NULL comparison
-  -- behaviour ever changes with future Postgres versions.
   v_streak := CASE
-    WHEN v_last IS NULL        THEN 1              -- first solve ever
-    WHEN v_last = v_today - 1  THEN v_streak + 1  -- consecutive day
-    WHEN v_last = v_today      THEN v_streak       -- same day (idempotency edge case)
-    ELSE                            1              -- streak broken
+    WHEN v_last IS NULL        THEN 1
+    WHEN v_last = v_today - 1  THEN v_streak + 1
+    WHEN v_last = v_today      THEN v_streak
+    ELSE                            1
   END;
 
   v_best := GREATEST(v_best, v_streak);
 
-  -- Atomic stats update
   UPDATE user_stats SET
     streak_count  = v_streak,
     best_streak   = v_best,
     last_solved   = v_today,
     total_solved  = total_solved + 1,
     xp            = xp + p_xp_earned
-    -- level is intentionally omitted here: computed client-side from XP
-    -- to stay in sync with the frontend formula without duplicating logic
   WHERE user_id = p_user_id;
 
   RETURN TRUE;
 END;
 $$;
 
--- Allow authenticated users to call this function
+-- 🔐 CRITICAL: remove public access, then re-grant
+REVOKE ALL ON FUNCTION record_solve FROM PUBLIC;
+REVOKE ALL ON clues            FROM PUBLIC;
+REVOKE ALL ON daily_puzzles    FROM PUBLIC;
+REVOKE ALL ON clue_components  FROM PUBLIC;
+REVOKE ALL ON user_stats       FROM PUBLIC;
+REVOKE ALL ON solve_history    FROM PUBLIC;
+REVOKE ALL ON clue_reactions   FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION record_solve TO authenticated;
 
+REVOKE ALL ON clue_reaction_counts FROM PUBLIC;
+GRANT SELECT ON clue_reaction_counts TO anon, authenticated;
+
+REVOKE ALL ON clue_solve_stats FROM PUBLIC;
+GRANT SELECT ON clue_solve_stats TO authenticated;
+
+ALTER DEFAULT PRIVILEGES IN SCHEMA public
+REVOKE EXECUTE ON FUNCTIONS FROM PUBLIC;
 
 -- ─── TRIGGERS ────────────────────────────────────────────────────────────────
 
 CREATE OR REPLACE FUNCTION set_updated_at()
-RETURNS TRIGGER LANGUAGE plpgsql AS $$
+RETURNS TRIGGER
+LANGUAGE plpgsql
+SET search_path = public   -- 🔐 added
+AS $$
 BEGIN
   NEW.updated_at = now();
   RETURN NEW;
@@ -475,12 +484,12 @@ CREATE TRIGGER user_stats_set_updated_at
 
 -- ─── ROW LEVEL SECURITY ──────────────────────────────────────────────────────
 
-ALTER TABLE clues            ENABLE ROW LEVEL SECURITY;
-ALTER TABLE daily_puzzles    ENABLE ROW LEVEL SECURITY;
-ALTER TABLE clue_components  ENABLE ROW LEVEL SECURITY;
-ALTER TABLE user_stats       ENABLE ROW LEVEL SECURITY;
-ALTER TABLE solve_history    ENABLE ROW LEVEL SECURITY;
-ALTER TABLE clue_reactions   ENABLE ROW LEVEL SECURITY;
+ALTER TABLE clues            FORCE ROW LEVEL SECURITY;
+ALTER TABLE daily_puzzles    FORCE ROW LEVEL SECURITY;
+ALTER TABLE clue_components  FORCE ROW LEVEL SECURITY;
+ALTER TABLE user_stats       FORCE ROW LEVEL SECURITY;
+ALTER TABLE solve_history    FORCE ROW LEVEL SECURITY;
+ALTER TABLE clue_reactions   FORCE ROW LEVEL SECURITY;
 
 -- clues: readable only when the clue is scheduled in a published daily_puzzle.
 -- daily_puzzles.published is the single source of truth for visibility.
@@ -539,13 +548,11 @@ CREATE POLICY "solve_history_owner"
 
 -- clue_reactions: own row; any authenticated user can read (for aggregate counts).
 -- WITH CHECK prevents reacting on behalf of another user.
-CREATE POLICY "clue_reactions_owner"
-  ON clue_reactions FOR ALL
-  USING     (auth.uid() = user_id)
-  WITH CHECK (auth.uid() = user_id);
+DROP POLICY IF EXISTS "clue_reactions_authenticated_read" ON clue_reactions;
 
-CREATE POLICY "clue_reactions_authenticated_read"
-  ON clue_reactions FOR SELECT USING (auth.role() = 'authenticated');
+CREATE POLICY "clue_reactions_owner_read"
+  ON clue_reactions FOR SELECT
+  USING (auth.uid() = user_id);
 
 CREATE POLICY "clue_reactions_service_write"
   ON clue_reactions FOR ALL

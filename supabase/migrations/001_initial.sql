@@ -56,6 +56,24 @@ INSERT INTO clue_indicator_types (id, label, description) VALUES
   ('spoonerism',           'Spoonerism',           'Signals swapped initial consonants');
 
 
+-- Lookup tables are read-only reference data — publicly readable, never writable
+-- by regular users. RLS is enabled for consistency; service_role handles writes.
+ALTER TABLE clue_wordplay_types  ENABLE ROW LEVEL SECURITY;
+ALTER TABLE clue_indicator_types ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "clue_wordplay_types_public_read"
+  ON clue_wordplay_types FOR SELECT USING (true);
+CREATE POLICY "clue_wordplay_types_service_write"
+  ON clue_wordplay_types FOR ALL
+  USING (auth.role() = 'service_role') WITH CHECK (auth.role() = 'service_role');
+
+CREATE POLICY "clue_indicator_types_public_read"
+  ON clue_indicator_types FOR SELECT USING (true);
+CREATE POLICY "clue_indicator_types_service_write"
+  ON clue_indicator_types FOR ALL
+  USING (auth.role() = 'service_role') WITH CHECK (auth.role() = 'service_role');
+
+
 -- ─── STABLE ENUMS ────────────────────────────────────────────────────────────
 -- These are closed sets unlikely to change. ENUMs are fine here.
 
@@ -297,7 +315,8 @@ SELECT
 FROM clue_reactions
 GROUP BY clue_id;
 
-GRANT SELECT ON clue_reaction_counts TO authenticated;
+-- anon can read aggregate counts (no user_id exposed); authenticated inherits
+GRANT SELECT ON clue_reaction_counts TO anon, authenticated;
 
 
 -- Per-clue solve analytics for clue authors and an admin dashboard.
@@ -528,72 +547,77 @@ CREATE POLICY "clue_reactions_owner"
 CREATE POLICY "clue_reactions_authenticated_read"
   ON clue_reactions FOR SELECT USING (auth.role() = 'authenticated');
 
+CREATE POLICY "clue_reactions_service_write"
+  ON clue_reactions FOR ALL
+  USING     (auth.role() = 'service_role')
+  WITH CHECK (auth.role() = 'service_role');
 
--- ─── SEED: PUZZLE #42 ────────────────────────────────────────────────────────
+
+-- ─── SEED: PUZZLE #1 ─────────────────────────────────────────────────────────
 
 INSERT INTO clues (
   clue_text, answer, answer_pattern,
   primary_type, definition_text, wordplay_summary,
   difficulty, clue_parts, hints
 ) VALUES (
-  'Pears mixed up to form a weapon (5)',
-  'SPEAR',
+  'Stone broken becomes musical sounds (5)',
+  'TONES',
   '5',
   'anagram',
-  'a weapon',
-  'PEARS is an anagram of SPEAR',
+  'musical sounds',
+  'STONE is an anagram of TONES',
   'easy',
   '[
-    {"text": "Pears",      "type": "fodder"},
-    {"text": " mixed up ", "type": "indicator"},
-    {"text": "to form ",   "type": "link"},
-    {"text": "a weapon",   "type": "definition"},
-    {"text": " (5)",       "type": null}
+    {"text": "Stone",            "type": "fodder"},
+    {"text": " broken ",        "type": "indicator"},
+    {"text": "becomes ",        "type": "link"},
+    {"text": "musical sounds",  "type": "definition"},
+    {"text": " (5)",            "type": null}
   ]',
   '[
     {
       "id": 1,
       "title": "Definition Location",
-      "text": "The definition is at the end of the clue.",
-      "highlight": "a weapon",
-      "mascot_comment": "The definition is always at the start or end of a cryptic clue. Look at the end! 👀",
+      "text": "The definition is at the end of the clue: ''musical sounds''.",
+      "highlight": "musical sounds",
+      "mascot_comment": "The definition is always at the start or end of a cryptic clue. It''s at the end here! 👀",
       "color": "#3B82F6", "bg": "#EFF6FF", "bg_dark": "#0D1F35", "border": "#93C5FD"
     },
     {
       "id": 2,
       "title": "Spot the Indicator",
-      "text": "\"Mixed up\" is an anagram indicator — it tells you the letters need rearranging.",
-      "highlight": "mixed up",
-      "mascot_comment": "\"Mixed up\" signals an anagram — letters are getting scrambled! 🔀",
+      "text": "\"Broken\" is an anagram indicator — it tells you the letters need rearranging.",
+      "highlight": "broken",
+      "mascot_comment": "\"Broken\" signals an anagram — the letters are being scrambled! 🔀",
       "color": "#7C3AED", "bg": "#F5F3FF", "bg_dark": "#1A0F35", "border": "#C4B5FD"
     },
     {
       "id": 3,
       "title": "Find the Fodder",
-      "text": "\"PEARS\" is the fodder — these are the letters you need to rearrange!",
-      "highlight": "Pears",
-      "mascot_comment": "P-E-A-R-S... these are your building blocks! Try shuffling them! ✨",
+      "text": "\"Stone\" is the fodder — these 5 letters need to be rearranged!",
+      "highlight": "Stone",
+      "mascot_comment": "S-T-O-N-E... shuffle these letters to find a musical word! ✨",
       "color": "#F97316", "bg": "#FFF7ED", "bg_dark": "#2A1505", "border": "#FED7AA"
     },
     {
       "id": 4,
       "title": "Full Breakdown",
-      "text": "Rearrange the letters of PEARS to get a 5-letter weapon. Think of a long pointed weapon used by knights...",
+      "text": "Rearrange the letters of STONE to get a 5-letter word meaning musical sounds. Think notes, pitches...",
       "highlight": null,
-      "mascot_comment": "You''ve got all the pieces! P-E-A-R-S → _ _ _ _ _ 🎯",
+      "mascot_comment": "S-T-O-N-E → _ _ _ _ _ 🎯 You''ve got all the pieces!",
       "color": "#059669", "bg": "#ECFDF5", "bg_dark": "#062010", "border": "#6EE7B7"
     }
   ]'
 ) ON CONFLICT (clue_text) DO NOTHING;
 
--- Daily puzzle entry for #42
+-- Daily puzzle entry for #1
 INSERT INTO daily_puzzles (date, clue_id, published, sequence_number, puzzle_number)
-SELECT '2026-04-06', id, true, 1, 42
+SELECT '2026-04-09', id, true, 1, 1
 FROM   clues
-WHERE  clue_text = 'Pears mixed up to form a weapon (5)'
+WHERE  clue_text = 'Stone broken becomes musical sounds (5)'
 ON CONFLICT (date, sequence_number) DO NOTHING;
 
--- Clue components for #42
+-- Clue components for #1
 INSERT INTO clue_components (clue_id, step_order, role, clue_text, derived_text, indicator_type, explanation)
 SELECT
   c.id,
@@ -606,9 +630,9 @@ SELECT
 FROM clues c
 CROSS JOIN (
   VALUES
-    (1, 'definition', 'a weapon', 'SPEAR', NULL,      'SPEAR = a weapon (plain definition)'),
-    (2, 'indicator',  'mixed up', NULL,    'anagram',  '"mixed up" signals an anagram'),
-    (3, 'fodder',     'Pears',    'SPEAR', NULL,       'PEARS → rearrange all 5 letters → SPEAR')
+    (1, 'definition', 'musical sounds', 'TONES', NULL,      'TONES = musical sounds (plain definition)'),
+    (2, 'indicator',  'broken',          NULL,   'anagram',  '"broken" signals an anagram'),
+    (3, 'fodder',     'Stone',           'TONES', NULL,      'STONE → rearrange all 5 letters → TONES')
 ) AS v(step_order, role, clue_text, derived_text, indicator_type, explanation)
-WHERE c.clue_text = 'Pears mixed up to form a weapon (5)'
+WHERE c.clue_text = 'Stone broken becomes musical sounds (5)'
 ON CONFLICT (clue_id, step_order) DO NOTHING;

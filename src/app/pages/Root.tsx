@@ -21,12 +21,10 @@ import { useAuth } from '../context/AuthContext';
 import {
   fetchAppLikesCount,
   addAppLike,
-  removeAppLike,
   isSupabaseConfigured,
 } from '../../lib/supabase';
 
 function LikeButton({ isDark }: { isDark: boolean }) {
-  const { user } = useAuth();
   const [liked, setLiked] = useState(() => {
     const val = localStorage.getItem('tco-app-liked');
     return val === 'true';
@@ -48,11 +46,7 @@ function LikeButton({ isDark }: { isDark: boolean }) {
 
     if (isSupabaseConfigured) {
       setTotalLikes(prev => prev + 1);
-      const success = await addAppLike(user?.id);
-      if (!success) {
-        // We don't rollback for unique violation because the user already liked it.
-        // If it's another error, we still keep the UI state for better UX.
-      }
+      await addAppLike();
     }
   };
 

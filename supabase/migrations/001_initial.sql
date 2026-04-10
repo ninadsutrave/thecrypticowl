@@ -305,23 +305,19 @@ CREATE INDEX cr_clue_reaction_idx ON clue_reactions (clue_id, reaction);
 
 -- ─── APP LIKES ───────────────────────────────────────────────────────────────
 -- Global "Like" counter for the entire application.
+-- These are purely anonymous. We use row count to track total appreciation.
 
 CREATE TABLE app_likes (
   id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id     UUID REFERENCES auth.users(id) UNIQUE,
   created_at  TIMESTAMPTZ DEFAULT now()
 );
 
 -- RLS
 ALTER TABLE app_likes ENABLE ROW LEVEL SECURITY;
 
--- Authenticated users can insert their own like (exactly once due to UNIQUE)
-CREATE POLICY "app_likes_auth_insert" ON app_likes
-  FOR INSERT WITH CHECK (auth.uid() = user_id);
-
--- Anonymous users can insert too (if we want to allow guest likes)
-CREATE POLICY "app_likes_anon_insert" ON app_likes
-  FOR INSERT WITH CHECK (auth.uid() IS NULL);
+-- Anyone can insert an anonymous like
+CREATE POLICY "app_likes_insert" ON app_likes
+  FOR INSERT WITH CHECK (true);
 
 -- Anyone can read the total count
 CREATE POLICY "app_likes_public_read" ON app_likes
@@ -335,6 +331,92 @@ CREATE OR REPLACE VIEW app_likes_count AS
   SELECT count(*) as total_likes FROM app_likes;
 
 GRANT SELECT ON app_likes_count TO anon, authenticated;
+
+
+-- ─── CLUE SUBMISSIONS ────────────────────────────────────────────────────────
+-- Clues submitted by users for review.
+
+CREATE TYPE submission_status AS ENUM ('pending', 'approved', 'rejected');
+
+CREATE TABLE clue_submissions (
+  id                UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id           UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  clue_text         TEXT NOT NULL,
+  answer            TEXT NOT NULL,
+  answer_pattern    TEXT NOT NULL,
+  primary_type      TEXT REFERENCES clue_wordplay_types(id),
+  definition_text   TEXT NOT NULL,
+  wordplay_summary  TEXT NOT NULL,
+  fodder            TEXT,
+  indicator         TEXT,
+  explanation       TEXT NOT NULL,
+  status            submission_status NOT NULL DEFAULT 'pending',
+  admin_notes       TEXT,
+  created_at        TIMESTAMPTZ DEFAULT now()
+);
+
+-- RLS
+ALTER TABLE clue_submissions ENABLE ROW LEVEL SECURITY;
+
+-- Users can insert their own submissions
+CREATE POLICY "clue_submissions_insert" ON clue_submissions
+  FOR INSERT WITH CHECK (auth.uid() = user_id);
+
+-- Users can see their own submissions
+CREATE POLICY "clue_submissions_owner_read" ON clue_submissions
+  FOR SELECT USING (auth.uid() = user_id);
+
+-- Service role can do everything (for admin functions)
+CREATE POLICY "clue_submissions_service_all" ON clue_submissions
+  FOR ALL USING (auth.role() = 'service_role');
+
+GRANT SELECT, INSERT ON clue_submissions TO authenticated;
+
+
+-- ─── ADMIN FUNCTIONS ─────────────────────────────────────────────────────────
+
+-- Approves a submission and schedules it as a daily puzzle.
+-- Must be called by a superuser/service_role or a designated admin.
+CREATE OR REPLACE FUNCTION approve_clue_submission(
+  p_submission_id   UUID,
+  p_publish_date    DATE,
+  p_puzzle_number   INTEGER
+)
+RETURNS UUID
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+  v_clue_id UUID;
+  v_sub RECORD;
+BEGIN
+  -- Load submission data
+  SELECT * INTO v_sub FROM clue_submissions WHERE id = p_submission_id;
+  IF NOT FOUND THEN RAISE EXCEPTION 'Submission not found'; END IF;
+  IF v_sub.status <> 'pending' THEN RAISE EXCEPTION 'Submission already processed'; END IF;
+
+  -- 1. Insert into main clues table
+  INSERT INTO clues (
+    clue_text, answer, answer_pattern,
+    primary_type, definition_text, wordplay_summary,
+    difficulty, author
+  ) VALUES (
+    v_sub.clue_text, v_sub.answer, v_sub.answer_pattern,
+    v_sub.primary_type, v_sub.definition_text, v_sub.wordplay_summary,
+    'medium', (SELECT email FROM auth.users WHERE id = v_sub.user_id) -- Placeholder for author email
+  ) RETURNING id INTO v_clue_id;
+
+  -- 2. Schedule in daily_puzzles
+  INSERT INTO daily_puzzles (date, clue_id, puzzle_number, published)
+  VALUES (p_publish_date, v_clue_id, p_puzzle_number, true);
+
+  -- 3. Update submission status
+  UPDATE clue_submissions SET status = 'approved' WHERE id = p_submission_id;
+
+  RETURN v_clue_id;
+END;
+$$;
 
 
 -- ─── VIEWS ───────────────────────────────────────────────────────────────────

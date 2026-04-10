@@ -170,6 +170,24 @@ export interface DbClueSolveStats {
   like_pct: number | null;
 }
 
+/** Row from the `clue_submissions` table. */
+export interface DbClueSubmission {
+  id: string;
+  user_id: string;
+  clue_text: string;
+  answer: string;
+  answer_pattern: string;
+  primary_type: ClueWordplayType;
+  definition_text: string;
+  wordplay_summary: string;
+  fodder: string | null;
+  indicator: string | null;
+  explanation: string;
+  status: 'pending' | 'approved' | 'rejected';
+  admin_notes: string | null;
+  created_at: string;
+}
+
 // ─── DAILY PUZZLES ────────────────────────────────────────────────────────────
 
 /**
@@ -463,24 +481,48 @@ export async function fetchAppLikesCount(): Promise<number> {
 }
 
 /** Record a new like for the app. */
-export async function addAppLike(userId?: string): Promise<boolean> {
+export async function addAppLike(): Promise<boolean> {
   if (!isSupabaseConfigured) return false;
-  const { error } = await supabase.from('app_likes').insert({
-    user_id: userId || null,
-  });
+  const { error } = await supabase.from('app_likes').insert({});
   if (error) {
-    // 23505 = unique_violation (user already liked)
-    if (error.code !== '23505') {
-      console.warn('[supabase] addAppLike:', error.message);
-    }
+    console.warn('[supabase] addAppLike:', error.message);
     return false;
   }
   return true;
 }
 
-/** Remove a like (only possible if authenticated). */
-export async function removeAppLike(userId: string): Promise<void> {
-  if (!isSupabaseConfigured) return;
-  const { error } = await supabase.from('app_likes').delete().eq('user_id', userId);
-  if (error) console.warn('[supabase] removeAppLike:', error.message);
+// removeAppLike removed — anonymous rows are write-only appreciation.
+
+// ─── CLUE SUBMISSIONS ────────────────────────────────────────────────────────
+
+/** Submit a new clue for review. */
+export async function submitClue(
+  userId: string,
+  clue: Omit<DbClueSubmission, 'id' | 'user_id' | 'status' | 'admin_notes' | 'created_at'>
+): Promise<boolean> {
+  if (!isSupabaseConfigured) return false;
+  const { error } = await supabase.from('clue_submissions').insert({
+    user_id: userId,
+    ...clue,
+  });
+  if (error) {
+    console.warn('[supabase] submitClue:', error.message);
+    return false;
+  }
+  return true;
+}
+
+/** Fetch all submissions for a specific user. */
+export async function fetchUserSubmissions(userId: string): Promise<DbClueSubmission[]> {
+  if (!isSupabaseConfigured) return [];
+  const { data, error } = await supabase
+    .from('clue_submissions')
+    .select('*')
+    .eq('user_id', userId)
+    .order('created_at', { ascending: false });
+  if (error) {
+    console.warn('[supabase] fetchUserSubmissions:', error.message);
+    return [];
+  }
+  return (data ?? []) as DbClueSubmission[];
 }

@@ -104,6 +104,13 @@ export interface DbDailyPuzzle {
 
   difficulty: PuzzleDifficulty;
   author: string | null;
+  author_id: string | null;
+  author_social: string | null;
+  author_profile?: {
+    name: string;
+    social_link: string | null;
+    avatar_url: string | null;
+  } | null;
   tags: string[];
   // notes is intentionally omitted — never sent to the frontend
 
@@ -183,6 +190,12 @@ export interface DbClueSubmission {
   fodder: string | null;
   indicator: string | null;
   explanation: string;
+
+  // Contributor info
+  author_name: string;
+  author_email: string;
+  author_social: string | null;
+
   status: 'pending' | 'approved' | 'rejected';
   admin_notes: string | null;
   created_at: string;
@@ -211,8 +224,13 @@ export async function fetchPuzzleByDate(isoDate: string): Promise<DbDailyPuzzle 
         clue_text, answer, answer_length, answer_pattern,
         primary_type, definition_text, wordplay_summary,
         clue_parts, hints,
-        difficulty, author, tags,
-        created_at, updated_at
+        difficulty, author, author_id, author_social, tags,
+        created_at, updated_at,
+        authors (
+          name,
+          social_link,
+          avatar_url
+        )
       )
     `
     )
@@ -234,6 +252,7 @@ export async function fetchPuzzleByDate(isoDate: string): Promise<DbDailyPuzzle 
     number: row.puzzle_number,
     date: row.date,
     ...clue,
+    author_profile: (clue.authors as DbDailyPuzzle['author_profile']) || null,
   } as DbDailyPuzzle;
 }
 
@@ -254,8 +273,13 @@ export async function fetchPuzzleByNumber(puzzleNumber: number): Promise<DbDaily
         clue_text, answer, answer_length, answer_pattern,
         primary_type, definition_text, wordplay_summary,
         clue_parts, hints,
-        difficulty, author, tags,
-        created_at, updated_at
+        difficulty, author, author_id, author_social, tags,
+        created_at, updated_at,
+        authors (
+          name,
+          social_link,
+          avatar_url
+        )
       )
     `
     )
@@ -276,6 +300,7 @@ export async function fetchPuzzleByNumber(puzzleNumber: number): Promise<DbDaily
     number: row.puzzle_number,
     date: row.date,
     ...clue,
+    author_profile: (clue.authors as DbDailyPuzzle['author_profile']) || null,
   } as DbDailyPuzzle;
 }
 

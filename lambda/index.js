@@ -1,4 +1,9 @@
 import { createClient } from "@supabase/supabase-js";
+import { selectLexical } from "./lib/lexicalPlanner.js";
+import { generateClue } from "./lib/clueGenerator.js";
+import { judgeClue } from "./lib/judge.js";
+import { getAIClient } from "./lib/aiClient.js";
+import { MAX_ATTEMPTS } from "./constants/prompts.js";
 
 // =========================
 // CONFIG
@@ -9,144 +14,9 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY
 );
 
-const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
-
-const MAX_ATTEMPTS = 3;
-
-// =========================
-// GEMINI CLIENT (Node 20 native fetch)
-// =========================
-
-async function callGemini(prompt, systemInstruction = "") {
-  const body = {
-    contents: [
-      {
-        role: "user",
-        parts: [{ text: prompt }],
-      },
-    ],
-    generationConfig: {
-      temperature: 0.9,
-      responseMimeType: "application/json",
-    },
-  };
-
-  if (systemInstruction) {
-    body.system_instruction = {
-      parts: [{ text: systemInstruction }],
-    };
-  }
-
-  const res = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`,
-    {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body),
-    }
-  );
-
-  if (!res.ok) {
-    const errText = await res.text();
-    throw new Error(`Gemini API error: ${res.status} - ${errText}`);
-  }
-
-  const data = await res.json();
-  const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
-
-  if (!text) throw new Error("Empty LLM response");
-
-  try {
-    // Basic cleanup in case Gemini wraps JSON in markdown code blocks
-    const cleanText = text.replace(/```json\n?|\n?```/g, "").trim();
-    return JSON.parse(cleanText);
-  } catch (e) {
-    throw new Error(`Invalid JSON from Gemini: ${text}`);
-  }
-}
-
-// =========================
-// LEXICAL PLANNER PROMPT
-// =========================
-
-const LEXICAL_SYSTEM = `You are an expert British cryptic crossword compiler. 
-Your goal is to select a high-quality word that is suitable for a daily cryptic clue.
-Avoid proper nouns, acronyms, and overly obscure words.
-The word should have a clear dictionary definition and be amenable to at least one standard cryptic mechanism (anagram, container, hidden, reversal, charade).`;
-
-function lexicalPrompt() {
-  return `Select a single English word between 4 and 10 letters.
-Return ONLY valid JSON in this format:
-{
-  "answer": "UPPERCASEWORD",
-  "definition": "A clear, concise dictionary definition",
-  "type": "anagram|charade|hidden|reversal|container|homophone",
-  "difficulty": "easy|medium|hard"
-}`;
-}
-
-// =========================
-// CLUE GENERATOR PROMPT
-// =========================
-
-const CLUE_SYSTEM = `You are a world-class British cryptic crossword setter (Ximenean style).
-You write elegant, fair, and clever clues with smooth surface readings.
-A cryptic clue consists of two parts: a definition and a wordplay mechanism.
-The definition must be at either the very beginning or the very end of the clue.
-The wordplay must lead precisely to the letters of the answer.`;
-
-function cluePrompt(lexical) {
-  return `Generate a professional cryptic clue for the word "${lexical.answer}".
-Mechanism: ${lexical.type}
-Definition: ${lexical.definition}
-
-STRICT RULES:
-1. The definition must be at the START or END of the clue.
-2. Use standard British cryptic crossword indicators (e.g., "broken" for anagram, "back" for reversal).
-3. The surface reading must be a natural-sounding English sentence.
-4. Do NOT include the answer in the clue text.
-5. Provide a clear wordplay breakdown.
-
-OUTPUT FORMAT (JSON):
-{
-  "clue": "The full clue text",
-  "definition": "The exact part of the clue that is the definition",
-  "wordplay_summary": "A concise explanation (e.g., 'Anagram (broken) of PEARS')",
-  "clue_parts": [
-    { "text": "Part of clue", "type": "definition|indicator|fodder|link|null" }
-  ],
-  "hints": [
-    { "id": 1, "title": "Definition Location", "text": "...", "highlight": "...", "mascot_comment": "..." },
-    { "id": 2, "title": "Mechanism", "text": "...", "highlight": "...", "mascot_comment": "..." }
-  ]
-}`;
-}
-
-// =========================
-// JUDGE
-// =========================
-
-function judge(clueObj, lexical) {
-  const errors = [];
-
-  if (!clueObj?.clue) errors.push("missing_clue");
-  if (!clueObj?.definition) errors.push("missing_definition");
-  if (!clueObj?.clue_parts || !Array.isArray(clueObj.clue_parts))
-    errors.push("missing_clue_parts");
-
-  // Ensure answer is not in clue
-  if (
-    clueObj?.clue &&
-    clueObj.clue.toUpperCase().includes(lexical.answer.toUpperCase())
-  ) {
-    errors.push("answer_leak_in_clue");
-  }
-
-  return {
-    valid: errors.length === 0,
-    errors,
-  };
-}
+// Default to Gemini, can be configured via ENV
+const AI_PROVIDER = process.env.AI_PROVIDER || "gemini";
+const callAI = getAIClient(AI_PROVIDER);
 
 // =========================
 // PIPELINE
@@ -154,16 +24,16 @@ function judge(clueObj, lexical) {
 
 async function generateValidClue() {
   for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
-    console.log(`Attempt ${attempt}`);
+    console.log(`Attempt ${attempt} using ${AI_PROVIDER}`);
 
     try {
-      const lexical = await callGemini(lexicalPrompt(), LEXICAL_SYSTEM);
-      console.log(`Lexical chosen: ${lexical.answer}`);
+      const lexical = await selectLexical(callAI);
+      console.log(`Lexical chosen: ${lexical.answer} (${lexical.type})`);
 
-      const clue = await callGemini(cluePrompt(lexical), CLUE_SYSTEM);
+      const clue = await generateClue(lexical, callAI);
       console.log(`Clue generated: ${clue.clue}`);
 
-      const verdict = judge(clue, lexical);
+      const verdict = judgeClue(clue, lexical);
 
       if (verdict.valid) {
         return { lexical, clue };
@@ -183,25 +53,74 @@ async function generateValidClue() {
 // =========================
 
 async function writeToSupabase(lexical, clue) {
-  const { error } = await supabase.from("clues").insert({
-    clue_text: clue.clue,
-    answer: lexical.answer,
-    answer_pattern: String(lexical.answer.length),
-    primary_type: lexical.type,
-    definition_text: lexical.definition,
-    wordplay_summary: clue.wordplay_summary,
-    clue_parts: clue.clue_parts,
-    hints: clue.hints.map((h) => ({
-      ...h,
-      color: h.color || "#7C3AED",
-      bg: h.bg || "#F5F3FF",
-      bg_dark: h.bg_dark || "#1A0F35",
-      border: h.border || "#C4B5FD",
-    })),
-    difficulty: lexical.difficulty || "medium",
+  // Map provider to author UUID
+  const AUTHOR_MAP = {
+    gemini: "7211516e-e61b-410a-b31c-6a1651515151",
+    openai: "0921516e-e61b-410a-b31c-6a1651515151",
+    claude: "1211516e-e61b-410a-b31c-6a1651515151",
+    huggingface: "5211516e-e61b-410a-b31c-6a1651515151",
+  };
+
+  const authorId = AUTHOR_MAP[AI_PROVIDER.toLowerCase()] || AUTHOR_MAP.gemini;
+
+  // 1. Insert clue
+  const { data: clueData, error: clueError } = await supabase
+    .from("clues")
+    .insert({
+      clue_text: clue.clue,
+      answer: lexical.answer,
+      answer_pattern: String(lexical.answer.length),
+      primary_type: lexical.type,
+      definition_text: lexical.definition,
+      wordplay_summary: clue.wordplay_summary,
+      clue_parts: clue.clue_parts,
+      hints: clue.hints.map((h) => ({
+        ...h,
+        color: h.color || "#7C3AED",
+        bg: h.bg || "#F5F3FF",
+        bg_dark: h.bg_dark || "#1A0F35",
+        border: h.border || "#C4B5FD",
+      })),
+      difficulty: lexical.difficulty || "medium",
+      author_id: authorId,
+    })
+    .select()
+    .single();
+
+  if (clueError) throw clueError;
+
+  // 2. Insert daily_puzzle (scheduled for today)
+  const today = new Date().toISOString().split("T")[0];
+  const { error: dpError } = await supabase.from("daily_puzzles").insert({
+    date: today,
+    clue_id: clueData.id,
+    published: true,
   });
 
-  if (error) throw error;
+  if (dpError && dpError.code !== "23505") {
+    // Ignore unique constraint error if already published for today
+    throw dpError;
+  }
+
+  // 3. Insert clue_components (pedagogical breakdown)
+  const components = [];
+  clue.clue_parts.forEach((part, index) => {
+    if (part.type) {
+      components.push({
+        clue_id: clueData.id,
+        step_order: index + 1,
+        role: part.type === "definition" ? "definition" : 
+              part.type === "indicator" ? "indicator" :
+              part.type === "fodder" ? "fodder" : "link_word",
+        clue_text: part.text,
+      });
+    }
+  });
+
+  if (components.length > 0) {
+    const { error: ccError } = await supabase.from("clue_components").insert(components);
+    if (ccError) throw ccError;
+  }
 }
 
 // =========================
@@ -220,6 +139,7 @@ export const handler = async (event) => {
         success: true,
         answer: lexical.answer,
         clue: clue.clue,
+        provider: AI_PROVIDER,
       }),
     };
   } catch (err) {

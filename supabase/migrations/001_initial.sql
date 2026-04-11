@@ -92,6 +92,38 @@ CREATE TYPE puzzle_difficulty AS ENUM ('easy', 'medium', 'hard', 'expert');
 CREATE TYPE clue_reaction     AS ENUM ('like', 'dislike');
 
 
+-- ─── AUTHORS ──────────────────────────────────────────────────────────────────
+-- Table for storing clue authors (LLMs or humans).
+
+CREATE TABLE authors (
+  id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  name        TEXT NOT NULL UNIQUE,
+  email       TEXT UNIQUE,
+  social_link TEXT,
+  avatar_url  TEXT,
+  created_at  TIMESTAMPTZ DEFAULT now()
+);
+
+-- RLS
+ALTER TABLE authors ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "authors_public_read" ON authors
+  FOR SELECT USING (true);
+
+CREATE POLICY "authors_service_all" ON authors
+  FOR ALL USING (auth.role() = 'service_role');
+
+GRANT SELECT ON authors TO anon, authenticated;
+
+-- Seed authors
+INSERT INTO authors (id, name, email, social_link) VALUES
+  ('7211516e-e61b-410a-b31c-6a1651515151', 'Gemini',      'gemini@google.com',  'https://deepmind.google/technologies/gemini/'),
+  ('0921516e-e61b-410a-b31c-6a1651515151', 'OpenAI',      'gpt@openai.com',    'https://openai.com/'),
+  ('1211516e-e61b-410a-b31c-6a1651515151', 'Claude',      'claude@anthropic.com', 'https://anthropic.com/'),
+  ('5211516e-e61b-410a-b31c-6a1651515151', 'Hugging Face', 'hf@huggingface.co', 'https://huggingface.co/')
+ON CONFLICT (name) DO NOTHING;
+
+
 -- ─── CLUES ───────────────────────────────────────────────────────────────────
 -- One row = one cryptic clue.
 -- All display data is denormalised here so the frontend never needs a join.
@@ -147,9 +179,11 @@ CREATE TABLE clues (
 
   -- Editorial
   difficulty       puzzle_difficulty  NOT NULL DEFAULT 'medium',
-  author           TEXT,
+  author_id        UUID               REFERENCES authors(id),
+  author           TEXT,              -- Legacy: stored author name if not in authors table
   tags             TEXT[]             NOT NULL DEFAULT '{}',
   notes            TEXT,  -- internal only, never sent to the frontend
+  author_social    TEXT,  -- Legacy: Link to contributor's profile
 
   created_at       TIMESTAMPTZ        NOT NULL DEFAULT now(),
   updated_at       TIMESTAMPTZ        NOT NULL DEFAULT now()
@@ -350,6 +384,12 @@ CREATE TABLE clue_submissions (
   fodder            TEXT,
   indicator         TEXT,
   explanation       TEXT NOT NULL,
+  
+  -- Contributor info
+  author_name       TEXT NOT NULL,
+  author_email      TEXT NOT NULL,
+  author_social     TEXT, -- Link to Twitter/X, Website, etc.
+
   status            submission_status NOT NULL DEFAULT 'pending',
   admin_notes       TEXT,
   created_at        TIMESTAMPTZ DEFAULT now()
@@ -400,11 +440,11 @@ BEGIN
   INSERT INTO clues (
     clue_text, answer, answer_pattern,
     primary_type, definition_text, wordplay_summary,
-    difficulty, author
+    difficulty, author, author_social
   ) VALUES (
     v_sub.clue_text, v_sub.answer, v_sub.answer_pattern,
     v_sub.primary_type, v_sub.definition_text, v_sub.wordplay_summary,
-    'medium', (SELECT email FROM auth.users WHERE id = v_sub.user_id) -- Placeholder for author email
+    'medium', v_sub.author_name, v_sub.author_social
   ) RETURNING id INTO v_clue_id;
 
   -- 2. Schedule in daily_puzzles
@@ -417,6 +457,21 @@ BEGIN
   RETURN v_clue_id;
 END;
 $$;
+
+
+-- ─── PERMISSIONS ─────────────────────────────────────────────────────────────
+
+-- Grant usage on public schema to all roles
+GRANT USAGE ON SCHEMA public TO anon, authenticated, service_role;
+
+-- Ensure all tables are readable by anon (via RLS)
+GRANT SELECT ON ALL TABLES IN SCHEMA public TO anon, authenticated, service_role;
+
+-- Ensure authenticated users and service_role can insert/update where allowed by RLS
+GRANT INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO authenticated, service_role;
+
+-- Ensure sequences are usable
+GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO authenticated, anon, service_role;
 
 
 -- ─── VIEWS ───────────────────────────────────────────────────────────────────
@@ -442,7 +497,7 @@ SELECT
   dp.date,
   c.primary_type,
   c.difficulty,
-  c.author,
+  COALESCE(a.name, c.author)                                AS author,
 
   COUNT(DISTINCT sh.user_id)                                AS total_solves,
 
@@ -467,11 +522,12 @@ SELECT
   END                                                       AS like_pct
 
 FROM clues c
+LEFT JOIN authors              a  ON a.id = c.author_id
 LEFT JOIN daily_puzzles        dp ON dp.clue_id = c.id
 LEFT JOIN solve_history        sh ON sh.clue_id = c.id
 LEFT JOIN clue_reaction_counts rc ON rc.clue_id = c.id
 GROUP BY
-  c.id, dp.date, c.primary_type, c.difficulty, c.author,
+  c.id, dp.date, c.primary_type, c.difficulty, a.name, c.author,
   rc.likes, rc.dislikes, rc.total;
 
 GRANT SELECT ON clue_solve_stats TO authenticated;
@@ -491,7 +547,8 @@ CREATE OR REPLACE FUNCTION record_solve(
   p_hints_used          SMALLINT,
   p_wrong_attempts      INTEGER,
   p_xp_earned           INTEGER,
-  p_solve_time_seconds  INTEGER DEFAULT NULL
+  p_solve_time_seconds  INTEGER DEFAULT NULL,
+  p_client_date         DATE    DEFAULT NULL
 )
 RETURNS BOOLEAN
 LANGUAGE plpgsql
@@ -499,7 +556,7 @@ SECURITY DEFINER
 SET search_path = public
 AS $$
 DECLARE
-  v_today     DATE    := CURRENT_DATE;
+  v_today     DATE    := COALESCE(p_client_date, CURRENT_DATE);
   v_last      DATE;
   v_streak    INTEGER;
   v_best      INTEGER;
@@ -509,17 +566,18 @@ BEGIN
     RAISE EXCEPTION 'unauthorized';
   END IF;
 
-  IF p_xp_earned < 0 OR p_xp_earned > 50 THEN
+  IF p_xp_earned < 0 OR p_xp_earned > 100 THEN
     RAISE EXCEPTION 'invalid xp';
   END IF;
 
   INSERT INTO solve_history (
     user_id, clue_id, puzzle_number,
-    hints_used, wrong_attempts, xp_earned, solve_time_seconds
+    hints_used, wrong_attempts, xp_earned, solve_time_seconds, solved_at
   )
   VALUES (
     p_user_id, p_clue_id, p_puzzle_number,
-    p_hints_used, p_wrong_attempts, p_xp_earned, p_solve_time_seconds
+    p_hints_used, p_wrong_attempts, p_xp_earned, p_solve_time_seconds,
+    CASE WHEN p_client_date IS NOT NULL THEN p_client_date::timestamptz ELSE now() END
   )
   ON CONFLICT (user_id, clue_id) DO NOTHING;
 

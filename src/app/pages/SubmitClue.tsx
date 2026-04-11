@@ -36,6 +36,9 @@ export function SubmitClue() {
     fodder: '',
     indicator: '',
     explanation: '',
+    author_name: user?.name || '',
+    author_email: user?.email || '',
+    author_social: '',
   });
 
   const [submitting, setSubmitting] = useState(false);
@@ -335,6 +338,78 @@ export function SubmitClue() {
                     className="w-full p-4 rounded-2xl border-2 focus:outline-none focus:border-[#7C3AED] transition-colors min-h-[120px]"
                     style={inputStyle}
                   />
+                </div>
+
+                <div className="pt-4 border-t" style={{ borderColor: T.cardBorder }}>
+                  <h3
+                    className="mb-4"
+                    style={{
+                      fontFamily: "'Fredoka One', cursive",
+                      fontSize: '1.1rem',
+                      color: isDark ? '#F0EAFF' : '#1E1B4B',
+                    }}
+                  >
+                    Contributor Details
+                  </h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                      <label
+                        className="text-sm font-black uppercase tracking-wider"
+                        style={{ color: T.textMuted }}
+                      >
+                        Public Author Name
+                      </label>
+                      <input
+                        required
+                        name="author_name"
+                        value={formData.author_name}
+                        onChange={handleChange}
+                        placeholder="How should we credit you?"
+                        className="w-full p-4 rounded-2xl border-2 focus:outline-none focus:border-[#7C3AED] transition-colors"
+                        style={{
+                          ...inputStyle,
+                          borderColor: formData.author_name ? '#10B981' : T.cardBorder,
+                        }}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <label
+                        className="text-sm font-black uppercase tracking-wider"
+                        style={{ color: T.textMuted }}
+                      >
+                        Email (Private)
+                      </label>
+                      <input
+                        required
+                        type="email"
+                        name="author_email"
+                        value={formData.author_email}
+                        onChange={handleChange}
+                        placeholder="For review updates"
+                        className="w-full p-4 rounded-2xl border-2 focus:outline-none focus:border-[#7C3AED] transition-colors"
+                        style={{
+                          ...inputStyle,
+                          borderColor: formData.author_email ? '#10B981' : T.cardBorder,
+                        }}
+                      />
+                    </div>
+                  </div>
+                  <div className="mt-6 space-y-2">
+                    <label
+                      className="text-sm font-black uppercase tracking-wider"
+                      style={{ color: T.textMuted }}
+                    >
+                      Social Media / Website (Optional)
+                    </label>
+                    <input
+                      name="author_social"
+                      value={formData.author_social}
+                      onChange={handleChange}
+                      placeholder="e.g. twitter.com/username or your site"
+                      className="w-full p-4 rounded-2xl border-2 focus:outline-none focus:border-[#7C3AED] transition-colors"
+                      style={inputStyle}
+                    />
+                  </div>
                 </div>
 
                 <div

@@ -847,17 +847,12 @@ export function Home() {
   }, []);
 
   return (
-    <div className="relative overflow-hidden">
+    <div className="relative overflow-hidden pb-20" style={{ background: T.pageBg }}>
       <FloatingBg isDark={isDark} />
 
       {/* ── HERO: App tagline + Today's Puzzle ── */}
-      <div className="relative z-10 max-w-4xl mx-auto px-4 pt-8 pb-6">
-        <motion.div
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4 }}
-          className="text-center mb-6"
-        >
+      <div className="relative z-10 max-w-4xl mx-auto px-4 pt-8">
+        <header className="text-center mb-10">
           <div className="flex items-center justify-center gap-2 mb-2">
             <Star size={14} style={{ color: '#7C3AED' }} fill="#7C3AED" />
             <span
@@ -896,14 +891,50 @@ export function Home() {
             Solve one clue a day, build your streak, and become a cryptic genius. No experience
             needed!
           </p>
-        </motion.div>
+        </header>
 
-        {/* ── Submission Prompt ────────────────────────────────────── */}
-        {!isSignedIn && (
+        {/* TODAY'S PUZZLE — front and centre */}
+        <TodaysPuzzleHero
+          onNavigate={() => navigate('/puzzle')}
+          isDark={isDark}
+          puzzle={todaysPuzzle}
+        />
+
+        {/* Stats strip */}
+        <StatsStrip isDark={isDark} />
+      </div>
+
+      {/* ── NEW PLAYER JOURNEY ── */}
+      <div className="relative z-10 px-4 py-12">
+        <NewPlayerJourney onNavigate={() => navigate('/learn')} isDark={isDark} />
+      </div>
+
+      {/* ── HOW IT WORKS ── */}
+      <div className="relative z-10">
+        <HowItWorks isDark={isDark} />
+      </div>
+
+      {/* ── BOTTOM CTA ── */}
+      <div className="relative z-10 mb-12">
+        <BottomCTA onNavigate={() => navigate('/learn')} isDark={isDark} />
+      </div>
+
+      {/* ── ACHIEVEMENTS ── */}
+      <LeaderboardTeaser isDark={isDark} />
+
+      {/* ── WORDPLAY TYPES ── */}
+      <div className="relative z-10">
+        <WordplayPreview onNavigate={() => navigate('/learn')} isDark={isDark} />
+      </div>
+
+      {/* ── SUBMISSION PROMPT: At the very end ── */}
+      <div className="relative z-10 max-w-4xl mx-auto px-4 pb-20">
+        {!isSignedIn ? (
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="mb-12 rounded-3xl p-6 border text-center flex flex-col md:flex-row items-center justify-between gap-6"
+            whileInView={{ opacity: 1, scale: 1 }}
+            viewport={{ once: true }}
+            className="rounded-3xl p-6 border text-center flex flex-col md:flex-row items-center justify-between gap-6"
             style={{
               background: isDark ? '#1A1035' : '#F5F3FF',
               borderColor: isDark ? '#4C3580' : '#C4B5FD',
@@ -941,40 +972,50 @@ export function Home() {
               Sign In to Start
             </motion.button>
           </motion.div>
+        ) : (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="rounded-3xl p-6 border text-center flex flex-col md:flex-row items-center justify-between gap-6"
+            style={{
+              background: isDark ? '#1A1035' : '#F5F3FF',
+              borderColor: isDark ? '#4C3580' : '#C4B5FD',
+            }}
+            onClick={() => navigate('/submit')}
+          >
+            <div className="flex items-center gap-4 text-left cursor-pointer group">
+              <div
+                className="w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0 transition-transform group-hover:scale-110"
+                style={{ background: isDark ? '#2D1B69' : 'white' }}
+              >
+                <Send size={24} style={{ color: '#7C3AED' }} />
+              </div>
+              <div>
+                <h3
+                  style={{
+                    fontFamily: "'Fredoka One', cursive",
+                    fontSize: '1.1rem',
+                    color: isDark ? '#F0EAFF' : '#1E1B4B',
+                  }}
+                >
+                  Contribute a Clue
+                </h3>
+                <p style={{ color: T.textMuted, fontSize: '0.85rem', margin: 0 }}>
+                  Share your cryptic creativity with the CrypticOwl community.
+                </p>
+              </div>
+            </div>
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              className="px-6 py-3 rounded-2xl font-bold text-white whitespace-nowrap"
+              style={{ background: 'linear-gradient(135deg, #7C3AED 0%, #5B21B6 100%)' }}
+            >
+              Submit Now
+            </motion.button>
+          </motion.div>
         )}
-
-        {/* TODAY'S PUZZLE — front and centre */}
-        <TodaysPuzzleHero
-          onNavigate={() => navigate('/puzzle')}
-          isDark={isDark}
-          puzzle={todaysPuzzle}
-        />
-
-        {/* Stats strip */}
-        <StatsStrip isDark={isDark} />
-      </div>
-
-      {/* ── NEW PLAYER JOURNEY ── */}
-      <div className="relative z-10 px-4 py-8">
-        <NewPlayerJourney onNavigate={() => navigate('/learn')} isDark={isDark} />
-      </div>
-
-      {/* ── HOW IT WORKS ── */}
-      <div className="relative z-10">
-        <HowItWorks isDark={isDark} />
-      </div>
-
-      {/* ── ACHIEVEMENTS ── */}
-      <LeaderboardTeaser isDark={isDark} />
-
-      {/* ── WORDPLAY TYPES ── */}
-      <div className="relative z-10">
-        <WordplayPreview onNavigate={() => navigate('/learn')} isDark={isDark} />
-      </div>
-
-      {/* ── BOTTOM CTA ── */}
-      <div className="relative z-10">
-        <BottomCTA onNavigate={() => navigate('/learn')} isDark={isDark} />
       </div>
     </div>
   );

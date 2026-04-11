@@ -58,12 +58,30 @@ export function getXPForSolve(hintsUsed: number): number {
   return 10;
 }
 
-export function getLevelFromXP(xp: number): number {
-  return Math.floor(Math.sqrt(xp / 50)) + 1;
+export function getLevelFromXP(xp: number, history: SolveRecord[] = []): number {
+  const baseLevel = Math.floor(Math.sqrt(xp / 50)) + 1;
+  if (history.length < 2) return baseLevel;
+
+  // Professional penalty: drop levels for significant gaps in solving
+  // A gap of > 3 days between any two solves in the last 5 solves results in a penalty
+  const recentHistory = history.slice(0, 5);
+  let maxGapDays = 0;
+  for (let i = 0; i < recentHistory.length - 1; i++) {
+    const d1 = new Date(recentHistory[i].date).getTime();
+    const d2 = new Date(recentHistory[i + 1].date).getTime();
+    const gap = Math.floor((d1 - d2) / (1000 * 60 * 60 * 24));
+    if (gap > maxGapDays) maxGapDays = gap;
+  }
+
+  const penalty = maxGapDays > 3 ? Math.floor(maxGapDays / 3) : 0;
+  return Math.max(1, baseLevel - penalty);
 }
 
-export function getXPToNextLevel(xp: number): { current: number; needed: number; label: string } {
-  const level = getLevelFromXP(xp);
+export function getXPToNextLevel(
+  xp: number,
+  history: SolveRecord[] = []
+): { current: number; needed: number; label: string } {
+  const level = getLevelFromXP(xp, history);
   const currentLevelXP = (level - 1) ** 2 * 50;
   const nextLevelXP = level ** 2 * 50;
   return {
@@ -74,10 +92,10 @@ export function getXPToNextLevel(xp: number): { current: number; needed: number;
 }
 
 export function getLevelTitle(level: number): string {
-  if (level >= 10) return 'Grand Master 🏆';
-  if (level >= 7) return 'Cryptic Expert 🎓';
-  if (level >= 5) return 'Word Wizard 🧙';
-  if (level >= 3) return 'Clue Hunter 🔎';
+  if (level >= 20) return 'Grand Master 🏆';
+  if (level >= 15) return 'Cryptic Expert 🎓';
+  if (level >= 10) return 'Word Wizard 🧙';
+  if (level >= 5) return 'Clue Hunter 🔎';
   if (level >= 2) return 'Apprentice Solver 📖';
   return 'Newbie Cryptician 🦉';
 }
@@ -122,14 +140,15 @@ export function useStreak() {
         xpEarned: xpGained,
       };
 
+      const newHistory = [solveRecord, ...(current.history ?? [])];
       const newData: StreakData = {
         count: newCount,
         lastSolved: today,
         totalSolved: current.totalSolved + 1,
         xp: newXP,
-        level: getLevelFromXP(newXP),
+        level: getLevelFromXP(newXP, newHistory),
         bestStreak: Math.max(current.bestStreak, newCount),
-        history: [solveRecord, ...(current.history ?? [])],
+        history: newHistory,
       };
 
       saveData(newData);

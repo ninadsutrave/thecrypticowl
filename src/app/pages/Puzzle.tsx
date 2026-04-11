@@ -267,7 +267,7 @@ function SolveTimer({ startTime, stopped }: { startTime: number; stopped: boolea
   const [elapsed, setElapsed] = useState(0);
 
   useEffect(() => {
-    if (stopped) return;
+    if (stopped || !startTime) return;
     const id = setInterval(() => setElapsed(Math.floor((Date.now() - startTime) / 1000)), 1000);
     return () => clearInterval(id);
   }, [startTime, stopped]);
@@ -1222,6 +1222,13 @@ interface ActivePuzzle {
   hints: typeof PUZZLE.hints;
   clueParts: typeof CLUE_PARTS;
   date?: string;
+  author?: string | null;
+  authorSocial?: string | null;
+  authorProfile?: {
+    name: string;
+    social_link: string | null;
+    avatar_url: string | null;
+  } | null;
 }
 
 function mapDbPuzzle(p: DbDailyPuzzle): ActivePuzzle {
@@ -1244,6 +1251,9 @@ function mapDbPuzzle(p: DbDailyPuzzle): ActivePuzzle {
     })),
     clueParts: (p.clue_parts ?? []).map(cp => ({ text: cp.text, type: cp.type as string | null })),
     date: p.date,
+    author: p.author,
+    authorSocial: p.author_social,
+    authorProfile: p.author_profile,
   };
 }
 
@@ -1278,6 +1288,7 @@ export function Puzzle() {
         if (p) {
           setActivePuzzle(mapDbPuzzle(p));
           setPuzzleId(p.id);
+          setStartTime(Date.now());
         } else {
           setNotFound(true);
         }
@@ -1294,6 +1305,7 @@ export function Puzzle() {
           const p = JSON.parse(cached);
           setActivePuzzle(mapDbPuzzle(p));
           setPuzzleId(p.id);
+          setStartTime(Date.now());
           setLoading(false);
           return;
         } catch {
@@ -1305,11 +1317,13 @@ export function Puzzle() {
         if (p) {
           setActivePuzzle(mapDbPuzzle(p));
           setPuzzleId(p.id);
+          setStartTime(Date.now());
           // Cache for the rest of the day
           localStorage.setItem(cacheKey, JSON.stringify(p));
         } else {
           // Fallback to hardcoded if DB is empty/unconfigured
           setActivePuzzle(DEFAULT_PUZZLE);
+          setStartTime(Date.now());
         }
         setLoading(false);
       });
@@ -1323,7 +1337,7 @@ export function Puzzle() {
   const [wrongAttemptsCount, setWrongAttemptsCount] = useState(0);
   const [newHintIndex, setNewHintIndex] = useState<number | null>(null);
   const [showAllHints, setShowAllHints] = useState(false);
-  const [startTime] = useState(Date.now());
+  const [startTime, setStartTime] = useState<number>(0);
   const [solveTime, setSolveTime] = useState(0);
   const [puzzleId, setPuzzleId] = useState<string | undefined>(undefined);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -1493,6 +1507,73 @@ export function Puzzle() {
                     >
                       {today}
                     </p>
+                    {activePuzzle?.author && (
+                      <div className="flex items-center gap-1.5 mt-1 opacity-80">
+                        <span style={{ fontSize: '0.7rem', color: T.textMuted, fontWeight: 700 }}>
+                          BY
+                        </span>
+                        {activePuzzle.authorProfile ? (
+                          <div className="flex items-center gap-2">
+                            {activePuzzle.authorProfile.avatar_url && (
+                              <img
+                                src={activePuzzle.authorProfile.avatar_url}
+                                alt={activePuzzle.authorProfile.name}
+                                className="w-5 h-5 rounded-full border border-[#7C3AED] shadow-sm"
+                              />
+                            )}
+                            <a
+                              href={
+                                activePuzzle.authorProfile.social_link?.startsWith('http')
+                                  ? activePuzzle.authorProfile.social_link
+                                  : activePuzzle.authorProfile.social_link
+                                    ? `https://${activePuzzle.authorProfile.social_link}`
+                                    : '#'
+                              }
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="flex items-center gap-1 hover:underline"
+                              style={{
+                                fontSize: '0.75rem',
+                                color: isDark ? '#A78BFA' : '#7C3AED',
+                                fontWeight: 800,
+                              }}
+                            >
+                              {activePuzzle.authorProfile.name.toUpperCase()}
+                              {activePuzzle.authorProfile.social_link && <ExternalLink size={10} />}
+                            </a>
+                          </div>
+                        ) : activePuzzle.authorSocial ? (
+                          <a
+                            href={
+                              activePuzzle.authorSocial.startsWith('http')
+                                ? activePuzzle.authorSocial
+                                : `https://${activePuzzle.authorSocial}`
+                            }
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center gap-1 hover:underline"
+                            style={{
+                              fontSize: '0.75rem',
+                              color: isDark ? '#A78BFA' : '#7C3AED',
+                              fontWeight: 800,
+                            }}
+                          >
+                            {activePuzzle.author.toUpperCase()}
+                            <ExternalLink size={10} />
+                          </a>
+                        ) : (
+                          <span
+                            style={{
+                              fontSize: '0.75rem',
+                              color: T.textSub,
+                              fontWeight: 800,
+                            }}
+                          >
+                            {activePuzzle.author.toUpperCase()}
+                          </span>
+                        )}
+                      </div>
+                    )}
                   </>
                 )}
               </div>

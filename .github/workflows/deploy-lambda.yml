@@ -23,7 +23,7 @@ jobs:
       - name: Create deployment package
         run: |
           cd lambda
-          zip -r ../function.zip . -x "*.git*" "node_modules/.cache/*"
+          zip -r ../function.zip index.js package.json lib/ constants/
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4

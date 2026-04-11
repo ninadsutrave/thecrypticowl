@@ -487,7 +487,7 @@ function HowItWorks({ isDark }: { isDark: boolean }) {
   ];
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-12">
+    <div className="max-w-4xl mx-auto px-4 py-4">
       <div className="text-center mb-10">
         <h2
           style={{
@@ -544,120 +544,6 @@ function HowItWorks({ isDark }: { isDark: boolean }) {
   );
 }
 
-// ─── WORDPLAY TYPES PREVIEW ───────────────────────────────────────────────────
-
-function WordplayPreview({ onNavigate, isDark }: { onNavigate: () => void; isDark: boolean }) {
-  const T = getTheme(isDark);
-  const topics = [
-    {
-      icon: '🔀',
-      title: 'Anagram',
-      color: '#A78BFA',
-      bg: '#F5F0FF',
-      dbg: '#1A0F35',
-      desc: 'Letters scrambled to form a new word',
-    },
-    {
-      icon: '📝',
-      title: 'Double Def',
-      color: '#34D399',
-      bg: '#ECFDF5',
-      dbg: '#062015',
-      desc: 'Two separate definitions, one answer',
-    },
-    {
-      icon: '🔄',
-      title: 'Reversal',
-      color: '#38BDF8',
-      bg: '#F0F9FF',
-      dbg: '#021520',
-      desc: 'Read a word backwards for the answer',
-    },
-    {
-      icon: '🎙️',
-      title: 'Homophone',
-      color: '#FB923C',
-      bg: '#FFF7ED',
-      dbg: '#1A0A00',
-      desc: 'The answer sounds like another word',
-    },
-    {
-      icon: '👻',
-      title: 'Hidden Word',
-      color: '#F472B6',
-      bg: '#FDF2F8',
-      dbg: '#1F0818',
-      desc: 'Answer concealed within the clue',
-    },
-    {
-      icon: '✂️',
-      title: 'Deletion',
-      color: '#FBBF24',
-      bg: '#FFFBEB',
-      dbg: '#1A1000',
-      desc: 'Remove letters to find the answer',
-    },
-  ];
-
-  return (
-    <div className="max-w-4xl mx-auto px-4 pb-16">
-      <div className="flex items-center justify-between mb-6">
-        <h2
-          style={{
-            fontFamily: "'Fredoka One', cursive",
-            fontSize: '1.8rem',
-            color: isDark ? '#C4B5FD' : '#1E1B4B',
-          }}
-        >
-          Types of Wordplay
-        </h2>
-        <button
-          onClick={onNavigate}
-          className="flex items-center gap-1.5 text-sm font-bold transition-colors"
-          style={{
-            color: '#7C3AED',
-            fontFamily: "'Nunito', sans-serif",
-          }}
-        >
-          Learn all <ChevronRight size={16} />
-        </button>
-      </div>
-      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-        {topics.map((topic, i) => (
-          <motion.div
-            key={i}
-            whileHover={{ scale: 1.04, y: -2 }}
-            whileTap={{ scale: 0.97 }}
-            onClick={onNavigate}
-            initial={{ opacity: 0, y: 16 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ delay: i * 0.06 }}
-            className="rounded-2xl p-4 cursor-pointer border-2 transition-all shadow-sm"
-            style={{
-              background: isDark ? topic.dbg : topic.bg,
-              borderColor: topic.color + '44',
-            }}
-          >
-            <div className="text-2xl mb-2">{topic.icon}</div>
-            <h3
-              style={{
-                fontFamily: "'Fredoka One', cursive",
-                fontSize: '1rem',
-                color: topic.color,
-                marginBottom: 4,
-              }}
-            >
-              {topic.title}
-            </h3>
-            <p style={{ fontSize: '0.78rem', color: T.textMuted, lineHeight: 1.5 }}>{topic.desc}</p>
-          </motion.div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
 // ─── ACHIEVEMENT TOAST ────────────────────────────────────────────────────────
 
 function LeaderboardTeaser({ isDark }: { isDark: boolean }) {
@@ -676,7 +562,7 @@ function LeaderboardTeaser({ isDark }: { isDark: boolean }) {
       initial={{ opacity: 0, y: 20 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
-      className="max-w-2xl mx-auto px-4 pb-16"
+      className="max-w-2xl mx-auto px-4 pb-4"
     >
       <div
         className="rounded-3xl p-6 border shadow-sm"
@@ -756,7 +642,7 @@ function LeaderboardTeaser({ isDark }: { isDark: boolean }) {
 
 function BottomCTA({ onNavigate, isDark: _isDark }: { onNavigate: () => void; isDark: boolean }) {
   return (
-    <div className="relative z-10 px-4 pb-16">
+    <div className="relative z-10 px-4 pb-4">
       <div className="max-w-2xl mx-auto">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -847,7 +733,7 @@ export function Home() {
   }, []);
 
   return (
-    <div className="relative overflow-hidden pb-20" style={{ background: T.pageBg }}>
+    <div className="relative overflow-hidden pb-8" style={{ background: T.pageBg }}>
       <FloatingBg isDark={isDark} />
 
       {/* ── HERO: App tagline + Today's Puzzle ── */}
@@ -904,8 +790,13 @@ export function Home() {
         <StatsStrip isDark={isDark} />
       </div>
 
+      {/* ── ACHIEVEMENTS ── */}
+      <div className="relative z-10 px-4 pt-8">
+        <LeaderboardTeaser isDark={isDark} />
+      </div>
+
       {/* ── NEW PLAYER JOURNEY ── */}
-      <div className="relative z-10 px-4 py-12">
+      <div className="relative z-10 px-4 py-4">
         <NewPlayerJourney onNavigate={() => navigate('/learn')} isDark={isDark} />
       </div>
 
@@ -915,20 +806,12 @@ export function Home() {
       </div>
 
       {/* ── BOTTOM CTA ── */}
-      <div className="relative z-10 mb-12">
+      <div className="relative z-10 mb-4">
         <BottomCTA onNavigate={() => navigate('/learn')} isDark={isDark} />
       </div>
 
-      {/* ── ACHIEVEMENTS ── */}
-      <LeaderboardTeaser isDark={isDark} />
-
-      {/* ── WORDPLAY TYPES ── */}
-      <div className="relative z-10">
-        <WordplayPreview onNavigate={() => navigate('/learn')} isDark={isDark} />
-      </div>
-
       {/* ── SUBMISSION PROMPT: At the very end ── */}
-      <div className="relative z-10 max-w-4xl mx-auto px-4 pb-20">
+      <div className="relative z-10 max-w-4xl mx-auto px-4 pb-4">
         {!isSignedIn ? (
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}

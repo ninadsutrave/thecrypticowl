@@ -622,11 +622,119 @@ const SYNONYMS = [
   { word: 'right', cryptic: 'R / RT', note: 'direction / correct' },
   { word: 'answer', cryptic: 'A / ANS', note: 'abbreviated' },
   { word: 'about', cryptic: 'C / CA / RE', note: 'circa / regarding' },
+  { word: 'one', cryptic: 'I', note: 'Roman numeral' },
+  { word: 'five', cryptic: 'V', note: 'Roman numeral' },
+  { word: 'ten', cryptic: 'X', note: 'Roman numeral' },
+  { word: 'fifty', cryptic: 'L', note: 'Roman numeral' },
+  { word: 'hundred', cryptic: 'C', note: 'Roman numeral' },
+  { word: 'five hundred', cryptic: 'D', note: 'Roman numeral' },
+  { word: 'thousand', cryptic: 'M', note: 'Roman numeral' },
 ];
 
 // ─── MAIN LEARN PAGE ──────────────────────────────────────────────────────────
 
 const SECTIONS = ['Intro', 'Parts', 'Wordplay', 'Compound', 'Synonyms'];
+
+function WordplayPreview({ isDark }: { isDark: boolean }) {
+  const T = getTheme(isDark);
+  const topics = [
+    {
+      icon: '🔀',
+      title: 'Anagram',
+      color: '#A78BFA',
+      bg: '#F5F0FF',
+      dbg: '#1A0F35',
+      desc: 'Letters scrambled to form a new word',
+    },
+    {
+      icon: '📝',
+      title: 'Double Def',
+      color: '#34D399',
+      bg: '#ECFDF5',
+      dbg: '#062015',
+      desc: 'Two separate definitions, one answer',
+    },
+    {
+      icon: '🔄',
+      title: 'Reversal',
+      color: '#38BDF8',
+      bg: '#F0F9FF',
+      dbg: '#021520',
+      desc: 'Read a word backwards for the answer',
+    },
+    {
+      icon: '🎙️',
+      title: 'Homophone',
+      color: '#FB923C',
+      bg: '#FFF7ED',
+      dbg: '#1A0A00',
+      desc: 'The answer sounds like another word',
+    },
+    {
+      icon: '👻',
+      title: 'Hidden Word',
+      color: '#F472B6',
+      bg: '#FDF2F8',
+      dbg: '#1F0818',
+      desc: 'Answer concealed within the clue',
+    },
+    {
+      icon: '✂️',
+      title: 'Deletion',
+      color: '#FBBF24',
+      bg: '#FFFBEB',
+      dbg: '#1A1000',
+      desc: 'Remove letters to find the answer',
+    },
+  ];
+
+  return (
+    <div className="max-w-4xl mx-auto pb-4">
+      <div className="flex items-center justify-between mb-6">
+        <h2
+          style={{
+            fontFamily: "'Fredoka One', cursive",
+            fontSize: '1.8rem',
+            color: isDark ? '#C4B5FD' : '#1E1B4B',
+          }}
+        >
+          Types of Wordplay
+        </h2>
+      </div>
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+        {topics.map((topic, i) => (
+          <motion.div
+            key={i}
+            whileHover={{ scale: 1.04, y: -2 }}
+            whileTap={{ scale: 0.97 }}
+            initial={{ opacity: 0, y: 16 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ delay: i * 0.06 }}
+            className="rounded-2xl p-4 cursor-pointer border-2 transition-all shadow-sm"
+            style={{
+              background: isDark ? topic.dbg : topic.bg,
+              borderColor: topic.color + '44',
+            }}
+          >
+            <div className="text-2xl mb-2">{topic.icon}</div>
+            <h3
+              style={{
+                fontFamily: "'Fredoka One', cursive",
+                fontSize: '1rem',
+                color: topic.color,
+                marginBottom: 4,
+              }}
+            >
+              {topic.title}
+            </h3>
+            <p style={{ fontSize: '0.78rem', color: T.textMuted, lineHeight: 1.5 }}>{topic.desc}</p>
+          </motion.div>
+        ))}
+      </div>
+    </div>
+  );
+}
 
 export function Learn() {
   const [activeSection, setActiveSection] = useState(0);
@@ -975,6 +1083,8 @@ export function Learn() {
           {/* ── SECTION 2: Wordplay Types ── */}
           {activeSection === 2 && (
             <div className="space-y-6">
+              <WordplayPreview isDark={isDark} />
+
               <div>
                 <h2
                   style={{
@@ -984,7 +1094,7 @@ export function Learn() {
                     marginBottom: 4,
                   }}
                 >
-                  Types of Wordplay 🎭
+                  Wordplay Deep Dive 🎭
                 </h2>
                 <p
                   style={{

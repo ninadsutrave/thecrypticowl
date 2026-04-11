@@ -1,6 +1,8 @@
 import { CLUE_SYSTEM } from "../constants/prompts.js";
 
 export function getCluePrompt(lexical) {
+  const isDoubleDef = lexical.type === 'double_definition';
+  
   return `Generate a professional British-style cryptic clue for the word "${lexical.answer}".
 Mechanism: ${lexical.type}
 Definition: ${lexical.definition}
@@ -14,18 +16,22 @@ STRICT XIMENEAN RULES:
 6. Include the letter count in parentheses at the end, e.g., " (5)".
 7. Return ONLY the final JSON object. Do not brainstorm out loud.
 
+COMPONENTS (MANDATORY):
+- definition: The exact string from the clue that serves as the definition.
+- indicator: The signal word(s) if applicable (e.g., "broken"). For Double Definition, this should be the OTHER definition.
+- fodder: The raw material being manipulated (e.g., the word to be anagrammed). For Double Definition, this can be null.
+- explanation: A concise pedagogical explanation of how the wordplay works (one or two sentences).
+
 OUTPUT FORMAT (JSON):
 {
   "clue": "The full clue text including (length)",
-  "definition": "The exact definition portion",
+  "definition": "...",
+  "indicator": "...",
+  "fodder": "...",
   "wordplay_summary": "Concise explanation, e.g., 'Anagram (broken) of PEARS'",
+  "explanation": "Detailed step-by-step breakdown for the final hint",
   "clue_parts": [
     { "text": "Part of clue", "type": "definition|indicator|fodder|link|null" }
-  ],
-  "hints": [
-    { "id": 1, "title": "Definition Location", "text": "...", "highlight": "...", "mascot_comment": "..." },
-    { "id": 2, "title": "Mechanism", "text": "...", "highlight": "...", "mascot_comment": "..." },
-    { "id": 3, "title": "Full Breakdown", "text": "...", "highlight": "...", "mascot_comment": "..." }
   ]
 }`;
 }

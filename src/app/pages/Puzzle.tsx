@@ -1460,6 +1460,11 @@ export function Puzzle() {
 
   const visibleHints = activePuzzle?.hints.slice(0, hintsUnlocked) || [];
 
+  const handleReveal = () => {
+    setIsCorrect(true);
+    setSolveTime(Math.floor((Date.now() - startTime) / 1000));
+  };
+
   return (
     <div className="max-w-2xl mx-auto px-4 pb-32 pt-6">
       {!isCorrect ? (
@@ -1798,6 +1803,28 @@ export function Puzzle() {
                   </span>
                 )}
             </motion.button>
+
+            {/* Reveal Button — only after all hints are used */}
+            {!loading && activePuzzle && hintsUnlocked >= activePuzzle.hints.length && (
+              <motion.button
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.97 }}
+                onClick={handleReveal}
+                className="w-full py-3 mt-3 rounded-2xl flex items-center justify-center gap-2 border-2 transition-all"
+                style={{
+                  borderColor: isDark ? '#4C3580' : '#E0E7FF',
+                  background: isDark ? '#1A1035' : '#F9FAFB',
+                  color: isDark ? '#A78BFA' : '#6B7280',
+                  fontFamily: "'Nunito', sans-serif",
+                  fontWeight: 800,
+                }}
+              >
+                <RotateCcw size={16} />
+                I'm stuck, reveal the answer
+              </motion.button>
+            )}
           </div>
 
           {/* Hints */}

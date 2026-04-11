@@ -52,6 +52,93 @@ async function generateValidClue() {
 // SUPABASE INSERT
 // =========================
 
+function constructHints(lexical, clue) {
+  const isDoubleDef = lexical.type === "double_definition";
+
+  if (isDoubleDef) {
+    return [
+      {
+        id: 1,
+        title: "First Definition",
+        text: `The first part of the clue is a definition for the answer.`,
+        highlight: clue.definition,
+        mascot_comment: "Double definitions are sneaky! One definition is at the start...",
+      },
+      {
+        id: 2,
+        title: "Second Definition",
+        text: `The other end of the clue is also a definition for the same answer.`,
+        highlight: clue.indicator,
+        mascot_comment: "...and the other is at the end! No wordplay here. 🦉",
+      },
+      {
+        id: 3,
+        title: "First Context",
+        text: `Think of a word that fits the first definition: "${clue.definition}".`,
+        mascot_comment: "Focus on one side first...",
+      },
+      {
+        id: 4,
+        title: "Second Context",
+        text: `That same word must also fit the second definition: "${clue.indicator}".`,
+        mascot_comment: "Does it fit both? Then you've found it! 🎯",
+      },
+    ];
+  }
+
+  // Standard Wordplay Hints
+  const mechanismDesc = {
+    anagram: "the letters are being rearranged (scrambled).",
+    reversal: "the letters are written backwards.",
+    container: "one set of letters is placed inside another.",
+    hidden: "the answer is hidden across the words of the clue.",
+    deletion: "one or more letters are removed from a word.",
+    charade: "two or more parts are joined together side-by-side.",
+    homophone: "the answer sounds like another word.",
+    cryptic_definition: "the whole clue is a punny or metaphorical definition.",
+    andlit: "the whole clue is both the definition and the wordplay!",
+    compound: "multiple mechanisms are combined together.",
+  };
+
+  return [
+    {
+      id: 1,
+      title: "Definition Location",
+      text: `The definition is at the ${
+        clue.clue.toLowerCase().startsWith(clue.definition.toLowerCase()) ? "start" : "end"
+      } of the clue.`,
+      highlight: clue.definition,
+      mascot_comment: "Found the definition! It's always at one of the ends. 👀",
+    },
+    {
+      id: 2,
+      title: "The Indicator",
+      text: clue.indicator
+        ? `The indicator word is "${clue.indicator}", which signals how the wordplay works.`
+        : `Look for a hidden signal word that tells you what to do with the letters.`,
+      highlight: clue.indicator || null,
+      mascot_comment: "Indicators are like road signs—they tell you which way to go!",
+    },
+    {
+      id: 3,
+      title: "The Fodder",
+      text: clue.fodder
+        ? `The raw letters or synonym to work with is "${clue.fodder}".`
+        : "Look closely at the letters in the clue...",
+      highlight: clue.fodder || null,
+      mascot_comment: "We've got the ingredients, now let's cook! 🍳",
+    },
+    {
+      id: 4,
+      title: "Wordplay Type",
+      text: `This is a ${lexical.type.replace("_", " ")} clue. In this type, ${
+        mechanismDesc[lexical.type] || "parts are combined to form the answer."
+      }`,
+      mascot_comment: "The final piece of the puzzle! Can you see it now? 🦉",
+    },
+  ];
+}
+
 async function writeToSupabase(lexical, clue) {
   // Map provider to author UUID
   const AUTHOR_MAP = {
@@ -63,6 +150,14 @@ async function writeToSupabase(lexical, clue) {
 
   const authorId = AUTHOR_MAP[AI_PROVIDER.toLowerCase()] || AUTHOR_MAP.gemini;
 
+  const hints = constructHints(lexical, clue).map((h) => ({
+    ...h,
+    color: h.color || "#7C3AED",
+    bg: h.bg || "#F5F3FF",
+    bg_dark: h.bg_dark || "#1A0F35",
+    border: h.border || "#C4B5FD",
+  }));
+
   // 1. Insert clue
   const { data: clueData, error: clueError } = await supabase
     .from("clues")
@@ -71,16 +166,10 @@ async function writeToSupabase(lexical, clue) {
       answer: lexical.answer,
       answer_pattern: String(lexical.answer.length),
       primary_type: lexical.type,
-      definition_text: lexical.definition,
-      wordplay_summary: clue.wordplay_summary,
+      definition_text: clue.definition,
+      wordplay_summary: clue.explanation || clue.wordplay_summary, // Store the full explanation as the post-solve summary
       clue_parts: clue.clue_parts,
-      hints: clue.hints.map((h) => ({
-        ...h,
-        color: h.color || "#7C3AED",
-        bg: h.bg || "#F5F3FF",
-        bg_dark: h.bg_dark || "#1A0F35",
-        border: h.border || "#C4B5FD",
-      })),
+      hints: hints,
       difficulty: lexical.difficulty || "medium",
       author_id: authorId,
     })

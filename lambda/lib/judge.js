@@ -7,9 +7,11 @@ export function judgeClue(clueObj, lexical) {
   if (!clueObj?.clue_parts || !Array.isArray(clueObj.clue_parts)) {
     errors.push("missing_clue_parts");
   }
-  if (!clueObj?.hints || !Array.isArray(clueObj.hints) || clueObj.hints.length < 3) {
-    errors.push("insufficient_hints");
-  }
+  if (!clueObj?.explanation) errors.push("missing_explanation");
+
+  // Ensure indicator/fodder exist (at least as null)
+  if (clueObj.indicator === undefined) errors.push("missing_indicator_field");
+  if (clueObj.fodder === undefined) errors.push("missing_fodder_field");
 
   // 2. Answer leak check
   if (

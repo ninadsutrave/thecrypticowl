@@ -192,7 +192,7 @@ function TodaysPuzzleHero({
             <p
               style={{
                 fontFamily: "'Nunito', sans-serif",
-                fontSize: 'clamp(1rem, 3vw, 1.15rem)',
+                fontSize: 'clamp(0.95rem, 4vw, 1.15rem)',
                 color: T.text,
                 fontWeight: 700,
                 lineHeight: 1.7,
@@ -278,27 +278,31 @@ function StatsStrip({ isDark }: { isDark: boolean }) {
       initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: 0.5 }}
-      className="flex flex-wrap gap-3 justify-center mt-6"
+      className="flex flex-wrap gap-2 sm:gap-3 justify-center mt-6 px-2"
     >
       {stats.map((s, i) => (
         <motion.div
           key={i}
           whileHover={{ y: -3, scale: 1.04 }}
           transition={{ type: 'spring', stiffness: 400 }}
-          className="flex flex-col items-center gap-1 rounded-3xl px-5 py-4 shadow-sm border"
+          className="flex flex-col items-center gap-1 rounded-3xl px-3 py-3 sm:px-5 sm:py-4 shadow-sm border flex-1 min-w-[120px] max-w-[160px]"
           style={{ background: T.cardBg, borderColor: T.cardBorder }}
         >
-          <span className="text-2xl">{s.icon}</span>
+          <span className="text-xl sm:text-2xl">{s.icon}</span>
           <span
             style={{
               fontFamily: "'Fredoka One', cursive",
-              fontSize: '1.4rem',
+              fontSize: '1.2rem',
               color: s.color,
             }}
+            className="sm:text-[1.4rem]"
           >
             {s.value}
           </span>
-          <span style={{ fontSize: '0.75rem', color: T.textMuted, fontWeight: 600 }}>
+          <span
+            style={{ fontSize: '0.65rem', color: T.textMuted, fontWeight: 600 }}
+            className="sm:text-[0.75rem] text-center"
+          >
             {s.label}
           </span>
         </motion.div>

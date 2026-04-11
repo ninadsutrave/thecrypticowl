@@ -1,7 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Mascot } from '../components/Mascot';
-import { Search, ChevronRight } from 'lucide-react';
+import { Search, ChevronRight, Eye } from 'lucide-react';
 import { useDarkMode } from '../context/DarkModeContext';
 import { getTheme } from '../theme';
 import learningData from '../data/learning_examples.json';
@@ -390,6 +390,135 @@ function WordplayPreview({
 
 const SECTIONS = ['Intro', 'Parts', 'Wordplay', 'Compound', 'Synonyms'];
 
+function CompoundExampleCard({
+  ex,
+  index,
+  isDark,
+  T,
+}: {
+  ex: any;
+  index: number;
+  isDark: boolean;
+  T: any;
+}) {
+  const [revealed, setRevealed] = useState(false);
+
+  return (
+    <div
+      className="rounded-3xl p-6 border shadow-sm flex flex-col"
+      style={{ background: T.cardBg, borderColor: T.cardBorder }}
+    >
+      <div className="flex items-center gap-3 mb-4">
+        <div className="text-3xl">{ex.emoji}</div>
+        <div>
+          <h3
+            style={{
+              fontFamily: "'Fredoka One', cursive",
+              fontSize: '1.1rem',
+              color: T.text,
+            }}
+          >
+            {ex.title}
+          </h3>
+          <p style={{ fontSize: '0.8rem', color: T.textMuted }}>{ex.subtitle}</p>
+        </div>
+      </div>
+
+      <div
+        className="rounded-2xl p-4 mb-4"
+        style={{
+          background: isDark ? '#1A0F35' : '#F5F3FF',
+          border: '1.5px solid #7C3AED',
+        }}
+      >
+        <p
+          style={{
+            fontFamily: "'Nunito', sans-serif",
+            fontWeight: 700,
+            fontSize: '0.95rem',
+            color: T.text,
+            lineHeight: 1.6,
+          }}
+        >
+          {ex.clue}
+        </p>
+      </div>
+
+      <AnimatePresence mode="wait">
+        {!revealed ? (
+          <motion.div
+            key="hidden"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="flex-grow flex items-center justify-center py-8"
+          >
+            <button
+              onClick={() => setRevealed(true)}
+              className="px-6 py-2.5 rounded-xl flex items-center gap-2 transition-all hover:scale-105"
+              style={{
+                background: isDark ? '#2D1B69' : '#F5F3FF',
+                border: `2px solid ${isDark ? '#7C3AED' : '#C4B5FD'}`,
+                color: isDark ? '#C4B5FD' : '#7C3AED',
+                fontFamily: "'Nunito', sans-serif",
+                fontWeight: 800,
+              }}
+            >
+              <Eye size={18} />
+              Reveal Explanation
+            </button>
+          </motion.div>
+        ) : (
+          <motion.div
+            key="revealed"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="flex flex-col flex-grow"
+          >
+            <div className="space-y-3 flex-grow mb-4">
+              {ex.steps.map((step: any, si: number) => (
+                <div key={si} className="flex items-start gap-3">
+                  <div
+                    className="w-5 h-5 rounded-full flex items-center justify-center text-[0.65rem] font-bold mt-0.5 flex-shrink-0"
+                    style={{
+                      background: PART_COLORS[step.type]?.bg || '#7C3AED',
+                      color: PART_COLORS[step.type]?.text || 'white',
+                      border: `1.5px solid ${PART_COLORS[step.type]?.border || '#7C3AED'}`,
+                    }}
+                  >
+                    {si + 1}
+                  </div>
+                  <p style={{ fontSize: '0.85rem', color: T.text, lineHeight: 1.5 }}>{step.text}</p>
+                </div>
+              ))}
+            </div>
+
+            <div className="mt-auto pt-4 border-t" style={{ borderColor: T.cardBorder }}>
+              <div className="flex items-center justify-between mb-2">
+                <span
+                  className="text-xs font-bold uppercase tracking-wider"
+                  style={{ color: T.textFaint }}
+                >
+                  Answer
+                </span>
+                <span
+                  className="font-black text-lg"
+                  style={{ color: '#059669', fontFamily: "'Fredoka One', cursive" }}
+                >
+                  {ex.answer}
+                </span>
+              </div>
+              <p style={{ fontSize: '0.75rem', color: T.textMuted, fontStyle: 'italic' }}>
+                💡 {ex.tip}
+              </p>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
 export function Learn() {
   const [activeSection, setActiveSection] = useState(0);
   const [activeWordplayTab, setActiveWordplayTab] = useState(learningData.wordplayTypes[0].id);
@@ -768,167 +897,131 @@ export function Learn() {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {learningData.compoundExamples.map((ex, i) => (
-                  <div
-                    key={i}
-                    className="rounded-3xl p-6 border shadow-sm flex flex-col"
-                    style={{ background: T.cardBg, borderColor: T.cardBorder }}
-                  >
-                    <div className="flex items-center gap-3 mb-4">
-                      <div className="text-3xl">{ex.emoji}</div>
-                      <div>
-                        <h3
-                          style={{
-                            fontFamily: "'Fredoka One', cursive",
-                            fontSize: '1.1rem',
-                            color: T.text,
-                          }}
-                        >
-                          {ex.title}
-                        </h3>
-                        <p style={{ fontSize: '0.8rem', color: T.textMuted }}>{ex.subtitle}</p>
-                      </div>
-                    </div>
-
-                    <div
-                      className="rounded-2xl p-4 mb-4"
-                      style={{
-                        background: isDark ? '#1A0F35' : '#F5F3FF',
-                        border: '1.5px solid #7C3AED',
-                      }}
-                    >
-                      <p
-                        style={{
-                          fontFamily: "'Nunito', sans-serif",
-                          fontWeight: 700,
-                          fontSize: '0.95rem',
-                          color: T.text,
-                          lineHeight: 1.6,
-                        }}
-                      >
-                        {ex.clue}
-                      </p>
-                    </div>
-
-                    <div className="space-y-3 flex-grow mb-4">
-                      {ex.steps.map((step, si) => (
-                        <div key={si} className="flex items-start gap-3">
-                          <div
-                            className="w-5 h-5 rounded-full flex items-center justify-center text-[0.65rem] font-bold mt-0.5 flex-shrink-0"
-                            style={{
-                              background: PART_COLORS[step.type]?.bg || '#7C3AED',
-                              color: PART_COLORS[step.type]?.text || 'white',
-                              border: `1.5px solid ${PART_COLORS[step.type]?.border || '#7C3AED'}`,
-                            }}
-                          >
-                            {si + 1}
-                          </div>
-                          <p style={{ fontSize: '0.85rem', color: T.text, lineHeight: 1.5 }}>
-                            {step.text}
-                          </p>
-                        </div>
-                      ))}
-                    </div>
-
-                    <div className="mt-auto pt-4 border-t" style={{ borderColor: T.cardBorder }}>
-                      <div className="flex items-center justify-between mb-2">
-                        <span
-                          className="text-xs font-bold uppercase tracking-wider"
-                          style={{ color: T.textFaint }}
-                        >
-                          Answer
-                        </span>
-                        <span
-                          className="font-black text-lg"
-                          style={{ color: '#059669', fontFamily: "'Fredoka One', cursive" }}
-                        >
-                          {ex.answer}
-                        </span>
-                      </div>
-                      <p style={{ fontSize: '0.75rem', color: T.textMuted, fontStyle: 'italic' }}>
-                        💡 {ex.tip}
-                      </p>
-                    </div>
-                  </div>
+                  <CompoundExampleCard key={i} ex={ex} index={i} isDark={isDark} T={T} />
                 ))}
               </div>
             </div>
           )}
 
-          {/* ── SECTION 4: Synonyms ── */}
+          {/* ── SECTION 5: Synonyms Cheat Sheet ── */}
           {activeSection === 4 && (
             <div className="space-y-6">
-              <div
-                className="rounded-3xl p-6 border shadow-sm"
-                style={{ background: T.cardBg, borderColor: T.cardBorder }}
-              >
+              <div>
                 <h2
                   style={{
                     fontFamily: "'Fredoka One', cursive",
                     fontSize: '1.5rem',
                     color: isDark ? '#C4B5FD' : '#1E1B4B',
-                    marginBottom: 12,
+                    marginBottom: 4,
                   }}
                 >
-                  Cryptic Abbreviations & Synonyms 📖
+                  The Cheat Sheet 📚
                 </h2>
-                <div className="relative mb-6">
-                  <Search
-                    className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"
-                    size={20}
-                  />
-                  <input
-                    type="text"
-                    placeholder="Search for a word (e.g. 'doctor', 'east')..."
-                    value={searchQuery}
-                    onChange={e => setSearchQuery(e.target.value)}
-                    className="w-full pl-12 pr-4 py-3 rounded-2xl border-2 transition-all outline-none"
-                    style={{
-                      background: T.cardBg,
-                      borderColor: T.cardBorder,
-                      color: T.text,
-                      fontFamily: "'Nunito', sans-serif",
-                    }}
-                  />
-                </div>
+                <p style={{ fontSize: '0.9rem', color: T.textMuted, fontWeight: 600 }}>
+                  Common cryptic substitutions you'll see everywhere.
+                </p>
+              </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  {filteredSynonyms.map((s, i) => (
+              <div className="relative mb-6">
+                <Search
+                  className="absolute left-4 top-1/2 -translate-y-1/2"
+                  size={18}
+                  style={{ color: T.textFaint }}
+                />
+                <input
+                  type="text"
+                  placeholder="Search common synonyms..."
+                  value={searchQuery}
+                  onChange={e => setSearchQuery(e.target.value)}
+                  className="w-full pl-12 pr-4 py-3 rounded-2xl border-2 transition-all outline-none"
+                  style={{
+                    background: T.cardBg,
+                    borderColor: T.cardBorder,
+                    color: T.text,
+                    fontFamily: "'Nunito', sans-serif",
+                  }}
+                />
+              </div>
+
+              {/* NATO Phonetic Alphabet Section */}
+              {!searchQuery && (
+                <div className="mb-8">
+                  <h3
+                    className="mb-4 px-2"
+                    style={{
+                      fontFamily: "'Fredoka One', cursive",
+                      fontSize: '1.1rem',
+                      color: isDark ? '#A78BFA' : '#7C3AED',
+                    }}
+                  >
+                    NATO Phonetic Alphabet ✈️
+                  </h3>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                    {learningData.synonyms
+                      .filter(s => s.note === 'NATO Phonetic')
+                      .map((s, i) => (
+                        <div
+                          key={i}
+                          className="p-3 rounded-xl border text-center transition-all hover:scale-[1.02]"
+                          style={{
+                            background: isDark ? '#1A1B2E' : '#F8FAFC',
+                            borderColor: T.cardBorder,
+                          }}
+                        >
+                          <div
+                            className="text-xs font-bold uppercase tracking-wider mb-1"
+                            style={{ color: T.textFaint }}
+                          >
+                            {s.word}
+                          </div>
+                          <div
+                            className="text-lg font-black"
+                            style={{ color: T.text, fontFamily: "'Fredoka One', cursive" }}
+                          >
+                            {s.cryptic}
+                          </div>
+                        </div>
+                      ))}
+                  </div>
+                </div>
+              )}
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {learningData.synonyms
+                  .filter(
+                    s =>
+                      s.note !== 'NATO Phonetic' &&
+                      (s.word.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                        s.cryptic.toLowerCase().includes(searchQuery.toLowerCase()))
+                  )
+                  .map((s, i) => (
                     <div
                       key={i}
-                      className="p-4 rounded-2xl border flex items-center justify-between transition-all hover:scale-[1.02]"
-                      style={{
-                        background: isDark ? '#00000020' : '#F9FAFB',
-                        borderColor: T.cardBorder,
-                      }}
+                      className="p-4 rounded-2xl border flex items-center justify-between group transition-all"
+                      style={{ background: T.cardBg, borderColor: T.cardBorder }}
                     >
                       <div>
-                        <p
-                          style={{
-                            fontSize: '0.75rem',
-                            fontWeight: 700,
-                            color: T.textFaint,
-                            textTransform: 'uppercase',
-                            marginBottom: 2,
-                          }}
+                        <div
+                          className="text-xs font-bold uppercase tracking-wider"
+                          style={{ color: T.textFaint }}
                         >
                           {s.word}
-                        </p>
-                        <p
-                          style={{
-                            fontFamily: "'Fredoka One', cursive",
-                            fontSize: '1.1rem',
-                            color: '#7C3AED',
-                          }}
-                        >
-                          {s.cryptic}
-                        </p>
+                        </div>
+                        <div className="text-sm" style={{ color: T.textMuted }}>
+                          {s.note}
+                        </div>
                       </div>
-                      <div className="text-right">
-                        <p style={{ fontSize: '0.72rem', color: T.textMuted }}>{s.note}</p>
+                      <div
+                        className="text-xl font-black"
+                        style={{
+                          color: isDark ? '#C4B5FD' : '#5B21B6',
+                          fontFamily: "'Fredoka One', cursive",
+                        }}
+                      >
+                        {s.cryptic}
                       </div>
                     </div>
                   ))}
-                </div>
               </div>
             </div>
           )}

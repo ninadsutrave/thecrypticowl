@@ -41,7 +41,16 @@
       "answer": "TONES",
       "visual": ["S", "T", "O", "N", "E"],
       "visualAnswer": ["T", "O", "N", "E", "S"],
-      "indicators": ["mixed", "wild", "broken", "scrambled", "confused", "jumbled", "crazy", "reformed"]
+      "indicators": [
+        "mixed",
+        "wild",
+        "broken",
+        "scrambled",
+        "confused",
+        "jumbled",
+        "crazy",
+        "reformed"
+      ]
     },
     {
       "id": "double_def",
@@ -198,7 +207,27 @@
         { "label": "Letters", "text": "L-A-W-N", "color": "fodder" }
       ],
       "answer": "LAWN",
-      "visual": ["L", "a", "y", "i", "n", "g", "a", "W", "o", "n", "d", "e", "r", "f", "u", "l", "N", "e", "w"],
+      "visual": [
+        "L",
+        "a",
+        "y",
+        "i",
+        "n",
+        "g",
+        "a",
+        "W",
+        "o",
+        "n",
+        "d",
+        "e",
+        "r",
+        "f",
+        "u",
+        "l",
+        "N",
+        "e",
+        "w"
+      ],
       "visualAnswer": ["L", "A", "W", "N"],
       "indicators": ["start", "initially", "firstly", "regularly", "every other", "unevenly"]
     }

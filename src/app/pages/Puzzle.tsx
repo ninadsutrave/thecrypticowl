@@ -568,7 +568,7 @@ function SuccessState({
   };
 
   const shareText = [
-    `🦉 The Cryptic Owl #${activePuzzle.number}`,
+    `🦉 TheCrypticOwl #${activePuzzle.number}`,
     ``,
     `${getShareBlocks()}  (${hintsUsed}/4 hints used)`,
     `⏱️ ${solveTimeStr}  🔥 ${displayData.streak}-day streak`,
@@ -677,7 +677,7 @@ function SuccessState({
                   margin: 0,
                 }}
               >
-                The Cryptic Owl
+                TheCrypticOwl
               </p>
               <p
                 style={{

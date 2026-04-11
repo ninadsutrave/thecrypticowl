@@ -1,0 +1,36 @@
+in clue submission form, add their name, email i
+
+d, social media link. and in the daily cryptical clue have some space to add author name, and auth or profile (if present).
+
+also this become a contributor component should be at the very last on the home page.
+
+Become a Contributor!
+
+Sign in to submit your own cryptic clues for our daily rotation.
+
+Sign In to Start
+
+also validate the correctness that all values are being brought correctly from supabase DB. streaks, etc maybe initially gotten from local sotrage, but after user signs in, their streak, current stats, etc should be stored in DB.
+
+also what changes do i make in supabase schema? when I'm trying to fetch a clue I'm getting 401 response:
+
+{
+
+"code": "42501",
+
+"details": null,
+
+"hint": null,
+
+"message": "permission denied for schema public"
+
+}
+
+
+have one author table with name, email and social.
+reference this author id at other places.
+also prefill author table with gemini, open api, claude and hugging face.
+
+the cryptic clue timer should only start after the clue has completed loaded on the screen.
+
+finally check all lint, formatting, prettier checks and confirm branch is good to merge into master.

@@ -152,17 +152,18 @@ export function Root() {
       >
         <div className="max-w-5xl mx-auto px-4 h-16 flex items-center justify-between">
           {/* Logo */}
-          <NavLink to="/" className="flex items-center gap-2.5 no-underline">
+          <NavLink to="/" className="flex items-center gap-2.5 no-underline flex-shrink-0">
             <OwlLogoMini />
             <span
+              className="whitespace-nowrap"
               style={{
                 fontFamily: "'Fredoka One', cursive",
-                fontSize: '1.25rem',
+                fontSize: 'clamp(1.1rem, 4vw, 1.25rem)',
                 color: isDark ? '#C4B5FD' : '#5B21B6',
                 letterSpacing: '-0.01em',
               }}
             >
-              The Cryptic Owl
+              TheCrypticOwl
             </span>
           </NavLink>
 
@@ -194,29 +195,31 @@ export function Root() {
           <div className="flex items-center gap-2">
             {/* Streak */}
             <motion.div
-              className="flex items-center gap-1.5 rounded-full px-3 py-1.5 border"
+              className="flex items-center gap-1.5 rounded-full px-2.5 py-1.5 border sm:px-3"
               style={{
                 background: T.streakBg,
                 borderColor: T.streakBorder,
               }}
               whileHover={{ scale: 1.05 }}
             >
-              <span className="text-base">🔥</span>
+              <span className="text-sm sm:text-base">🔥</span>
               <span
                 style={{
                   fontFamily: "'Fredoka One', cursive",
-                  fontSize: '1rem',
+                  fontSize: '0.9rem',
                   color: isDark ? '#FB923C' : '#EA580C',
                 }}
+                className="sm:text-[1rem]"
               >
                 {streak}
               </span>
               <span
                 style={{
-                  fontSize: '0.72rem',
+                  fontSize: '0.65rem',
                   color: isDark ? '#C2410C' : '#C2410C',
                   fontWeight: 600,
                 }}
+                className="sm:text-[0.72rem]"
               >
                 streak
               </span>

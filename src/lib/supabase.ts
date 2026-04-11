@@ -247,12 +247,12 @@ export async function fetchPuzzleByDate(isoDate: string): Promise<DbDailyPuzzle 
 
   // Flatten the nested join into a single object
   const row = data[0];
-  const clue = row.clues as unknown as Record<string, any>;
+  const clue = row.clues as unknown as Record<string, unknown>;
   return {
     number: row.puzzle_number,
     date: row.date,
     ...clue,
-    author_profile: clue.authors || null,
+    author_profile: (clue.authors as DbDailyPuzzle['author_profile']) || null,
   } as DbDailyPuzzle;
 }
 
@@ -295,12 +295,12 @@ export async function fetchPuzzleByNumber(puzzleNumber: number): Promise<DbDaily
   if (!data || data.length === 0 || !data[0].clues) return null;
 
   const row = data[0];
-  const clue = row.clues as unknown as Record<string, any>;
+  const clue = row.clues as unknown as Record<string, unknown>;
   return {
     number: row.puzzle_number,
     date: row.date,
     ...clue,
-    author_profile: clue.authors || null,
+    author_profile: (clue.authors as DbDailyPuzzle['author_profile']) || null,
   } as DbDailyPuzzle;
 }
 

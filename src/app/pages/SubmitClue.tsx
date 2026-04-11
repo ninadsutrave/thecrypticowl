@@ -366,7 +366,10 @@ export function SubmitClue() {
                         onChange={handleChange}
                         placeholder="How should we credit you?"
                         className="w-full p-4 rounded-2xl border-2 focus:outline-none focus:border-[#7C3AED] transition-colors"
-                        style={{ ...inputStyle, borderColor: formData.author_name ? '#10B981' : T.cardBorder }}
+                        style={{
+                          ...inputStyle,
+                          borderColor: formData.author_name ? '#10B981' : T.cardBorder,
+                        }}
                       />
                     </div>
                     <div className="space-y-2">
@@ -384,7 +387,10 @@ export function SubmitClue() {
                         onChange={handleChange}
                         placeholder="For review updates"
                         className="w-full p-4 rounded-2xl border-2 focus:outline-none focus:border-[#7C3AED] transition-colors"
-                        style={{ ...inputStyle, borderColor: formData.author_email ? '#10B981' : T.cardBorder }}
+                        style={{
+                          ...inputStyle,
+                          borderColor: formData.author_email ? '#10B981' : T.cardBorder,
+                        }}
                       />
                     </div>
                   </div>

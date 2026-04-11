@@ -386,6 +386,115 @@ function WordplayPreview({
   );
 }
 
+const COMPOUND_EXAMPLES = [
+  {
+    title: 'Charade',
+    subtitle: 'Two abbreviations join end-to-end',
+    emoji: '🔗',
+    mechanisms: ['Abbreviation', 'Direct'],
+    clue: '"Doctor on the sick list makes a boring tool (5)"',
+    steps: [
+      { text: 'Doctor → DR  (standard abbreviation)', type: 'indicator' as const },
+      { text: 'Sick → ILL  (direct synonym)', type: 'fodder' as const },
+      { text: 'DR + ILL = DRILL', type: 'definition' as const },
+    ],
+    answer: 'DRILL',
+    tip: "In a charade, there's no single indicator word — each component points to itself.",
+  },
+  {
+    title: 'Charade',
+    subtitle: 'Direction abbreviation + animal synonym',
+    emoji: '🔗',
+    mechanisms: ['Direction', 'Synonym'],
+    clue: '"Compass point before a great ape gives the back of the neck (4)"',
+    steps: [
+      { text: 'Compass point → N  (North)', type: 'indicator' as const },
+      { text: 'Great ape → APE', type: 'fodder' as const },
+      { text: 'N + APE = NAPE', type: 'definition' as const },
+    ],
+    answer: 'NAPE',
+    tip: 'Compass points (N, S, E, W) are among the most common building blocks in cryptics.',
+  },
+  {
+    title: 'Deletion + Reversal',
+    subtitle: 'Remove a letter, then read backwards',
+    emoji: '✂️🔄',
+    mechanisms: ['Deletion', 'Reversal'],
+    clue: '"Star without its head, turned around, is a rodent (3)"',
+    steps: [
+      { text: 'Word: STAR', type: 'fodder' as const },
+      { text: '"Without its head" → remove S → TAR', type: 'indicator' as const },
+      { text: '"Turned around" → reverse TAR → RAT ✓', type: 'definition' as const },
+    ],
+    answer: 'RAT',
+    tip: 'Each indicator word does a separate job — "without its head" deletes, "turned around" reverses. Apply them in reading order.',
+  },
+  {
+    title: 'Deletion + Anagram',
+    subtitle: "Trim the word, then scramble what's left",
+    emoji: '✂️🔀',
+    mechanisms: ['Deletion', 'Anagram'],
+    clue: '"Mostly earns, scrambled, means close (4)"',
+    steps: [
+      { text: 'Word: EARNS', type: 'fodder' as const },
+      { text: '"Mostly" → remove last letter S → EARN', type: 'indicator' as const },
+      { text: '"Scrambled" → anagram EARN → NEAR ✓', type: 'definition' as const },
+    ],
+    answer: 'NEAR',
+    tip: '"Mostly" quietly removes the last letter. Then "scrambled" signals the anagram. Watch for these quiet deletion words.',
+  },
+  {
+    title: 'Reversal + Hidden',
+    subtitle: "Reverse the source word, then find what's inside",
+    emoji: '🔄👻',
+    mechanisms: ['Reversal', 'Hidden'],
+    clue: '"Backwards in \'reward\' lies an equal contest (4)"',
+    steps: [
+      { text: '"Backwards" → reverse REWARD → DRAWER', type: 'indicator' as const },
+      { text: '"In" → look for hidden word inside DRAWER', type: 'fodder' as const },
+      { text: 'D-R-A-W-e-r → DRAW = a tied game ✓', type: 'definition' as const },
+    ],
+    answer: 'DRAW',
+    tip: 'The two indicators work in order: first reverse, then extract the hidden word from the result.',
+  },
+];
+
+// ─── SYNONYMS ─────────────────────────────────────────────────────────────────
+
+const SYNONYMS = [
+  { word: 'flower', cryptic: 'river', note: 'something that flows' },
+  { word: 'doctor', cryptic: 'DR / MB / MD', note: 'medical title' },
+  { word: 'east', cryptic: 'E', note: 'compass point' },
+  { word: 'left', cryptic: 'L', note: 'compass / direction' },
+  { word: 'north', cryptic: 'N', note: 'compass point' },
+  { word: 'south', cryptic: 'S', note: 'compass point' },
+  { word: 'west', cryptic: 'W', note: 'compass point' },
+  { word: 'king', cryptic: 'K / R / ER', note: 'royalty' },
+  { word: 'queen', cryptic: 'Q / HM / R', note: 'royalty' },
+  { word: 'article', cryptic: 'A / AN / THE', note: 'grammar word' },
+  { word: 'hundred', cryptic: 'C / TON', note: 'number' },
+  { word: 'note', cryptic: 'A–G / DO / RE / MI', note: 'musical note' },
+  { word: 'old', cryptic: 'O / EX', note: 'prefix meaning former' },
+  { word: 'river', cryptic: 'NILE / EXE / DEE', note: 'UK rivers (short names)' },
+  { word: 'saint', cryptic: 'ST', note: 'abbreviation' },
+  { word: 'street', cryptic: 'ST / RD', note: 'abbreviation' },
+  { word: 'small', cryptic: 'S / WEE', note: 'size' },
+  { word: 'large', cryptic: 'L / BIG', note: 'size' },
+  { word: 'number', cryptic: 'NO / NB', note: 'abbreviation' },
+  { word: 'gold', cryptic: 'OR / AU', note: 'heraldry / chemistry' },
+  { word: 'silver', cryptic: 'AG', note: 'chemistry symbol' },
+  { word: 'right', cryptic: 'R / RT', note: 'direction / correct' },
+  { word: 'answer', cryptic: 'A / ANS', note: 'abbreviated' },
+  { word: 'about', cryptic: 'C / CA / RE', note: 'circa / regarding' },
+  { word: 'one', cryptic: 'I', note: 'Roman numeral' },
+  { word: 'five', cryptic: 'V', note: 'Roman numeral' },
+  { word: 'ten', cryptic: 'X', note: 'Roman numeral' },
+  { word: 'fifty', cryptic: 'L', note: 'Roman numeral' },
+  { word: 'hundred', cryptic: 'C', note: 'Roman numeral' },
+  { word: 'five hundred', cryptic: 'D', note: 'Roman numeral' },
+  { word: 'thousand', cryptic: 'M', note: 'Roman numeral' },
+];
+
 // ─── MAIN LEARN PAGE ──────────────────────────────────────────────────────────
 
 const SECTIONS = ['Intro', 'Parts', 'Wordplay', 'Compound', 'Synonyms'];

@@ -1561,7 +1561,7 @@ export function Puzzle() {
   };
 
   return (
-    <div className="max-w-2xl mx-auto px-4 pb-32 pt-6">
+    <div className="max-w-2xl mx-auto px-4 pb-20 pt-6">
       {!isCorrect ? (
         <div className="space-y-5">
           {/* Already solved notice */}
@@ -2047,7 +2047,7 @@ export function Puzzle() {
       )}
 
       {/* Achievements at the bottom */}
-      <div className="mt-12">
+      <div className="mt-8">
         <Achievements isDark={isDark} />
       </div>
     </div>

@@ -8,6 +8,7 @@
     "zip": "zip -r function.zip lambda node_modules package.json"
   },
   "dependencies": {
+    "@aws-sdk/client-sns": "^3.0.0",
     "@supabase/supabase-js": "^2.49.1"
   },
   "engines": {

@@ -76,8 +76,8 @@ function SignInGate({ isDark }: { isDark: boolean }) {
 
   return (
     <div
-      className="min-h-screen flex flex-col items-center justify-center px-4 py-16 relative"
-      style={{ background: T.pageBg }}
+      className="flex flex-col items-center justify-center px-4 py-12 relative"
+      style={{ background: T.pageBg, minHeight: '60vh' }}
     >
       {/* Floating bg */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none z-0" aria-hidden>
@@ -113,7 +113,7 @@ function SignInGate({ isDark }: { isDark: boolean }) {
         transition={{ duration: 0.5 }}
       >
         <div
-          className="rounded-3xl border p-8 text-center"
+          className="rounded-3xl border p-6 text-center"
           style={{
             background: T.cardBg,
             borderColor: T.cardBorder,

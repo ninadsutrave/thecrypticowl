@@ -34,16 +34,48 @@ jobs:
 
       - name: Deploy to AWS Lambda
         run: |
-          aws lambda update-function-code \
+          # Try to update code, if it fails, create the function
+          if aws lambda update-function-code --function-name ${{ secrets.LAMBDA_FUNCTION_NAME }} --zip-file fileb://function.zip; then
+            echo "Function exists, updating configuration..."
+            aws lambda update-function-configuration \
+              --function-name ${{ secrets.LAMBDA_FUNCTION_NAME }} \
+              --runtime nodejs20.x \
+              --handler index.handler \
+              --environment "Variables={SUPABASE_URL=${{ secrets.SUPABASE_URL }},SUPABASE_SERVICE_ROLE_KEY=${{ secrets.SUPABASE_SERVICE_ROLE_KEY }},GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY }},TELEGRAM_BOT_TOKEN=${{ secrets.TELEGRAM_BOT_TOKEN }},TELEGRAM_CHAT_ID=${{ secrets.TELEGRAM_CHAT_ID }},SNS_TOPIC_ARN=${{ secrets.SNS_TOPIC_ARN }}}"
+          else
+            echo "Function does not exist, creating..."
+            aws lambda create-function \
+              --function-name ${{ secrets.LAMBDA_FUNCTION_NAME }} \
+              --runtime nodejs20.x \
+              --role ${{ secrets.LAMBDA_ROLE_ARN }} \
+              --handler index.handler \
+              --zip-file fileb://function.zip \
+              --environment "Variables={SUPABASE_URL=${{ secrets.SUPABASE_URL }},SUPABASE_SERVICE_ROLE_KEY=${{ secrets.SUPABASE_SERVICE_ROLE_KEY }},GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY }},TELEGRAM_BOT_TOKEN=${{ secrets.TELEGRAM_BOT_TOKEN }},TELEGRAM_CHAT_ID=${{ secrets.TELEGRAM_CHAT_ID }},SNS_TOPIC_ARN=${{ secrets.SNS_TOPIC_ARN }}}"
+          fi
+
+          # Get Lambda ARN and Account ID for EventBridge target
+          LAMBDA_ARN=$(aws lambda get-function --function-name ${{ secrets.LAMBDA_FUNCTION_NAME }} --query 'Configuration.FunctionArn' --output text)
+          AWS_ACCOUNT_ID=$(aws sts get-caller-identity --query 'Account' --output text)
+
+          # Create EventBridge Rule (if not exists, put-rule is idempotent for updates)
+          aws events put-rule \
+            --name DailyClueGeneratorRule \
+            --schedule-expression "cron(50 23 * * ? *)" \
+            --state ENABLED \
+            --description "Trigger Cryptic Owl clue generator daily at 23:50 UTC"
+
+          # Add permission for EventBridge to invoke Lambda (ignore error if exists)
+          aws lambda add-permission \
             --function-name ${{ secrets.LAMBDA_FUNCTION_NAME }} \
-            --zip-file fileb://function.zip || \
-          aws lambda create-function \
-            --function-name ${{ secrets.LAMBDA_FUNCTION_NAME }} \
-            --runtime nodejs20.x \
-            --role ${{ secrets.LAMBDA_ROLE_ARN }} \
-            --handler index.handler \
-            --zip-file fileb://function.zip \
-            --environment "Variables={SUPABASE_URL=${{ secrets.SUPABASE_URL }},SUPABASE_SERVICE_ROLE_KEY=${{ secrets.SUPABASE_SERVICE_ROLE_KEY }},GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY }}}"
+            --statement-id EventBridgeInvoke \
+            --action lambda:InvokeFunction \
+            --principal events.amazonaws.com \
+            --source-arn "arn:aws:events:${{ secrets.AWS_REGION }}:$AWS_ACCOUNT_ID:rule/DailyClueGeneratorRule" || true
+
+          # Set Target for the Rule
+          aws events put-targets \
+            --rule DailyClueGeneratorRule \
+            --targets "Id"="1","Arn"="$LAMBDA_ARN"
 
       - name: Cleanup
         run: rm function.zip

@@ -264,7 +264,7 @@ function HowItWorks({ isDark }: { isDark: boolean }) {
   const steps = [
     {
       emoji: '🔍',
-      title: 'Read the Clue',
+      title: 'Analyze the Clue',
       desc: 'Every cryptic clue has two parts: a definition and wordplay.',
     },
     {

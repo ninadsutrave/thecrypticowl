@@ -4,6 +4,8 @@ import { generateClue } from "./lib/clueGenerator.js";
 import { judgeClue } from "./lib/judge.js";
 import { getAIClient } from "./lib/aiClient.js";
 import { MAX_ATTEMPTS } from "./constants/prompts.js";
+import { notify } from "./lib/alerts.js";
+import { AUTHOR_MAP, MECHANISM_DESCRIPTIONS, DEFAULT_HINT_STYLES } from "./constants/clue.js";
 
 // =========================
 // CONFIG
@@ -14,7 +16,6 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY
 );
 
-// Default to Gemini, can be configured via ENV
 const AI_PROVIDER = process.env.AI_PROVIDER || "gemini";
 const callAI = getAIClient(AI_PROVIDER);
 
@@ -86,20 +87,6 @@ function constructHints(lexical, clue) {
     ];
   }
 
-  // Standard Wordplay Hints
-  const mechanismDesc = {
-    anagram: "the letters are being rearranged (scrambled).",
-    reversal: "the letters are written backwards.",
-    container: "one set of letters is placed inside another.",
-    hidden: "the answer is hidden across the words of the clue.",
-    deletion: "one or more letters are removed from a word.",
-    charade: "two or more parts are joined together side-by-side.",
-    homophone: "the answer sounds like another word.",
-    cryptic_definition: "the whole clue is a punny or metaphorical definition.",
-    andlit: "the whole clue is both the definition and the wordplay!",
-    compound: "multiple mechanisms are combined together.",
-  };
-
   return [
     {
       id: 1,
@@ -132,7 +119,7 @@ function constructHints(lexical, clue) {
       id: 4,
       title: "Wordplay Type",
       text: `This is a ${lexical.type.replace("_", " ")} clue. In this type, ${
-        mechanismDesc[lexical.type] || "parts are combined to form the answer."
+        MECHANISM_DESCRIPTIONS[lexical.type] || "parts are combined to form the answer."
       }`,
       mascot_comment: "The final piece of the puzzle! Can you see it now? 🦉",
     },
@@ -140,22 +127,11 @@ function constructHints(lexical, clue) {
 }
 
 async function writeToSupabase(lexical, clue) {
-  // Map provider to author UUID
-  const AUTHOR_MAP = {
-    gemini: "7211516e-e61b-410a-b31c-6a1651515151",
-    openai: "0921516e-e61b-410a-b31c-6a1651515151",
-    claude: "1211516e-e61b-410a-b31c-6a1651515151",
-    huggingface: "5211516e-e61b-410a-b31c-6a1651515151",
-  };
-
   const authorId = AUTHOR_MAP[AI_PROVIDER.toLowerCase()] || AUTHOR_MAP.gemini;
 
   const hints = constructHints(lexical, clue).map((h) => ({
     ...h,
-    color: h.color || "#7C3AED",
-    bg: h.bg || "#F5F3FF",
-    bg_dark: h.bg_dark || "#1A0F35",
-    border: h.border || "#C4B5FD",
+    ...DEFAULT_HINT_STYLES,
   }));
 
   // 1. Insert clue
@@ -167,7 +143,7 @@ async function writeToSupabase(lexical, clue) {
       answer_pattern: String(lexical.answer.length),
       primary_type: lexical.type,
       definition_text: clue.definition,
-      wordplay_summary: clue.explanation || clue.wordplay_summary, // Store the full explanation as the post-solve summary
+      wordplay_summary: clue.explanation || clue.wordplay_summary,
       clue_parts: clue.clue_parts,
       hints: hints,
       difficulty: lexical.difficulty || "medium",
@@ -187,24 +163,20 @@ async function writeToSupabase(lexical, clue) {
   });
 
   if (dpError && dpError.code !== "23505") {
-    // Ignore unique constraint error if already published for today
     throw dpError;
   }
 
   // 3. Insert clue_components (pedagogical breakdown)
-  const components = [];
-  clue.clue_parts.forEach((part, index) => {
-    if (part.type) {
-      components.push({
-        clue_id: clueData.id,
-        step_order: index + 1,
-        role: part.type === "definition" ? "definition" : 
-              part.type === "indicator" ? "indicator" :
-              part.type === "fodder" ? "fodder" : "link_word",
-        clue_text: part.text,
-      });
-    }
-  });
+  const components = clue.clue_parts
+    .filter((part) => part.type)
+    .map((part, index) => ({
+      clue_id: clueData.id,
+      step_order: index + 1,
+      role: part.type === "definition" ? "definition" : 
+            part.type === "indicator" ? "indicator" :
+            part.type === "fodder" ? "fodder" : "link_word",
+      clue_text: part.text,
+    }));
 
   if (components.length > 0) {
     const { error: ccError } = await supabase.from("clue_components").insert(components);
@@ -219,8 +191,10 @@ async function writeToSupabase(lexical, clue) {
 export const handler = async (event) => {
   try {
     const { lexical, clue } = await generateValidClue();
-
     await writeToSupabase(lexical, clue);
+
+    const successMessage = `Generated clue for *${lexical.answer}* (${lexical.type})\n\n"${clue.clue}"`;
+    await notify(successMessage, true);
 
     return {
       statusCode: 200,
@@ -233,6 +207,7 @@ export const handler = async (event) => {
     };
   } catch (err) {
     console.error("Lambda error:", err);
+    await notify(`Failed to generate/insert clue:\n\`${err.message}\``, false);
 
     return {
       statusCode: 500,

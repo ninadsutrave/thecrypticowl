@@ -266,42 +266,42 @@
       "subtitle": "Remove a letter, then read backwards",
       "emoji": "✂️🔄",
       "mechanisms": ["Deletion", "Reversal"],
-      "clue": "\"Star without its head, turned around, is a rodent (3)\"",
+      "clue": "\"Rodent returned following loss of leader's status (3)\"",
       "steps": [
-        { "text": "Start: STAR", "type": "fodder" },
-        { "text": "Deletion: 'Without its head' → remove S → TAR", "type": "indicator" },
-        { "text": "Reversal: 'Turned around' → reverse TAR → RAT", "type": "definition" }
+        { "text": "Start: STAR (status)", "type": "fodder" },
+        { "text": "Deletion: 'Loss of leader' → remove S → TAR", "type": "indicator" },
+        { "text": "Reversal: 'Returned' → reverse TAR → RAT", "type": "definition" }
       ],
       "answer": "RAT",
-      "tip": "Each indicator word does a separate job — 'without its head' deletes, 'turned around' reverses."
+      "tip": "Each indicator word does a separate job — 'loss of leader' deletes, 'returned' reverses."
     },
     {
       "title": "Deletion + Anagram",
       "subtitle": "Trim the word, then scramble what's left",
       "emoji": "✂️🔀",
       "mechanisms": ["Deletion", "Anagram"],
-      "clue": "\"Mostly earns, scrambled, means close (4)\"",
+      "clue": "\"Almost all the income is redistributed locally (4)\"",
       "steps": [
-        { "text": "Start: EARNS", "type": "fodder" },
-        { "text": "Deletion: 'Mostly' → remove last letter S → EARN", "type": "indicator" },
-        { "text": "Anagram: 'Scrambled' → anagram EARN → NEAR", "type": "definition" }
+        { "text": "Start: EARNS (income)", "type": "fodder" },
+        { "text": "Deletion: 'Almost all' → remove S → EARN", "type": "indicator" },
+        { "text": "Anagram: 'Redistributed' → anagram EARN → NEAR", "type": "definition" }
       ],
       "answer": "NEAR",
-      "tip": "'Mostly' quietly removes the last letter. Then 'scrambled' signals the anagram."
+      "tip": "'Almost all' quietly removes the last letter. Then 'redistributed' signals the anagram."
     },
     {
       "title": "Hidden + Reversal",
       "subtitle": "Backwards and hidden inside",
       "emoji": "👻🔄",
       "mechanisms": ["Hidden Word", "Reversal"],
-      "clue": "\"High card is hidden in 'big area', backwards (3)\"",
+      "clue": "\"Top card returning in the cafe (3)\"",
       "steps": [
-        { "text": "Hidden: 'big arEA' contains ECA", "type": "fodder" },
-        { "text": "Reversal: 'backwards' flips ECA → ACE", "type": "indicator" },
-        { "text": "Result: ACE (High card)", "type": "definition" }
+        { "text": "Hidden: 'thE CAfe' contains ECA", "type": "fodder" },
+        { "text": "Reversal: 'Returning' → reverse ECA → ACE", "type": "indicator" },
+        { "text": "Result: ACE (Top card)", "type": "definition" }
       ],
       "answer": "ACE",
-      "tip": "A single indicator like 'backwards' can flip a hidden word!"
+      "tip": "A single indicator like 'returning' can flip a hidden word!"
     },
     {
       "title": "Alternation + Charade",

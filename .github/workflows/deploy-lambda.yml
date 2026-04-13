@@ -1,29 +1,38 @@
 name: Deploy CrypticOwl Lambda
 
 on:
-  workflow_dispatch:   # 👈 MANUAL ONLY (no push trigger)
+  workflow_dispatch:
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repo
+      - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Setup Node
+      - name: Setup Node.js 20
         uses: actions/setup-node@v4
         with:
-          node-version: 18
+          node-version: 20
+          cache: 'npm'
+          cache-dependency-path: lambda/package-lock.json
 
       - name: Install dependencies
         working-directory: lambda
-        run: npm install
+        run: npm ci
 
       - name: Create deployment package
         run: |
           cd lambda
-          zip -r ../function.zip index.js package.json lib/ constants/
+          zip -r ../function.zip . \
+            -x "*.git*" \
+            -x "*.github*" \
+            -x "node_modules/.cache/*" \
+            -x "*.log" \
+            -x "test/*" \
+            -x "*.md" \
+            -x "node_modules/aws-sdk/*"
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
@@ -33,49 +42,70 @@ jobs:
           aws-region: ${{ secrets.AWS_REGION }}
 
       - name: Deploy to AWS Lambda
+        env:
+          LAMBDA_NAME: ${{ secrets.LAMBDA_FUNCTION_NAME }}
+          LAMBDA_ROLE: ${{ secrets.LAMBDA_ROLE_ARN }}
+          AWS_REGION: ${{ secrets.AWS_REGION }}
+          ENV_VARS: "Variables={SUPABASE_URL=${{ secrets.SUPABASE_URL }},SUPABASE_SERVICE_ROLE_KEY=${{ secrets.SUPABASE_SERVICE_ROLE_KEY }},GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY }},TELEGRAM_BOT_TOKEN=${{ secrets.TELEGRAM_BOT_TOKEN }},TELEGRAM_CHAT_ID=${{ secrets.TELEGRAM_CHAT_ID }},SNS_TOPIC_ARN=${{ secrets.SNS_TOPIC_ARN }}}"
         run: |
-          # Try to update code, if it fails, create the function
-          if aws lambda update-function-code --function-name ${{ secrets.LAMBDA_FUNCTION_NAME }} --zip-file fileb://function.zip; then
-            echo "Function exists, updating configuration..."
+          set -e
+          export AWS_PAGER=""
+          export AWS_DEFAULT_REGION=$AWS_REGION
+          DEPLOY_DESC="Deployed via GitHub Actions $(date +'%Y-%m-%d %H:%M:%S')"
+
+          echo "Checking if Lambda function $LAMBDA_NAME exists in $AWS_DEFAULT_REGION..."
+          if aws lambda get-function --function-name "$LAMBDA_NAME" > /dev/null 2>&1; then
+            echo "Function exists. Updating code..."
+            aws lambda update-function-code \
+              --function-name "$LAMBDA_NAME" \
+              --zip-file fileb://function.zip
+
+            echo "Waiting for code update to complete..."
+            aws lambda wait function-updated --function-name "$LAMBDA_NAME"
+
+            echo "Updating configuration (timeout, memory, env vars)..."
             aws lambda update-function-configuration \
-              --function-name ${{ secrets.LAMBDA_FUNCTION_NAME }} \
+              --function-name "$LAMBDA_NAME" \
               --runtime nodejs20.x \
               --handler index.handler \
-              --environment "Variables={SUPABASE_URL=${{ secrets.SUPABASE_URL }},SUPABASE_SERVICE_ROLE_KEY=${{ secrets.SUPABASE_SERVICE_ROLE_KEY }},GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY }},TELEGRAM_BOT_TOKEN=${{ secrets.TELEGRAM_BOT_TOKEN }},TELEGRAM_CHAT_ID=${{ secrets.TELEGRAM_CHAT_ID }},SNS_TOPIC_ARN=${{ secrets.SNS_TOPIC_ARN }}}"
+              --timeout 10 \
+              --memory-size 256 \
+              --description "$DEPLOY_DESC" \
+              --environment "$ENV_VARS"
+
+            echo "Waiting for configuration update to complete..."
+            aws lambda wait function-updated --function-name "$LAMBDA_NAME"
+
+            echo "Publishing new version..."
+            VERSION=$(aws lambda publish-version \
+              --function-name "$LAMBDA_NAME" \
+              --query 'Version' \
+              --output text)
+            
+            echo "Successfully published version: $VERSION"
           else
-            echo "Function does not exist, creating..."
+            echo "Function does not exist. Creating function..."
             aws lambda create-function \
-              --function-name ${{ secrets.LAMBDA_FUNCTION_NAME }} \
+              --function-name "$LAMBDA_NAME" \
               --runtime nodejs20.x \
-              --role ${{ secrets.LAMBDA_ROLE_ARN }} \
+              --role "$LAMBDA_ROLE" \
               --handler index.handler \
               --zip-file fileb://function.zip \
-              --environment "Variables={SUPABASE_URL=${{ secrets.SUPABASE_URL }},SUPABASE_SERVICE_ROLE_KEY=${{ secrets.SUPABASE_SERVICE_ROLE_KEY }},GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY }},TELEGRAM_BOT_TOKEN=${{ secrets.TELEGRAM_BOT_TOKEN }},TELEGRAM_CHAT_ID=${{ secrets.TELEGRAM_CHAT_ID }},SNS_TOPIC_ARN=${{ secrets.SNS_TOPIC_ARN }}}"
+              --timeout 10 \
+              --memory-size 256 \
+              --description "$DEPLOY_DESC" \
+              --environment "$ENV_VARS" \
+              --architectures x86_64
+
+            echo "Publishing initial version..."
+            VERSION=$(aws lambda publish-version \
+              --function-name "$LAMBDA_NAME" \
+              --query 'Version' \
+              --output text)
+            
+            echo "Successfully published version: $VERSION"
           fi
 
-          # Get Lambda ARN and Account ID for EventBridge target
-          LAMBDA_ARN=$(aws lambda get-function --function-name ${{ secrets.LAMBDA_FUNCTION_NAME }} --query 'Configuration.FunctionArn' --output text)
-          AWS_ACCOUNT_ID=$(aws sts get-caller-identity --query 'Account' --output text)
-
-          # Create EventBridge Rule (if not exists, put-rule is idempotent for updates)
-          aws events put-rule \
-            --name DailyClueGeneratorRule \
-            --schedule-expression "cron(50 23 * * ? *)" \
-            --state ENABLED \
-            --description "Trigger Cryptic Owl clue generator daily at 23:50 UTC"
-
-          # Add permission for EventBridge to invoke Lambda (ignore error if exists)
-          aws lambda add-permission \
-            --function-name ${{ secrets.LAMBDA_FUNCTION_NAME }} \
-            --statement-id EventBridgeInvoke \
-            --action lambda:InvokeFunction \
-            --principal events.amazonaws.com \
-            --source-arn "arn:aws:events:${{ secrets.AWS_REGION }}:$AWS_ACCOUNT_ID:rule/DailyClueGeneratorRule" || true
-
-          # Set Target for the Rule
-          aws events put-targets \
-            --rule DailyClueGeneratorRule \
-            --targets "Id"="1","Arn"="$LAMBDA_ARN"
-
       - name: Cleanup
-        run: rm function.zip
+        if: always()
+        run: rm -f function.zip

@@ -134,7 +134,24 @@ async function writeToSupabase(lexical, clue) {
     ...DEFAULT_HINT_STYLES,
   }));
 
-  // 1. Insert clue
+  // 1. Determine target date (Next day, since we run at 23:50 UTC)
+  const date = new Date();
+  date.setUTCDate(date.getUTCDate() + 1);
+  const targetDate = date.toISOString().split("T")[0];
+
+  // 2. Check if a puzzle already exists for this date (Idempotency)
+  const { data: existingPuzzle } = await supabase
+    .from("daily_puzzles")
+    .select("id")
+    .eq("date", targetDate)
+    .maybeSingle();
+
+  if (existingPuzzle) {
+    console.log(`Puzzle already exists for ${targetDate}. Skipping generation.`);
+    return;
+  }
+
+  // 3. Insert clue
   const { data: clueData, error: clueError } = await supabase
     .from("clues")
     .insert({
@@ -154,10 +171,9 @@ async function writeToSupabase(lexical, clue) {
 
   if (clueError) throw clueError;
 
-  // 2. Insert daily_puzzle (scheduled for today)
-  const today = new Date().toISOString().split("T")[0];
+  // 4. Insert daily_puzzle
   const { error: dpError } = await supabase.from("daily_puzzles").insert({
-    date: today,
+    date: targetDate,
     clue_id: clueData.id,
     published: true,
   });
@@ -166,7 +182,7 @@ async function writeToSupabase(lexical, clue) {
     throw dpError;
   }
 
-  // 3. Insert clue_components (pedagogical breakdown)
+  // 5. Insert clue_components (pedagogical breakdown)
   const components = clue.clue_parts
     .filter((part) => part.type)
     .map((part, index) => ({

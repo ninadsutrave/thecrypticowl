@@ -2,7 +2,9 @@ import {
   GEMINI_MODEL, 
   GEMINI_BASE_URL, 
   GEMINI_GENERATE_ACTION, 
-  GEMINI_HEADERS 
+  GEMINI_HEADERS,
+  GEMINI_CONFIG,
+  HTTP_METHODS
 } from "../../constants/gemini.js";
 
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
@@ -15,10 +17,7 @@ export async function callGemini(prompt, systemInstruction = "") {
         parts: [{ text: prompt }],
       },
     ],
-    generationConfig: {
-      temperature: 0.7,
-      responseMimeType: "application/json",
-    },
+    generationConfig: GEMINI_CONFIG,
   };
 
   if (systemInstruction) {
@@ -30,7 +29,7 @@ export async function callGemini(prompt, systemInstruction = "") {
   const res = await fetch(
     `${GEMINI_BASE_URL}${GEMINI_MODEL}${GEMINI_GENERATE_ACTION}?key=${GEMINI_API_KEY}`,
     {
-      method: "POST",
+      method: HTTP_METHODS.POST,
       headers: GEMINI_HEADERS,
       body: JSON.stringify(body),
     }

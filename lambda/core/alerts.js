@@ -1,12 +1,20 @@
-import { getAllAlertClients } from "./alertClient.js";
+import { getAllAlertClients } from "../clients/alertClient.js";
+import { 
+  NOTIFICATION_SUBJECTS, 
+  NOTIFICATION_EMOJIS, 
+  NOTIFICATION_TITLES 
+} from "../constants/alerts.js";
 
 /**
  * High-level notify function that broadcasts to all providers.
  */
 export async function notify(message, isSuccess = false) {
-  const subject = isSuccess ? "✅ Lambda executed successfully" : "❌ Lambda execution failed";
-  const emoji = isSuccess ? "✅" : "❌";
-  const formattedMessage = `${emoji} *Cryptic Owl Lambda ${isSuccess ? "Success" : "Failure"}*\n\n${message}`;
+  const statusKey = isSuccess ? "SUCCESS" : "FAILURE";
+  const subject = NOTIFICATION_SUBJECTS[statusKey];
+  const emoji = NOTIFICATION_EMOJIS[statusKey];
+  const title = NOTIFICATION_TITLES[statusKey];
+  
+  const formattedMessage = `${emoji} *Cryptic Owl Lambda ${title}*\n\n${message}`;
 
   const clients = getAllAlertClients();
 

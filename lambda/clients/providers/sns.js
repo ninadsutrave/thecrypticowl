@@ -1,6 +1,7 @@
 import { SNSClient, PublishCommand } from "@aws-sdk/client-sns";
+import { SNS_DEFAULT_REGION, SNS_DEFAULT_SUBJECT } from "../../constants/sns.js";
 
-const sns = new SNSClient({ region: process.env.AWS_REGION || "ap-south-1" });
+const sns = new SNSClient({ region: process.env.AWS_REGION || SNS_DEFAULT_REGION });
 
 /**
  * SNS Alert Provider
@@ -12,7 +13,7 @@ export async function notifySNS(message, options = {}) {
     return;
   }
 
-  const { subject = "Cryptic Owl Lambda Alert" } = options;
+  const { subject = SNS_DEFAULT_SUBJECT } = options;
 
   try {
     await sns.send(

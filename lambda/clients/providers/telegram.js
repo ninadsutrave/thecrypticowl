@@ -1,3 +1,12 @@
+import { 
+  TELEGRAM_BASE_URL, 
+  TELEGRAM_METHODS, 
+  TELEGRAM_HEADERS, 
+  TELEGRAM_PARSE_MODE, 
+  TELEGRAM_ALERT_PREFIX 
+} from "../../constants/telegram.js";
+import { HTTP_METHODS } from "../../constants/gemini.js";
+
 /**
  * Telegram Alert Provider
  */
@@ -10,15 +19,15 @@ export async function sendTelegramAlert(message) {
     return;
   }
 
-  const url = `https://api.telegram.org/bot${token}/sendMessage`;
+  const url = `${TELEGRAM_BASE_URL}${token}/${TELEGRAM_METHODS.SEND_MESSAGE}`;
   try {
     const response = await fetch(url, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
+      method: HTTP_METHODS.POST,
+      headers: TELEGRAM_HEADERS,
       body: JSON.stringify({
         chat_id: chatId,
-        text: `🚨 *Cryptic Owl Lambda Alert*\n\n${message}`,
-        parse_mode: "Markdown",
+        text: `${TELEGRAM_ALERT_PREFIX}\n\n${message}`,
+        parse_mode: TELEGRAM_PARSE_MODE,
       }),
     });
     if (!response.ok) {

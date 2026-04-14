@@ -2,7 +2,7 @@ import { buildJudgePrompt, JUDGE_SYSTEM, JUDGE_RESPONSE_SCHEMA } from '../../con
 import { callGeminiFlash } from '../../clients/providers/gemini.js';
 
 /**
- * Validates a generated clue in two stages:
+ * Validates a generated clue in two stages.
  *
  * Stage 1 — Fast structural checks (no AI call):
  *   • Core fields present
@@ -11,21 +11,25 @@ import { callGeminiFlash } from '../../clients/providers/gemini.js';
  *   • Clue-parts reconstruct the full clue string
  *   • Letter count in parentheses matches answer length
  *   • Hidden word literally embedded (hidden type only)
+ *   • Anagram exact-letter check: if fodder and answer have the same letter count,
+ *     sorted letters must match. If they don't, the clue still proceeds to Flash
+ *     with a flag — the fodder may be a synonym, which Flash can assess.
  *
- * Stage 2 — Gemini expert review:
- *   • Wordplay correctness (synonym-aware — no rigid letter sort)
+ * Stage 2 — Gemini 3 Flash expert review (temperature 0.1 — deterministic):
+ *   • Wordplay correctness (synonym-aware for anagram/reversal)
  *   • Surface quality score (1–5)
- *   • Indicator fairness
- *   • Overall score (1–10) and feedback
+ *   • Indicator fairness in British cryptics
+ *   • Overall score (1–10) — must be ≥7 to pass
  *   • rejectLexical signal (word+type fundamentally unsuitable)
  *
- * Returns a unified verdict the pipeline can act on.
+ * Fallback: if Flash is unavailable, the clue is REJECTED (fail-safe) and
+ * the pipeline retries — a clue that bypasses quality review never ships.
  *
- * @param {{ clue: string, definition: string, indicator: string, fodder: string, clue_parts: object[], wordplay_summary: string }} clue
+ * @param {{ clue: string, definition: string, indicator: string, fodder: string,
+ *           clue_parts: object[], wordplay_summary: string }} clue
  * @param {{ answer: string, type: string }} lexical
- * @param {Function} callAI  - AI client (prompt, system, schema?) => object
  */
-export async function judgeClue(clue, lexical, callAI) {
+export async function judgeClue(clue, lexical) {
   const errors = [];
   const type = lexical.type;
   const answer = lexical.answer.toUpperCase();
@@ -76,7 +80,7 @@ export async function judgeClue(clue, lexical, callAI) {
     }
   }
 
-  // 1f. Hidden word: answer must be literally embedded
+  // 1f. Hidden word: answer must be literally embedded across the clue text
   if (type === 'hidden') {
     const clueLetters = clue.clue.toUpperCase().replace(/[^A-Z]/g, '');
     if (!clueLetters.includes(answer)) {
@@ -84,7 +88,30 @@ export async function judgeClue(clue, lexical, callAI) {
     }
   }
 
-  // Structural failure — skip AI judge, return immediately
+  // 1g. Anagram exact-letter check
+  // When fodder and answer have the same number of letters, the letter multisets
+  // must match exactly (sorted comparison). If they don't, the fodder is being
+  // used as a synonym — which may be legitimate. We flag it for Flash rather
+  // than hard-rejecting, so Flash can assess the synonym substitution.
+  let anagramSynonymFlag = false;
+  if (type === 'anagram' && clue.fodder) {
+    const sortLetters = (str) =>
+      str.toUpperCase().replace(/[^A-Z]/g, '').split('').sort().join('');
+    const sortedFodder = sortLetters(clue.fodder);
+    const sortedAnswer = sortLetters(answer);
+
+    if (sortedFodder.length === sortedAnswer.length && sortedFodder !== sortedAnswer) {
+      // Same letter count but letters don't match → fodder must be a synonym.
+      // Flag for Flash to verify the synonym is valid.
+      anagramSynonymFlag = true;
+      console.log(
+        `[judge] Anagram: sorted fodder "${sortedFodder}" ≠ sorted answer "${sortedAnswer}". ` +
+        `Flagging as synonym substitution for Flash review.`
+      );
+    }
+  }
+
+  // Hard structural failures — skip AI judge
   if (errors.length > 0) {
     return {
       valid: false,
@@ -95,27 +122,29 @@ export async function judgeClue(clue, lexical, callAI) {
   }
 
   // ── Stage 2: Gemini 3 Flash expert review ────────────────────────────────────
-  // Uses a different model family from the generator (2.5 Pro) to break
-  // the self-judging bias where the generator's blind spots match the judge's.
+  // - Different model family from generator (2.5 Pro) → independent blind spots
+  // - Temperature 0.1 → deterministic, consistent scoring across runs
+  // - Fail-safe: if Flash is unavailable, the clue is REJECTED (not passed)
   let judgeResult;
   try {
     judgeResult = await callGeminiFlash(
-      buildJudgePrompt(lexical, clue),
+      buildJudgePrompt(lexical, clue, anagramSynonymFlag),
       JUDGE_SYSTEM,
       JUDGE_RESPONSE_SCHEMA
     );
   } catch (e) {
-    // If the AI judge itself fails, fall back to structural-only verdict (pass).
-    console.warn('[judge] Gemini Flash judge call failed, falling back to structural pass:', e.message);
+    // Flash unavailable — fail safe. Never let an unreviewed clue ship.
+    console.error('[judge] Gemini Flash unavailable — rejecting clue (fail-safe):', e.message);
     return {
-      valid: true,
-      score: 7,
-      feedback: 'AI judge unavailable — passed structural checks only.',
+      valid: false,
+      score: 0,
+      feedback: `Quality gate unavailable (Flash error: ${e.message}). Clue rejected to prevent unreviewed content from shipping.`,
       rejectLexical: false,
+      judgeUnavailable: true, // signal for pipeline logging/alerting
     };
   }
 
-  // Threshold: 7+ = "high quality, minor polish needed" — no flawed clues ship.
+  // Threshold: 7+ = "high quality, minor polish needed"
   const valid = judgeResult.valid && judgeResult.wordplay_correct && judgeResult.score >= 7;
 
   return {

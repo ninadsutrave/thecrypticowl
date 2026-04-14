@@ -14,10 +14,10 @@ export const handler = async (event) => {
 
   try {
     // 1. Generate Clue
-    const { lexical, clue } = await generateValidClue(callAI, AI_PROVIDER, DB_PROVIDER);
+    const { lexical, clue, verdict } = await generateValidClue(callAI, AI_PROVIDER, DB_PROVIDER);
 
-    // 2. Save to DB
-    const result = await writeToDB(lexical, clue, AI_PROVIDER, DB_PROVIDER);
+    // 2. Save to DB (verdict carries judge scores for persistence)
+    const result = await writeToDB(lexical, clue, verdict, AI_PROVIDER, DB_PROVIDER);
 
     // 3. Notify
     if (result.skipped) {
@@ -28,7 +28,9 @@ export const handler = async (event) => {
     }
 
     const successMessage =
-      `Generated Puzzle #${result.puzzleNumber} for *${lexical.answer}* (${lexical.type})\n\n"${clue.clue}"`;
+      `Generated Puzzle #${result.puzzleNumber} for *${lexical.answer}* (${lexical.type})\n\n` +
+      `"${clue.clue}"\n\n` +
+      `Score: ${verdict.score}/10 | Surface: ${verdict.surfaceQuality}/5 | Wordplay: ${verdict.wordplayCorrect ? '✓' : '✗'}`;
     await notify(successMessage, true);
 
     return {

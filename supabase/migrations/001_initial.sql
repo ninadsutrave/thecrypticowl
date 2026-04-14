@@ -185,6 +185,12 @@ CREATE TABLE clues (
   notes            TEXT,  -- internal only, never sent to the frontend
   author_social    TEXT,  -- Legacy: Link to contributor's profile
 
+  -- AI judge quality scores (populated by lambda at generation time)
+  judge_score            SMALLINT,  -- overall 1–10 (9–10 = publishable in The Times)
+  judge_surface_quality  SMALLINT,  -- surface reading score 1–5
+  judge_wordplay_correct BOOLEAN,   -- wordplay is mechanically correct
+  judge_indicator_fair   BOOLEAN,   -- indicator is a legitimate British cryptic signal
+
   created_at       TIMESTAMPTZ        NOT NULL DEFAULT now(),
   updated_at       TIMESTAMPTZ        NOT NULL DEFAULT now()
 );

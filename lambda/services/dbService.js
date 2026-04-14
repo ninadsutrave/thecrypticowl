@@ -56,8 +56,14 @@ export async function getRecentUsage(dbProvider) {
 
 /**
  * Saves the generated clue and its metadata to the database.
+ *
+ * @param {object} lexical    - { answer, type, definition, difficulty }
+ * @param {object} clue       - { clue, definition, indicator, fodder, clue_parts, wordplay_summary }
+ * @param {object} verdict    - judge scores: { score, surfaceQuality, wordplayCorrect, indicatorFair }
+ * @param {string} aiProvider
+ * @param {string} dbProvider
  */
-export async function writeToDB(lexical, clue, aiProvider, dbProvider = 'supabase') {
+export async function writeToDB(lexical, clue, verdict = {}, aiProvider, dbProvider = 'supabase') {
   const db = getDBClient(dbProvider);
   const authorId = AUTHOR_MAP[aiProvider.toLowerCase()] || AUTHOR_MAP.gemini;
   const hints = constructHints(lexical, clue);
@@ -89,7 +95,7 @@ export async function writeToDB(lexical, clue, aiProvider, dbProvider = 'supabas
 
   const nextPuzzleNumber = (maxRow?.puzzle_number ?? 0) + 1;
 
-  // 4. Insert clue.
+  // 4. Insert clue (includes judge quality scores for analytics).
   const { data: clueData, error: clueError } = await db
     .from('clues')
     .insert({
@@ -103,6 +109,11 @@ export async function writeToDB(lexical, clue, aiProvider, dbProvider = 'supabas
       hints,
       difficulty: lexical.difficulty || 'medium',
       author_id: authorId,
+      // Judge quality scores — useful for tracking trends and filtering by quality.
+      judge_score: verdict.score ?? null,
+      judge_surface_quality: verdict.surfaceQuality ?? null,
+      judge_wordplay_correct: verdict.wordplayCorrect ?? null,
+      judge_indicator_fair: verdict.indicatorFair ?? null,
     })
     .select()
     .single();

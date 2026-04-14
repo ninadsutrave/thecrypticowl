@@ -1,7 +1,7 @@
 // ─── PIPELINE CONSTANTS ───────────────────────────────────────────────────────
 
 /** Maximum generation attempts before the pipeline throws. */
-export const MAX_ATTEMPTS = 5;
+export const MAX_ATTEMPTS = 9;
 
 // ─── WORDPLAY TYPES ───────────────────────────────────────────────────────────
 
@@ -50,8 +50,9 @@ export const CLUE_RESPONSE_SCHEMA = {
         type: 'OBJECT',
         properties: {
           text: { type: 'STRING' },
-          // null for structural text (letter count, link words)
-          type: { type: 'STRING', nullable: true },
+          // Omit `type` for structural segments (letter count, link words).
+          // Not in `required` — Gemini treats absent fields as optional; no nullable needed.
+          type: { type: 'STRING' },
         },
         required: ['text'],
       },
@@ -321,8 +322,14 @@ particular clue attempt was poor.`;
  *
  * @param {{ answer: string, type: string, definition: string }} lexical
  * @param {{ clue: string, definition: string, indicator: string, fodder: string, wordplay_summary: string }} clue
+ * @param {boolean} anagramSynonymFlag - true when structural check found fodder letters ≠ answer letters
+ *                                       (same count), meaning the fodder is being used as a synonym
  */
-export function buildJudgePrompt(lexical, clue) {
+export function buildJudgePrompt(lexical, clue, anagramSynonymFlag = false) {
+  const synonymNote = anagramSynonymFlag
+    ? `\nNOTE: The fodder "${clue.fodder}" has the same number of letters as the answer but the letters do not match exactly. This means the fodder is being used as a SYNONYM. You must verify: (1) is "${clue.fodder}" a genuinely accepted synonym or stand-in for a word whose letters ARE an anagram of "${lexical.answer}"? (2) Is the synonym substitution clear and fair to a British cryptic solver? If the synonym is obscure or the substitution is unfair, set wordplay_correct = false.`
+    : '';
+
   return `Evaluate this British cryptic clue:
 
 ANSWER: ${lexical.answer}
@@ -331,7 +338,7 @@ CLUE: "${clue.clue}"
 DEFINITION USED: "${clue.definition}"
 INDICATOR: "${clue.indicator || '(none)'}"
 FODDER: "${clue.fodder || '(none)'}"
-WORDPLAY EXPLANATION: "${clue.wordplay_summary}"
+WORDPLAY EXPLANATION: "${clue.wordplay_summary}"${synonymNote}
 
 Check every criterion and return your verdict as JSON.`;
 }

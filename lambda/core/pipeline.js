@@ -4,23 +4,26 @@ import { judgeClue } from './validator/judge.js';
 import { getRecentUsage } from '../services/dbService.js';
 import { MAX_ATTEMPTS } from '../constants/prompts.js';
 
-// Maximum clue attempts per lexical word before picking a new word.
+// Maximum clue attempts per lexical word before selecting a new word.
 const MAX_CLUE_ATTEMPTS_PER_LEXICAL = 3;
 
 /**
  * Orchestrates the AI pipeline to generate a valid, high-quality clue.
  *
- * Strategy:
- *   • Outer loop: pick a new word (up to MAX_ATTEMPTS total clue attempts).
- *   • Inner loop: generate up to MAX_CLUE_ATTEMPTS_PER_LEXICAL clues for the
- *     current word, feeding the judge's feedback into each retry so the model
- *     can correct its specific mistakes.
- *   • If the judge signals rejectLexical (word+type fundamentally unsuitable),
- *     skip remaining inner attempts and select a new word immediately.
+ * Budget: MAX_ATTEMPTS total clue generations across all words.
+ * Each lexical selection costs 1 attempt. Each clue generation costs 1 attempt.
+ * A rejectLexical verdict immediately moves to the next word without exhausting
+ * the inner retries.
+ *
+ * Example with MAX_ATTEMPTS=9, MAX_CLUE_ATTEMPTS_PER_LEXICAL=3:
+ *   Word 1: [lexical] [clue1] [clue2] [clue3]  — 4 attempts
+ *   Word 2: [lexical] [clue1]                  — 2 attempts (accepted)
+ *   Total: 6 / 9 attempts used
  *
  * @param {Function} callAI     - AI client (prompt, system, schema?) => object
  * @param {string}   aiProvider - e.g. "gemini"
  * @param {string}   dbProvider - e.g. "supabase"
+ * @returns {{ lexical, clue, verdict }} — verdict contains score, surfaceQuality, etc.
  */
 export async function generateValidClue(callAI, aiProvider, dbProvider) {
   // Fetch variety constraints once — non-fatal if unavailable.
@@ -29,59 +32,68 @@ export async function generateValidClue(callAI, aiProvider, dbProvider) {
     constraints = await getRecentUsage(dbProvider);
     console.log(
       `Variety constraints — avoid types: [${constraints.avoidTypes.join(', ')}], ` +
-      `avoid answers: [${constraints.avoidAnswers.join(', ')}]`
+        `avoid answers: [${constraints.avoidAnswers.join(', ')}]`
     );
   } catch (e) {
     console.warn('Could not fetch recent usage (variety enforcement disabled):', e.message);
   }
 
-  let totalAttempts = 0;
+  // Flat attempt counter: every AI generation call (lexical OR clue) costs 1.
+  let attempts = 0;
 
-  while (totalAttempts < MAX_ATTEMPTS) {
-    // ── Select a word + mechanism ──────────────────────────────────────────────
+  while (attempts < MAX_ATTEMPTS) {
+    // ── Select a word + mechanism (costs 1 attempt) ───────────────────────────
+    attempts++;
     let lexical;
     try {
       lexical = await selectLexical(callAI, constraints);
       console.log(
-        `[${++totalAttempts}/${MAX_ATTEMPTS}] Lexical: ${lexical.answer} ` +
-        `(${lexical.type}) — "${lexical.definition}"`
+        `[attempt ${attempts}/${MAX_ATTEMPTS}] Lexical: ${lexical.answer} ` +
+          `(${lexical.type}) — "${lexical.definition}"`
       );
     } catch (e) {
-      console.error('Lexical selection failed:', e.message);
-      totalAttempts++;
+      console.error(`[attempt ${attempts}] Lexical selection failed:`, e.message);
       continue;
     }
 
-    // ── Inner feedback loop: up to N clue attempts for this word ──────────────
+    // ── Inner feedback loop: up to N clue generations for this word ───────────
     let feedback = null;
 
     for (
       let clueAttempt = 1;
-      clueAttempt <= MAX_CLUE_ATTEMPTS_PER_LEXICAL && totalAttempts <= MAX_ATTEMPTS;
+      clueAttempt <= MAX_CLUE_ATTEMPTS_PER_LEXICAL && attempts < MAX_ATTEMPTS;
       clueAttempt++
     ) {
-      if (clueAttempt > 1) totalAttempts++;
+      // Each clue generation costs 1 attempt.
+      attempts++;
 
       try {
         const clue = await generateClue(lexical, callAI, feedback);
+        console.log(`  [clue ${clueAttempt}/${MAX_CLUE_ATTEMPTS_PER_LEXICAL}] "${clue.clue}"`);
+
+        const verdict = await judgeClue(clue, lexical);
         console.log(
-          `  Clue attempt ${clueAttempt}: "${clue.clue}"`
+          `  Judge: valid=${verdict.valid} score=${verdict.score ?? '—'} ` +
+            `wordplay=${verdict.wordplayCorrect} surface=${verdict.surfaceQuality} ` +
+            `rejectLexical=${verdict.rejectLexical}`
         );
 
-        const verdict = await judgeClue(clue, lexical, callAI);
-        console.log(
-          `  Judge: valid=${verdict.valid} score=${verdict.score} ` +
-          `rejectLexical=${verdict.rejectLexical}`
-        );
+        if (verdict.judgeUnavailable) {
+          // Flash was down — this is a quality-gate failure, not a clue failure.
+          // Alert loudly and let the attempt counter drain so the lambda fails cleanly.
+          console.error('  QUALITY GATE BYPASSED — Flash judge unavailable. Draining attempts.');
+          attempts = MAX_ATTEMPTS; // force exit
+          break;
+        }
 
         if (verdict.valid) {
           console.log(`  Accepted (score ${verdict.score}/10): "${clue.clue}"`);
-          return { lexical, clue, score: verdict.score };
+          return { lexical, clue, verdict };
         }
 
         console.log(`  Rejected: ${verdict.feedback}`);
 
-        // Hard reject: word+type is fundamentally unsuitable — skip inner loop.
+        // Hard reject: word+type fundamentally unsuitable — pick a new word.
         if (verdict.rejectLexical) {
           console.log('  Lexical rejected — selecting a new word.');
           break;
@@ -89,13 +101,12 @@ export async function generateValidClue(callAI, aiProvider, dbProvider) {
 
         // Carry feedback into the next clue attempt.
         feedback = verdict.feedback;
-
       } catch (e) {
         console.error(`  Clue attempt ${clueAttempt} threw:`, e.message);
-        feedback = null; // reset feedback on unexpected error
+        feedback = null;
       }
     }
   }
 
-  throw new Error(`Failed to generate a valid clue after ${MAX_ATTEMPTS} attempts`);
+  throw new Error(`Failed to generate a valid clue after ${attempts} attempts`);
 }

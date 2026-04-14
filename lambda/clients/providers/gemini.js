@@ -5,6 +5,7 @@ import {
   GEMINI_GENERATE_ACTION,
   GEMINI_HEADERS,
   GEMINI_CONFIG,
+  GEMINI_JUDGE_CONFIG,
   HTTP_METHODS,
 } from '../../constants/gemini.js';
 
@@ -20,34 +21,34 @@ const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
  * When responseSchema is omitted:
  *   - Falls back to regex extraction in case the model adds preamble text.
  *
- * @param {string} prompt
- * @param {string} systemInstruction
- * @param {object|null} responseSchema  - Gemini OpenAPI-style schema object
- * @param {string} model                - Gemini model ID (defaults to GEMINI_MODEL)
+ * @param {string}      prompt
+ * @param {string}      systemInstruction
+ * @param {object|null} responseSchema   - Gemini OpenAPI-style schema object
+ * @param {string}      model            - Gemini model ID (defaults to GEMINI_MODEL)
+ * @param {object}      baseConfig       - Generation config (defaults to GEMINI_CONFIG)
  */
-export async function callGemini(prompt, systemInstruction = '', responseSchema = null, model = GEMINI_MODEL) {
-  const generationConfig = { ...GEMINI_CONFIG };
+export async function callGemini(
+  prompt,
+  systemInstruction = '',
+  responseSchema = null,
+  model = GEMINI_MODEL,
+  baseConfig = GEMINI_CONFIG
+) {
+  const generationConfig = { ...baseConfig };
   if (responseSchema) {
     generationConfig.responseSchema = responseSchema;
   }
 
   const body = {
-    contents: [
-      {
-        role: 'user',
-        parts: [{ text: prompt }],
-      },
-    ],
+    contents: [{ role: 'user', parts: [{ text: prompt }] }],
     generationConfig,
   };
 
   if (systemInstruction) {
-    body.system_instruction = {
-      parts: [{ text: systemInstruction }],
-    };
+    body.system_instruction = { parts: [{ text: systemInstruction }] };
   }
 
-  console.log(`[gemini] calling model: ${model}`);
+  console.log(`[gemini] calling model: ${model} (temperature: ${baseConfig.temperature})`);
 
   const res = await fetch(
     `${GEMINI_BASE_URL}${model}${GEMINI_GENERATE_ACTION}?key=${GEMINI_API_KEY}`,
@@ -77,8 +78,7 @@ export async function callGemini(prompt, systemInstruction = '', responseSchema 
     }
   }
 
-  // Fallback: strip markdown fences then extract the last valid JSON object
-  // (handles cases where the model adds reasoning text before the JSON).
+  // Fallback: strip markdown fences then extract the last valid JSON object.
   try {
     const cleanText = text.replace(/```json\n?|\n?```/g, '').trim();
     const jsonMatches = [
@@ -94,10 +94,11 @@ export async function callGemini(prompt, systemInstruction = '', responseSchema 
 }
 
 /**
- * Pre-bound variant that always calls the judge model (Gemini 3 Flash).
- * Used by the clue judge so it evaluates with a different model than the generator,
- * breaking the self-judging bias inherent in same-model evaluation.
+ * Judge variant: Gemini 3 Flash at temperature 0.1.
+ *
+ * Different model family from the generator (2.5 Pro) → different blind spots.
+ * Near-zero temperature → deterministic, consistent scoring across runs.
  */
 export function callGeminiFlash(prompt, systemInstruction, responseSchema) {
-  return callGemini(prompt, systemInstruction, responseSchema, GEMINI_JUDGE_MODEL);
+  return callGemini(prompt, systemInstruction, responseSchema, GEMINI_JUDGE_MODEL, GEMINI_JUDGE_CONFIG);
 }

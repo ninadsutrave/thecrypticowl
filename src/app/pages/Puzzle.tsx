@@ -28,6 +28,7 @@ import {
   fetchPuzzleByNumber,
   type DbDailyPuzzle,
   type PuzzleHint,
+  type ClueWordplayType,
 } from '../../lib/supabase';
 
 // ─── ACHIEVEMENTS ─────────────────────────────────────────────────────────────
@@ -441,52 +442,6 @@ function NextPuzzleCountdown({ isDark }: { isDark: boolean }) {
   );
 }
 
-// ─── SCRAMBLE LETTERS ─────────────────────────────────────────────────────────
-
-function ScrambleLetters({ isDark }: { isDark: boolean }) {
-  const [shuffled, setShuffled] = useState(true);
-  const letters = ['P', 'E', 'A', 'R', 'S'];
-  const answer = ['S', 'P', 'E', 'A', 'R'];
-  const colors = ['#7C3AED', '#F97316', '#0284C7', '#059669', '#DB2777'];
-
-  return (
-    <div className="flex flex-col items-center gap-3">
-      <div className="flex gap-2">
-        {(shuffled ? letters : answer).map((l, i) => (
-          <motion.div
-            key={`${shuffled}-${i}`}
-            initial={{ scale: 0, rotate: -20 }}
-            animate={{ scale: 1, rotate: 0 }}
-            transition={{ delay: i * 0.05, type: 'spring', stiffness: 400 }}
-            className="w-10 h-10 rounded-xl flex items-center justify-center font-bold shadow-sm"
-            style={{
-              background: colors[i] + '22',
-              border: `2px solid ${colors[i]}`,
-              color: colors[i],
-              fontFamily: "'Fredoka One', cursive",
-              fontSize: '1.2rem',
-            }}
-          >
-            {l}
-          </motion.div>
-        ))}
-      </div>
-      <button
-        onClick={() => setShuffled(!shuffled)}
-        className="text-xs font-bold px-3 py-1.5 rounded-full transition-all hover:opacity-80"
-        style={{
-          background: isDark ? '#1A0F35' : '#F5F0FF',
-          color: '#7C3AED',
-          border: `1.5px solid ${isDark ? '#4C3580' : '#C4B5FD'}`,
-          fontFamily: "'Nunito', sans-serif",
-        }}
-      >
-        {shuffled ? '🔀 Rearrange!' : '↩️ Shuffle back'}
-      </button>
-    </div>
-  );
-}
-
 // ─── HINT CARD ────────────────────────────────────────────────────────────────
 
 function HintCard({
@@ -543,11 +498,6 @@ function HintCard({
             >
               {hint.text}
             </p>
-            {hint.id === 3 && (
-              <div className="mt-3">
-                <ScrambleLetters isDark={isDark} />
-              </div>
-            )}
           </div>
         </div>
         <div
@@ -582,6 +532,7 @@ function SuccessState({
   onReset,
   isDark,
   activePuzzle,
+  wasRevealed,
 }: {
   hintsUsed: number;
   wrongAttemptsCount: number;
@@ -590,13 +541,14 @@ function SuccessState({
   onReset: () => void;
   isDark: boolean;
   activePuzzle: ActivePuzzle;
+  wasRevealed: boolean;
 }) {
   const [copied, setCopied] = useState(false);
   const runConfetti = useRef(false);
   const T = getTheme(isDark);
   const { count: streak, totalSolved, xp, level, recordSolve } = useStreak();
   const { user } = useAuth();
-  const xpEarned = getXPForSolve(hintsUsed);
+  const xpEarned = wasRevealed ? 0 : getXPForSolve(hintsUsed);
   const [finalData, setFinalData] = useState<{
     streak: number;
     total: number;
@@ -608,40 +560,47 @@ function SuccessState({
     if (!runConfetti.current) {
       runConfetti.current = true;
 
-      // Record the solve — passes wrongAttemptsCount, puzzleId, and solveTime for Supabase
-      const result = recordSolve(
-        hintsUsed,
-        activePuzzle.number,
-        user?.id,
-        puzzleId,
-        wrongAttemptsCount,
-        solveTime || undefined
-      );
-      if (result) {
-        setFinalData({
-          streak: result.count,
-          total: result.totalSolved,
-          xp: result.xp,
-          level: result.level,
-        });
-      }
+      if (wasRevealed) {
+        // Don't record a solve or award XP when the user peeked at the answer
+        setFinalData({ streak, total: totalSolved, xp, level });
+      } else {
+        // Record the solve — passes wrongAttemptsCount, puzzleId, and solveTime for Supabase
+        const result = recordSolve(
+          hintsUsed,
+          activePuzzle.number,
+          user?.id,
+          puzzleId,
+          wrongAttemptsCount,
+          solveTime || undefined
+        );
+        if (result) {
+          setFinalData({
+            streak: result.count,
+            total: result.totalSolved,
+            xp: result.xp,
+            level: result.level,
+          });
+        }
 
-      const end = Date.now() + 2800;
-      const colors = ['#7C3AED', '#F97316', '#34D399', '#38BDF8', '#FCD34D', '#F472B6'];
-      const frame = () => {
-        confetti({ particleCount: 3, angle: 60, spread: 55, origin: { x: 0 }, colors });
-        confetti({ particleCount: 3, angle: 120, spread: 55, origin: { x: 1 }, colors });
-        if (Date.now() < end) requestAnimationFrame(frame);
-      };
-      frame();
+        // Confetti only for genuine solves
+        const end = Date.now() + 2800;
+        const colors = ['#7C3AED', '#F97316', '#34D399', '#38BDF8', '#FCD34D', '#F472B6'];
+        const frame = () => {
+          confetti({ particleCount: 3, angle: 60, spread: 55, origin: { x: 0 }, colors });
+          confetti({ particleCount: 3, angle: 120, spread: 55, origin: { x: 1 }, colors });
+          if (Date.now() < end) requestAnimationFrame(frame);
+        };
+        frame();
+      }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const displayData = finalData || { streak, total: totalSolved, xp, level };
 
-  /** 🟩 = didn't need hint | 🟨 = early hint (1-2) | 🟥 = late hint (3-4) */
+  /** 🟩 = didn't need hint | 🟨 = early hint (1-2) | 🟥 = late hint (3-4) | 🟫 = revealed */
   const getShareEmoji = (slotIndex: number) => {
+    if (wasRevealed) return '🟫';
     if (slotIndex >= hintsUsed) return '🟩';
     return slotIndex < 2 ? '🟨' : '🟥';
   };
@@ -656,23 +615,35 @@ function SuccessState({
     solveTime < 60 ? `${solveTime}s` : `${Math.floor(solveTime / 60)}m ${solveTime % 60}s`;
 
   const getFunCallout = () => {
+    if (wasRevealed) return "Today's clue stumped me — can you crack it without peeking? 🫣";
     if (hintsUsed === 0) return "I cracked today's cryptic with zero hints 🧠 Can you?";
     if (hintsUsed === 1) return "Just 1 hint to crack today's cryptic — your turn 👀";
     if (hintsUsed <= 3) return 'Tricky clue, but I got there! Think you can crack it? 🔍';
     return "Today's cryptic nearly had me — reckon you can solve it? 🤯";
   };
 
-  const shareText = [
-    `🦉 TheCrypticOwl #${activePuzzle.number}`,
-    ``,
-    `${getShareBlocks()}  (${hintsUsed}/4 hints used)`,
-    `⏱️ ${solveTimeStr}  🔥 ${displayData.streak}-day streak`,
-    ``,
-    getFunCallout(),
-    ``,
-    `One cryptic clue a day — try it yourself:`,
-    `👉 thecrypticowl.com`,
-  ].join('\n');
+  const shareText = wasRevealed
+    ? [
+        `🦉 TheCrypticOwl #${activePuzzle.number}`,
+        ``,
+        `🟫🟫🟫🟫  (revealed the answer)`,
+        ``,
+        getFunCallout(),
+        ``,
+        `One cryptic clue a day — try it yourself:`,
+        `👉 thecrypticowl.com`,
+      ].join('\n')
+    : [
+        `🦉 TheCrypticOwl #${activePuzzle.number}`,
+        ``,
+        `${getShareBlocks()}  (${hintsUsed}/4 hints used)`,
+        `⏱️ ${solveTimeStr}  🔥 ${displayData.streak}-day streak`,
+        ``,
+        getFunCallout(),
+        ``,
+        `One cryptic clue a day — try it yourself:`,
+        `👉 thecrypticowl.com`,
+      ].join('\n');
 
   const handleShare = async () => {
     const canNativeShare = typeof navigator.share === 'function';
@@ -706,9 +677,9 @@ function SuccessState({
       <div className="text-center py-6">
         <div className="flex justify-center mb-4">
           <Mascot
-            mood="celebrating"
+            mood={wasRevealed ? 'hint' : 'celebrating'}
             size={120}
-            speechBubble="Brilliant solve! 🎉"
+            speechBubble={wasRevealed ? 'So close! 🤏 Try again tomorrow!' : 'Brilliant solve! 🎉'}
             bubbleDirection="right"
             animate
           />
@@ -722,11 +693,11 @@ function SuccessState({
             style={{
               fontFamily: "'Fredoka One', cursive",
               fontSize: '2.2rem',
-              color: '#7C3AED',
+              color: wasRevealed ? '#D97706' : '#7C3AED',
               marginBottom: 4,
             }}
           >
-            You got it! 🎊
+            {wasRevealed ? 'Almost there! 🤏' : 'You got it! 🎊'}
           </h2>
           <p
             style={{
@@ -735,11 +706,13 @@ function SuccessState({
               fontFamily: "'Nunito', sans-serif",
             }}
           >
-            {hintsUsed === 0
-              ? "No hints needed — you're a natural!"
-              : hintsUsed === 1
-                ? 'Solved with just 1 hint. Impressive!'
-                : `Solved with ${hintsUsed} hints. Great effort!`}
+            {wasRevealed
+              ? "You peeked at the answer — cryptics are tricky! Give tomorrow's a go 💪"
+              : hintsUsed === 0
+                ? "No hints needed — you're a natural!"
+                : hintsUsed === 1
+                  ? 'Solved with just 1 hint. Impressive!'
+                  : `Solved with ${hintsUsed} hints. Great effort!`}
           </p>
         </motion.div>
       </div>
@@ -957,58 +930,95 @@ function SuccessState({
         transition={{ delay: 0.45, type: 'spring', stiffness: 400 }}
         className="rounded-3xl p-5 border-2 text-center"
         style={{
-          background: isDark ? '#1A0F35' : '#F5F0FF',
-          borderColor: isDark ? '#4C3580' : '#C4B5FD',
+          background: wasRevealed
+            ? isDark
+              ? '#2A1A00'
+              : '#FFFBEB'
+            : isDark
+              ? '#1A0F35'
+              : '#F5F0FF',
+          borderColor: wasRevealed
+            ? isDark
+              ? '#92400E'
+              : '#FDE68A'
+            : isDark
+              ? '#4C3580'
+              : '#C4B5FD',
         }}
       >
-        <motion.div animate={{ scale: [1, 1.15, 1] }} transition={{ duration: 0.5, delay: 0.6 }}>
-          <span
-            style={{ fontFamily: "'Fredoka One', cursive", fontSize: '2rem', color: '#7C3AED' }}
-          >
-            +{xpEarned} XP
-          </span>
-        </motion.div>
-        <p
-          style={{
-            fontSize: '0.85rem',
-            color: isDark ? '#A78BFA' : '#5B21B6',
-            fontWeight: 700,
-            marginTop: 2,
-          }}
-        >
-          <Zap size={13} className="inline mr-1" />
-          {hintsUsed === 0
-            ? 'Perfect solve bonus!'
-            : `${hintsUsed} hint${hintsUsed > 1 ? 's' : ''} used`}
-        </p>
-        <div className="mt-3 grid grid-cols-3 gap-2">
-          {[
-            { emoji: '🔥', value: displayData.streak, label: 'Streak' },
-            { emoji: '🧩', value: displayData.total, label: 'Total Solved' },
-            { emoji: '⚡', value: `${displayData.xp} XP`, label: levelTitle.split(' ')[0] },
-          ].map((s, i) => (
-            <div key={i}>
-              <p
-                style={{
-                  fontFamily: "'Fredoka One', cursive",
-                  fontSize: '1.2rem',
-                  color: '#7C3AED',
-                }}
+        {wasRevealed ? (
+          <>
+            <p
+              style={{ fontFamily: "'Fredoka One', cursive", fontSize: '1.5rem', color: '#D97706' }}
+            >
+              No XP this time 🙈
+            </p>
+            <p
+              style={{
+                fontSize: '0.82rem',
+                color: isDark ? '#FDE68A' : '#92400E',
+                fontWeight: 600,
+                marginTop: 4,
+              }}
+            >
+              XP is only earned when you solve without peeking — come back tomorrow!
+            </p>
+          </>
+        ) : (
+          <>
+            <motion.div
+              animate={{ scale: [1, 1.15, 1] }}
+              transition={{ duration: 0.5, delay: 0.6 }}
+            >
+              <span
+                style={{ fontFamily: "'Fredoka One', cursive", fontSize: '2rem', color: '#7C3AED' }}
               >
-                {s.emoji} {s.value}
-              </p>
-              <p
-                style={{
-                  fontSize: '0.72rem',
-                  color: isDark ? '#9381CC' : '#9CA3AF',
-                  fontWeight: 600,
-                }}
-              >
-                {s.label}
-              </p>
+                +{xpEarned} XP
+              </span>
+            </motion.div>
+            <p
+              style={{
+                fontSize: '0.85rem',
+                color: isDark ? '#A78BFA' : '#5B21B6',
+                fontWeight: 700,
+                marginTop: 2,
+              }}
+            >
+              <Zap size={13} className="inline mr-1" />
+              {hintsUsed === 0
+                ? 'Perfect solve bonus!'
+                : `${hintsUsed} hint${hintsUsed > 1 ? 's' : ''} used`}
+            </p>
+            <div className="mt-3 grid grid-cols-3 gap-2">
+              {[
+                { emoji: '🔥', value: displayData.streak, label: 'Streak' },
+                { emoji: '🧩', value: displayData.total, label: 'Total Solved' },
+                { emoji: '⚡', value: `${displayData.xp} XP`, label: levelTitle.split(' ')[0] },
+              ].map((s, i) => (
+                <div key={i}>
+                  <p
+                    style={{
+                      fontFamily: "'Fredoka One', cursive",
+                      fontSize: '1.2rem',
+                      color: '#7C3AED',
+                    }}
+                  >
+                    {s.emoji} {s.value}
+                  </p>
+                  <p
+                    style={{
+                      fontSize: '0.72rem',
+                      color: isDark ? '#9381CC' : '#9CA3AF',
+                      fontWeight: 600,
+                    }}
+                  >
+                    {s.label}
+                  </p>
+                </div>
+              ))}
             </div>
-          ))}
-        </div>
+          </>
+        )}
       </motion.div>
 
       {/* ── 3. ANSWER + FULL BREAKDOWN ── */}
@@ -1326,6 +1336,231 @@ interface ActivePuzzle {
   } | null;
 }
 
+// ─── HINT BUILDER ────────────────────────────────────────────────────────────
+
+/** Fixed colour scheme per hint slot (1→blue, 2→purple, 3→orange, 4→green). */
+const HINT_STYLES = [
+  { color: '#3B82F6', bg: '#EFF6FF', bgDark: '#0D1F35', border: '#93C5FD' },
+  { color: '#7C3AED', bg: '#F5F3FF', bgDark: '#1A0F35', border: '#C4B5FD' },
+  { color: '#F97316', bg: '#FFF7ED', bgDark: '#2A1505', border: '#FED7AA' },
+  { color: '#059669', bg: '#ECFDF5', bgDark: '#062010', border: '#6EE7B7' },
+] as const;
+
+/** Human-readable descriptions for each wordplay mechanism (Hint 4). */
+const MECHANISM_DESCRIPTIONS: Record<string, string> = {
+  anagram:
+    'This is an anagram clue — the letters of the fodder are rearranged to spell the answer.',
+  reversal: 'This is a reversal clue — a word or phrase is read backwards to give the answer.',
+  container: 'This is a container clue — one word is placed inside another to form the answer.',
+  hidden:
+    'This is a hidden word clue — the answer is literally spelled out consecutively inside the clue.',
+  deletion:
+    'This is a deletion clue — removing one or more letters from a word produces the answer.',
+  charade:
+    'This is a charade clue — two or more parts are assembled consecutively to spell the answer.',
+  homophone: 'This is a homophone clue — the answer sounds like another word or phrase.',
+  double_definition:
+    'This is a double definition clue — two separate meanings both independently define the same answer.',
+  cryptic_definition:
+    'This is a cryptic definition — a single cleverly phrased definition that misdirects before revealing the answer.',
+  andlit:
+    'This is an &lit clue — the entire clue simultaneously serves as both definition and wordplay.',
+  compound:
+    'This is a compound clue — two or more cryptic mechanisms are combined to arrive at the answer.',
+};
+
+/** Mascot quips per hint slot. */
+const HINT_MASCOT_COMMENTS = [
+  'The definition is always at the start or end of a cryptic clue. Found it? 👀',
+  'The indicator tells you what trick to apply — look for the signal word! 🔍',
+  'Now you have the raw material — apply the mechanism to it! ✨',
+  "You've got all the pieces now — put it together! 🎯",
+];
+
+/**
+ * Build the 4 progressive hints from normalised clue_components data.
+ * Falls back to the legacy PuzzleHint[] JSONB if no components are present.
+ *
+ * Hint slot meanings:
+ *   1 → definition (what the answer means)
+ *   2 → indicator / second-definition for double_def
+ *   3 → fodder (the raw wordplay material)
+ *   4 → mechanism description
+ */
+function buildHintsFromComponents(
+  components: DbDailyPuzzle['clue_components'],
+  primaryType: ClueWordplayType,
+  legacyHints: PuzzleHint[]
+): typeof PUZZLE.hints {
+  // Fall back to legacy JSONB hints if the lambda hasn't written components yet
+  if (!components || components.length === 0) {
+    if (legacyHints.length > 0) {
+      return legacyHints.map(h => ({
+        id: h.id,
+        title: h.title,
+        text: h.text,
+        highlight: h.highlight ?? null,
+        mascotComment: h.mascot_comment,
+        color: h.color,
+        bg: h.bg,
+        bgDark: h.bg_dark,
+        border: h.border,
+      }));
+    }
+    // No legacy hints either — return 4 generic fallback hints
+    return [
+      {
+        id: 1,
+        title: 'Definition',
+        text: 'The definition is at the very start or end of the clue.',
+        highlight: null,
+        mascotComment: HINT_MASCOT_COMMENTS[0],
+        ...HINT_STYLES[0],
+      },
+      {
+        id: 2,
+        title: 'Indicator',
+        text: 'Look for a word that signals the cryptic trick (e.g. "mixed", "back", "hidden in").',
+        highlight: null,
+        mascotComment: HINT_MASCOT_COMMENTS[1],
+        ...HINT_STYLES[1],
+      },
+      {
+        id: 3,
+        title: 'Fodder',
+        text: 'The wordplay material is somewhere in the clue — apply the mechanism to it.',
+        highlight: null,
+        mascotComment: HINT_MASCOT_COMMENTS[2],
+        ...HINT_STYLES[2],
+      },
+      {
+        id: 4,
+        title: 'Mechanism',
+        text:
+          MECHANISM_DESCRIPTIONS[primaryType] ?? 'Apply the cryptic mechanism to find the answer.',
+        highlight: null,
+        mascotComment: HINT_MASCOT_COMMENTS[3],
+        ...HINT_STYLES[3],
+      },
+    ];
+  }
+
+  const def = components.find(c => c.role === 'definition');
+  // For double_definition: Gemini stores the 2nd definition in the indicator slot
+  const ind = components.find(c => c.role === 'indicator');
+  // For container clues prefer the inner element as the "fodder" the solver manipulates
+  const fod =
+    components.find(c => c.role === 'fodder') ??
+    components.find(c => c.role === 'container_inner') ??
+    components.find(c => c.role === 'container_outer');
+
+  const isDoubleDef = primaryType === 'double_definition';
+  const isCrypticDef = primaryType === 'cryptic_definition';
+  const isAndlit = primaryType === 'andlit';
+  const noFodder = isDoubleDef || isCrypticDef || isAndlit;
+
+  // ── Hint 1: Definition ─────────────────────────────────────────────────────
+  let hint1Text: string;
+  let hint1Highlight: string | null;
+
+  if (isDoubleDef) {
+    // Both def and ind are definitions for double_definition
+    hint1Text =
+      def && ind
+        ? `This clue has two definitions: "${def.clue_text}" and "${ind.clue_text}". The answer satisfies both.`
+        : def
+          ? `One definition is: "${def.clue_text}". Find the second one at the other end of the clue.`
+          : 'Both ends of this clue are plain definitions — the answer satisfies both simultaneously.';
+    hint1Highlight = def?.clue_text ?? null;
+  } else if (isCrypticDef || isAndlit) {
+    hint1Text = def
+      ? `The entire clue is a cleverly worded definition: "${def.clue_text}". Think laterally!`
+      : 'The whole clue is a single, cleverly phrased definition — there is no separate wordplay section.';
+    hint1Highlight = def?.clue_text ?? null;
+  } else {
+    hint1Text = def
+      ? `The definition part of this clue is: "${def.clue_text}"`
+      : 'Look at the very start or end of the clue — one of them is a plain definition of the answer.';
+    hint1Highlight = def?.clue_text ?? null;
+  }
+
+  // ── Hint 2: Indicator ──────────────────────────────────────────────────────
+  let hint2Text: string;
+  let hint2Highlight: string | null;
+
+  if (isDoubleDef) {
+    // ind holds the second definition — already shown in Hint 1, so Hint 2 reinforces
+    hint2Text =
+      'There is no indicator word in this clue — both halves are plain definitions. Look for the boundary between them.';
+    hint2Highlight = null;
+  } else if (isCrypticDef || isAndlit) {
+    hint2Text =
+      'There is no separate indicator — the wordplay and definition are one and the same. Re-read the clue from a different angle.';
+    hint2Highlight = null;
+  } else {
+    hint2Text = ind
+      ? `"${ind.clue_text}" is the indicator — it tells you which wordplay trick to apply.`
+      : 'Look for a signal word or phrase that tells you the cryptic trick (e.g. "mixed up", "back", "hidden in", "sounds like").';
+    hint2Highlight = ind?.clue_text ?? null;
+  }
+
+  // ── Hint 3: Fodder ─────────────────────────────────────────────────────────
+  let hint3Text: string;
+  let hint3Highlight: string | null;
+
+  if (noFodder) {
+    hint3Text = isDoubleDef
+      ? 'Double definitions have no fodder. The trick is that both parts of the clue, read separately, define the same word.'
+      : 'This clue type has no separate fodder — the cleverness is all in the phrasing.';
+    hint3Highlight = null;
+  } else {
+    hint3Text = fod
+      ? `The wordplay material is: "${fod.clue_text}"`
+      : 'The wordplay material is somewhere in the clue — it may appear as a word, phrase, or synonym.';
+    hint3Highlight = fod?.clue_text ?? null;
+  }
+
+  // ── Hint 4: Mechanism ──────────────────────────────────────────────────────
+  const hint4Text =
+    MECHANISM_DESCRIPTIONS[primaryType] ??
+    'Apply the cryptic mechanism to the fodder to produce the answer.';
+
+  return [
+    {
+      id: 1,
+      title: 'Find the Definition',
+      text: hint1Text,
+      highlight: hint1Highlight,
+      mascotComment: HINT_MASCOT_COMMENTS[0],
+      ...HINT_STYLES[0],
+    },
+    {
+      id: 2,
+      title: 'Spot the Indicator',
+      text: hint2Text,
+      highlight: hint2Highlight,
+      mascotComment: HINT_MASCOT_COMMENTS[1],
+      ...HINT_STYLES[1],
+    },
+    {
+      id: 3,
+      title: 'Find the Fodder',
+      text: hint3Text,
+      highlight: hint3Highlight,
+      mascotComment: HINT_MASCOT_COMMENTS[2],
+      ...HINT_STYLES[2],
+    },
+    {
+      id: 4,
+      title: 'Mechanism Type',
+      text: hint4Text,
+      highlight: null,
+      mascotComment: HINT_MASCOT_COMMENTS[3],
+      ...HINT_STYLES[3],
+    },
+  ];
+}
+
 function mapDbPuzzle(p: DbDailyPuzzle): ActivePuzzle {
   return {
     id: p.id,
@@ -1333,17 +1568,7 @@ function mapDbPuzzle(p: DbDailyPuzzle): ActivePuzzle {
     clue: p.clue_text,
     answer: p.answer,
     letterCount: p.answer_length,
-    hints: p.hints.map((h: PuzzleHint) => ({
-      id: h.id,
-      title: h.title,
-      text: h.text,
-      highlight: h.highlight ?? null,
-      mascotComment: h.mascot_comment,
-      color: h.color,
-      bg: h.bg,
-      bgDark: h.bg_dark,
-      border: h.border,
-    })),
+    hints: buildHintsFromComponents(p.clue_components, p.primary_type, p.hints ?? []),
     clueParts: (p.clue_parts ?? []).map(cp => ({ text: cp.text, type: cp.type as string | null })),
     date: p.date,
     author: p.author,
@@ -1367,7 +1592,9 @@ const DEFAULT_PUZZLE: ActivePuzzle = {
 export function Puzzle() {
   const { number: puzzleNumberParam } = useParams<{ number?: string }>();
   const requestedNumber = puzzleNumberParam ? parseInt(puzzleNumberParam, 10) : undefined;
-  const isArchive = !!requestedNumber && requestedNumber !== PUZZLE.number;
+  // isArchive = true whenever a puzzle number is in the URL (even if it equals the hardcoded
+  // fallback number). This ensures /puzzle/42 always fetches puzzle #42 from the DB.
+  const isArchive = requestedNumber !== undefined;
 
   // The puzzle to play: archive puzzle (if loaded) or today's hardcoded puzzle
   const [activePuzzle, setActivePuzzle] = useState<ActivePuzzle | null>(null);
@@ -1428,6 +1655,7 @@ export function Puzzle() {
   const [answer, setAnswer] = useState('');
   const [hintsUnlocked, setHintsUnlocked] = useState(0);
   const [isCorrect, setIsCorrect] = useState(false);
+  const [wasRevealed, setWasRevealed] = useState(false);
   const [wrongAttempt, setWrongAttempt] = useState<string | null>(null);
   const [wrongAttemptsCount, setWrongAttemptsCount] = useState(0);
   const [newHintIndex, setNewHintIndex] = useState<number | null>(null);
@@ -1549,13 +1777,17 @@ export function Puzzle() {
     setAnswer('');
     setHintsUnlocked(0);
     setIsCorrect(false);
+    setWasRevealed(false);
     setWrongAttempt(null);
+    setWrongAttemptsCount(0);
     setNewHintIndex(null);
+    setShowAllHints(false);
   };
 
   const visibleHints = activePuzzle?.hints.slice(0, hintsUnlocked) || [];
 
   const handleReveal = () => {
+    setWasRevealed(true);
     setIsCorrect(true);
     setSolveTime(Math.floor((Date.now() - startTime) / 1000));
   };
@@ -1824,14 +2056,15 @@ export function Puzzle() {
                 onChange={e => setAnswer(e.target.value.replace(/[^a-zA-Z]/g, ''))}
                 onKeyDown={e => e.key === 'Enter' && handleSubmit()}
                 placeholder={loading ? 'Loading…' : 'Enter your answer ...'}
-                className="flex-1 py-4 px-4 rounded-2xl border-2 focus:outline-none transition-all"
+                className="flex-1 py-3 sm:py-4 px-3 sm:px-4 rounded-2xl border-2 focus:outline-none transition-all min-w-0"
                 style={{
                   borderColor: isDark ? '#4C3580' : '#E0E7FF',
                   fontFamily: "'Fredoka One', cursive",
-                  fontSize: '1.05rem',
+                  // 16px minimum prevents iOS Safari from zooming on input focus
+                  fontSize: '1rem',
                   color: T.text,
                   fontWeight: 700,
-                  letterSpacing: '0.15em',
+                  letterSpacing: '0.12em',
                   background: isDark ? '#1A1035' : '#FAFAFA',
                   textTransform: 'uppercase',
                   textAlign: 'left',
@@ -1850,7 +2083,7 @@ export function Puzzle() {
                 whileTap={{ scale: 0.95 }}
                 onClick={handleSubmit}
                 disabled={loading || answer.length !== (activePuzzle?.letterCount || 0)}
-                className="px-6 py-3 rounded-2xl flex items-center gap-2 transition-all disabled:opacity-40 shadow-md"
+                className="px-3 sm:px-6 py-3 rounded-2xl flex items-center gap-2 transition-all disabled:opacity-40 shadow-md shrink-0"
                 style={{
                   background:
                     !loading && answer.length === activePuzzle?.letterCount
@@ -1869,7 +2102,7 @@ export function Puzzle() {
                 }}
               >
                 <Send size={18} />
-                Submit
+                <span className="hidden sm:inline">Submit</span>
               </motion.button>
             </div>
 
@@ -1990,6 +2223,7 @@ export function Puzzle() {
             onReset={handleReset}
             isDark={isDark}
             activePuzzle={activePuzzle}
+            wasRevealed={wasRevealed}
           />
         )
       )}

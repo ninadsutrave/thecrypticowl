@@ -265,14 +265,12 @@ CREATE TABLE clue_components (
   -- e.g. fodder "PEARS" → derived_text "SPEAR" after applying the anagram indicator
   derived_text   TEXT,
 
-  -- Only populated when role = 'indicator'; NULL for all other roles.
-  -- CHECK enforces the coupling so the data is always self-consistent.
+  -- Populated for indicator components when the sub-type is known.
+  -- Non-indicator components must leave this NULL.
+  -- Note: indicator_type is optional even for indicators — charade, double_definition,
+  -- cryptic_definition, andlit, and compound clues may have no classified indicator type.
   indicator_type TEXT REFERENCES clue_indicator_types(id),
-  CHECK (
-    (role = 'indicator' AND indicator_type IS NOT NULL)
-    OR
-    (role <> 'indicator' AND indicator_type IS NULL)
-  ),
+  CHECK (role = 'indicator' OR indicator_type IS NULL),
 
   -- Plain-English explanation shown in the admin / clue-authoring UI
   explanation    TEXT,

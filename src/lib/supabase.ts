@@ -102,6 +102,13 @@ export interface DbDailyPuzzle {
   clue_parts: CluePart[];
   hints: PuzzleHint[];
 
+  /** Normalised wordplay breakdown from clue_components. Used to build progressive hints. */
+  clue_components?: Array<{
+    step_order: number;
+    role: ClueComponentRole;
+    clue_text: string;
+  }> | null;
+
   difficulty: PuzzleDifficulty;
   author: string | null;
   author_id: string | null;
@@ -205,10 +212,14 @@ export interface DbClueSubmission {
 
 /**
  * Fetch the published puzzle for a specific ISO date (e.g. "2026-04-06").
- * Joins daily_puzzles → clues and flattens the result into DbDailyPuzzle.
- * Returns null if no published puzzle exists for that date.
+ * Joins daily_puzzles → clues → clue_components and flattens into DbDailyPuzzle.
+ * If no puzzle exists for `isoDate`, automatically tries the previous day (once).
+ * Returns null if neither date has a published puzzle.
  */
-export async function fetchPuzzleByDate(isoDate: string): Promise<DbDailyPuzzle | null> {
+export async function fetchPuzzleByDate(
+  isoDate: string,
+  _allowFallback = true
+): Promise<DbDailyPuzzle | null> {
   if (!isSupabaseConfigured) return null;
   // Use limit(1) + order rather than .single() so that future multi-clue days
   // (crossword mode) don't cause a "multiple rows" error. We always want the first
@@ -230,6 +241,9 @@ export async function fetchPuzzleByDate(isoDate: string): Promise<DbDailyPuzzle 
           name,
           social_link,
           avatar_url
+        ),
+        clue_components (
+          step_order, role, clue_text
         )
       )
     `
@@ -243,15 +257,33 @@ export async function fetchPuzzleByDate(isoDate: string): Promise<DbDailyPuzzle 
     console.warn('[supabase] fetchPuzzleByDate:', error.message);
     return null;
   }
-  if (!data || data.length === 0 || !data[0].clues) return null;
+
+  // No puzzle for this date — try yesterday (only one level of fallback)
+  if (!data || data.length === 0 || !data[0].clues) {
+    if (_allowFallback) {
+      const [y, m, d] = isoDate.split('-').map(Number);
+      const prev = new Date(y, m - 1, d - 1);
+      const prevISO = `${prev.getFullYear()}-${String(prev.getMonth() + 1).padStart(2, '0')}-${String(prev.getDate()).padStart(2, '0')}`;
+      console.info('[supabase] No puzzle for today — falling back to', prevISO);
+      return fetchPuzzleByDate(prevISO, false);
+    }
+    return null;
+  }
 
   // Flatten the nested join into a single object
   const row = data[0];
   const clue = row.clues as unknown as Record<string, unknown>;
+
+  // Sort clue_components by step_order (PostgREST nested selects are unordered)
+  const components = ((clue.clue_components as DbDailyPuzzle['clue_components']) ?? []).sort(
+    (a, b) => a.step_order - b.step_order
+  );
+
   return {
     number: row.puzzle_number,
     date: row.date,
     ...clue,
+    clue_components: components,
     author_profile: (clue.authors as DbDailyPuzzle['author_profile']) || null,
   } as DbDailyPuzzle;
 }
@@ -279,6 +311,9 @@ export async function fetchPuzzleByNumber(puzzleNumber: number): Promise<DbDaily
           name,
           social_link,
           avatar_url
+        ),
+        clue_components (
+          step_order, role, clue_text
         )
       )
     `
@@ -296,10 +331,16 @@ export async function fetchPuzzleByNumber(puzzleNumber: number): Promise<DbDaily
 
   const row = data[0];
   const clue = row.clues as unknown as Record<string, unknown>;
+
+  const components = ((clue.clue_components as DbDailyPuzzle['clue_components']) ?? []).sort(
+    (a, b) => a.step_order - b.step_order
+  );
+
   return {
     number: row.puzzle_number,
     date: row.date,
     ...clue,
+    clue_components: components,
     author_profile: (clue.authors as DbDailyPuzzle['author_profile']) || null,
   } as DbDailyPuzzle;
 }

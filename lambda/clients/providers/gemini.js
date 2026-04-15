@@ -11,8 +11,41 @@ import {
 
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 
+/** Maximum ms to wait on a single retry delay (2 minutes — stays under Lambda timeout). */
+const MAX_RETRY_DELAY_MS = 120_000;
+/** How many times to retry a single call after a rate-limit (429) response. */
+const MAX_RATE_LIMIT_RETRIES = 2;
+
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+/**
+ * Parse the retryDelay duration string from a Gemini 429 error body.
+ * Gemini returns it inside details[] as { "@type": "…RetryInfo", "retryDelay": "49s" }.
+ * Returns milliseconds, capped at MAX_RETRY_DELAY_MS, or null if not found.
+ *
+ * @param {object} errBody  - parsed JSON error response from Gemini
+ * @returns {number|null}
+ */
+function parseRetryDelayMs(errBody) {
+  try {
+    const details = errBody?.error?.details ?? [];
+    const retryInfo = details.find((d) =>
+      d['@type']?.endsWith('RetryInfo') && d.retryDelay
+    );
+    if (!retryInfo) return null;
+    // retryDelay is a proto Duration string: "49s" or "49.213782892s"
+    const seconds = parseFloat(retryInfo.retryDelay);
+    if (!Number.isFinite(seconds) || seconds <= 0) return null;
+    return Math.min(Math.ceil(seconds * 1000), MAX_RETRY_DELAY_MS);
+  } catch {
+    return null;
+  }
+}
+
 /**
  * Calls a Gemini model with optional responseSchema enforcement.
+ * Automatically retries on 429 (RESOURCE_EXHAUSTED), honouring the retryDelay
+ * from the API response when present (capped at MAX_RETRY_DELAY_MS).
  *
  * When responseSchema is provided:
  *   - Gemini's JSON mode is fully enforced — the response is guaranteed to match
@@ -26,13 +59,15 @@ const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
  * @param {object|null} responseSchema   - Gemini OpenAPI-style schema object
  * @param {string}      model            - Gemini model ID (defaults to GEMINI_MODEL)
  * @param {object}      baseConfig       - Generation config (defaults to GEMINI_CONFIG)
+ * @param {number}      _retryCount      - internal: current retry depth (do not pass)
  */
 export async function callGemini(
   prompt,
   systemInstruction = '',
   responseSchema = null,
   model = GEMINI_MODEL,
-  baseConfig = GEMINI_CONFIG
+  baseConfig = GEMINI_CONFIG,
+  _retryCount = 0
 ) {
   const generationConfig = { ...baseConfig };
   if (responseSchema) {
@@ -48,7 +83,7 @@ export async function callGemini(
     body.system_instruction = { parts: [{ text: systemInstruction }] };
   }
 
-  console.log(`[gemini] calling model: ${model} (temperature: ${baseConfig.temperature})`);
+  console.log(`[gemini] calling model: ${model} (temperature: ${baseConfig.temperature}${_retryCount ? `, retry #${_retryCount}` : ''})`);
 
   const res = await fetch(
     `${GEMINI_BASE_URL}${model}${GEMINI_GENERATE_ACTION}?key=${GEMINI_API_KEY}`,
@@ -58,6 +93,18 @@ export async function callGemini(
       body: JSON.stringify(body),
     }
   );
+
+  // ── Rate-limit handling ─────────────────────────────────────────────────────
+  if (res.status === 429 && _retryCount < MAX_RATE_LIMIT_RETRIES) {
+    let errBody = null;
+    try { errBody = await res.json(); } catch { /* ignore */ }
+
+    const delayMs = parseRetryDelayMs(errBody) ?? Math.min(30_000 * (1 + _retryCount), MAX_RETRY_DELAY_MS);
+    console.warn(`[gemini] 429 rate-limited on ${model}. Waiting ${(delayMs / 1000).toFixed(1)}s before retry #${_retryCount + 1}…`);
+    await sleep(delayMs);
+
+    return callGemini(prompt, systemInstruction, responseSchema, model, baseConfig, _retryCount + 1);
+  }
 
   if (!res.ok) {
     const errText = await res.text();

@@ -266,28 +266,28 @@
       "subtitle": "Remove a letter, then read backwards",
       "emoji": "✂️🔄",
       "mechanisms": ["Deletion", "Reversal"],
-      "clue": "\"Rodent returned following loss of leader's status (3)\"",
+      "clue": "\"Celebrity loses head and turns back to reveal vermin (3)\"",
       "steps": [
-        { "text": "Start: STAR (status)", "type": "fodder" },
-        { "text": "Deletion: 'Loss of leader' → remove S → TAR", "type": "indicator" },
-        { "text": "Reversal: 'Returned' → reverse TAR → RAT", "type": "definition" }
+        { "text": "Start: STAR (celebrity)", "type": "fodder" },
+        { "text": "Deletion: 'Loses head' → remove S → TAR", "type": "indicator" },
+        { "text": "Reversal: 'Turns back' → reverse TAR → RAT", "type": "definition" }
       ],
       "answer": "RAT",
-      "tip": "Each indicator word does a separate job — 'loss of leader' deletes, 'returned' reverses."
+      "tip": "Each indicator word does a separate job — 'loses head' deletes, 'turns back' reverses."
     },
     {
       "title": "Deletion + Anagram",
       "subtitle": "Trim the word, then scramble what's left",
-      "emoji": "✂️🔀",
+      "emoji": "✂️🌀",
       "mechanisms": ["Deletion", "Anagram"],
-      "clue": "\"Almost all the income is redistributed locally (4)\"",
+      "clue": "\"Salary lacking its tail, scrambled to mean adjacent (4)\"",
       "steps": [
-        { "text": "Start: EARNS (income)", "type": "fodder" },
-        { "text": "Deletion: 'Almost all' → remove S → EARN", "type": "indicator" },
-        { "text": "Anagram: 'Redistributed' → anagram EARN → NEAR", "type": "definition" }
+        { "text": "Start: EARNS (salary)", "type": "fodder" },
+        { "text": "Deletion: 'Lacking its tail' → remove S → EARN", "type": "indicator" },
+        { "text": "Anagram: 'Scrambled' → anagram EARN → NEAR", "type": "definition" }
       ],
       "answer": "NEAR",
-      "tip": "'Almost all' quietly removes the last letter. Then 'redistributed' signals the anagram."
+      "tip": "'Lacking its tail' quietly removes the last letter. Then 'scrambled' signals the anagram."
     },
     {
       "title": "Hidden + Reversal",

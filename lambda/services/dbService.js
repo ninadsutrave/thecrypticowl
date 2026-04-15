@@ -13,6 +13,19 @@ const PART_ROLE_MAP = {
   result: 'result',
 };
 
+// Maps wordplay types → clue_indicator_types.id values.
+// Only types that have a canonical indicator sub-type are listed.
+// Charade, double_definition, cryptic_definition, andlit, and compound
+// do not have a single classifiable indicator type, so they are omitted.
+const INDICATOR_TYPE_MAP = {
+  anagram:    'anagram',
+  reversal:   'reversal',
+  container:  'container',
+  hidden:     'hidden',
+  deletion:   'deletion',
+  homophone:  'homophone',
+};
+
 /**
  * Returns variety constraints based on clue usage in the last 14 days.
  * Avoids types used 3+ times and answers used at all.
@@ -134,14 +147,23 @@ export async function writeToDB(lexical, clue, verdict = {}, aiProvider, dbProvi
   }
 
   // 6. Insert clue_components (pedagogical breakdown — derived from clue_parts).
+  const indicatorType = INDICATOR_TYPE_MAP[lexical.type] ?? null;
   const components = clue.clue_parts
     .filter((part) => part.type) // skip structural nulls (link words, letter count)
-    .map((part, index) => ({
-      clue_id: clueData.id,
-      step_order: index + 1,
-      role: PART_ROLE_MAP[part.type] || 'link_word',
-      clue_text: part.text,
-    }));
+    .map((part, index) => {
+      const role = PART_ROLE_MAP[part.type] || 'link_word';
+      return {
+        clue_id: clueData.id,
+        step_order: index + 1,
+        role,
+        clue_text: part.text.trim(),
+        // indicator_type is only valid on indicator components and only when classifiable
+        indicator_type: role === 'indicator' ? indicatorType : null,
+        // explanation is intentionally null for AI-generated clues to avoid spoiling the answer.
+        // Human-authored clues can populate this via the admin UI for richer Hint 3 text.
+        explanation: null,
+      };
+    });
 
   if (components.length > 0) {
     const { error: ccError } = await db.from('clue_components').insert(components);

@@ -5,7 +5,7 @@ import { Zap, Star, Send, Clock } from 'lucide-react';
 import { useDarkMode } from '../context/DarkModeContext';
 import { getTheme } from '../theme';
 import { useEffect, useState } from 'react';
-import { fetchPuzzleByDate } from '../../lib/supabase';
+import { fetchPuzzleByDate, fetchAppLikesCount, addAppLike } from '../../lib/supabase';
 import { useAuth } from '../context/AuthContext';
 
 // ─── FLOATING BG ──────────────────────────────────────────────────────────────
@@ -404,6 +404,75 @@ function BottomCTA({ onNavigate, isDark: _isDark }: { onNavigate: () => void; is
   );
 }
 
+// ─── APP LIKE BUTTON ─────────────────────────────────────────────────────────
+
+function AppLikeButton({ isDark }: { isDark: boolean }) {
+  const T = getTheme(isDark);
+  const [count, setCount] = useState<number | null>(null);
+  const [liked, setLiked] = useState(false);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    // Check if user already liked this session (session-scoped to avoid re-voting on reload)
+    setLiked(sessionStorage.getItem('tco-app-liked') === '1');
+    fetchAppLikesCount().then(setCount);
+  }, []);
+
+  const handleLike = async () => {
+    if (liked || loading) return;
+    setLoading(true);
+    const ok = await addAppLike();
+    if (ok) {
+      setLiked(true);
+      sessionStorage.setItem('tco-app-liked', '1');
+      setCount(c => (c ?? 0) + 1);
+    }
+    setLoading(false);
+  };
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 12 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true }}
+      className="flex items-center justify-center gap-3 py-4"
+    >
+      <motion.button
+        onClick={handleLike}
+        disabled={liked || loading}
+        whileHover={liked ? {} : { scale: 1.08, y: -1 }}
+        whileTap={liked ? {} : { scale: 0.92 }}
+        className="flex items-center gap-2 px-5 py-2.5 rounded-full border-2 transition-all font-bold"
+        style={{
+          background: liked ? (isDark ? '#2A0F15' : '#FFF1F2') : isDark ? '#1A1035' : '#FFF7F7',
+          borderColor: liked ? '#EF4444' : isDark ? '#3D2A6B' : '#FCA5A5',
+          color: liked ? '#EF4444' : T.textMuted,
+          cursor: liked ? 'default' : 'pointer',
+          fontFamily: "'Nunito', sans-serif",
+          fontSize: '0.88rem',
+        }}
+        aria-label={liked ? 'You liked this app' : 'Like this app'}
+      >
+        <span style={{ fontSize: '1.1rem' }}>{liked ? '❤️' : '🤍'}</span>
+        <span>{liked ? 'You love it!' : 'Love this app?'}</span>
+        {count !== null && (
+          <span
+            className="rounded-full px-2 py-0.5"
+            style={{
+              background: liked ? '#EF4444' : isDark ? '#261845' : '#EDE9FE',
+              color: liked ? 'white' : isDark ? '#C4B5FD' : '#7C3AED',
+              fontSize: '0.75rem',
+              fontWeight: 700,
+            }}
+          >
+            {count.toLocaleString()}
+          </span>
+        )}
+      </motion.button>
+    </motion.div>
+  );
+}
+
 // ─── MAIN HOME ────────────────────────────────────────────────────────────────
 
 export function Home() {
@@ -495,6 +564,11 @@ export function Home() {
       {/* ── BOTTOM CTA ── */}
       <div className="relative z-10 my-8">
         <BottomCTA onNavigate={() => navigate('/learn')} isDark={isDark} />
+      </div>
+
+      {/* ── APP LIKES ── */}
+      <div className="relative z-10">
+        <AppLikeButton isDark={isDark} />
       </div>
 
       {/* ── SUBMISSION PROMPT: At the very end ── */}

@@ -1050,7 +1050,7 @@ export function Learn() {
                         </div>
                       </div>
                       <div
-                        className="text-2xl font-black"
+                        className="text-lg font-black"
                         style={{
                           color: '#059669',
                           fontFamily: "'Fredoka One', cursive",

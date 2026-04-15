@@ -163,6 +163,10 @@ export function useStreak() {
       // puzzleId (UUID) is required by the DB schema; skip if we only have a local
       // puzzle number (e.g. the hardcoded fallback puzzle used in local dev).
       if (userId && puzzleId) {
+        // Build YYYY-MM-DD from local time, not UTC — avoids streak-breaking for
+        // users in UTC+ timezones who play before midnight local but after midnight UTC.
+        const _d = new Date();
+        const localDate = `${_d.getFullYear()}-${String(_d.getMonth() + 1).padStart(2, '0')}-${String(_d.getDate()).padStart(2, '0')}`;
         callRecordSolve(userId, {
           clueId: puzzleId,
           puzzleNumber,
@@ -170,8 +174,7 @@ export function useStreak() {
           wrongAttempts,
           xpEarned: xpGained,
           solveTimeSeconds,
-          // Send the client's local date so the DB streak logic isn't skewed by UTC offset
-          clientDate: new Date().toISOString().split('T')[0],
+          clientDate: localDate,
         }).catch(console.error);
       }
 

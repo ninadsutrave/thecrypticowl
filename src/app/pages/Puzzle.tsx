@@ -1356,6 +1356,14 @@ const MECHANISM_DESCRIPTIONS: Record<string, string> = {
     'This is a hidden word clue — the answer is literally spelled out consecutively inside the clue.',
   deletion:
     'This is a deletion clue — removing one or more letters from a word produces the answer.',
+  initial_letters:
+    'This is an initial-letters clue — the first letter of each consecutive word in the fodder spells the answer.',
+  final_letters:
+    'This is a final-letters clue — the last letter of each consecutive word in the fodder spells the answer.',
+  alternating_letters:
+    'This is an alternating-letters clue — every other letter (odds or evens) of the fodder spells the answer.',
+  spoonerism:
+    'This is a spoonerism — swapping the initial sounds of two words produces the answer (in the style of Reverend Spooner).',
   charade:
     'This is a charade clue — two or more parts are assembled consecutively to spell the answer.',
   homophone: 'This is a homophone clue — the answer sounds like another word or phrase.',
@@ -1445,26 +1453,40 @@ function buildHintsFromComponents(
     ];
   }
 
-  const def = components.find(c => c.role === 'definition');
-  // For double_definition: Gemini stores the 2nd definition in the indicator slot
-  const ind = components.find(c => c.role === 'indicator');
-  // For container clues prefer the inner element as the "fodder" the solver manipulates
-  const fod =
-    components.find(c => c.role === 'fodder') ??
-    components.find(c => c.role === 'container_inner') ??
-    components.find(c => c.role === 'container_outer');
+  const defs = components.filter(c => c.role === 'definition');
+  const inds = components.filter(c => c.role === 'indicator');
+  // Fodder-like roles the solver manipulates (container inner/outer count too).
+  const fods = components.filter(
+    c => c.role === 'fodder' || c.role === 'container_inner' || c.role === 'container_outer'
+  );
+
+  const def = defs[0];
+  // For double_definition the model stores the 2nd definition in the indicator slot.
+  const ind = inds[0];
+  const fod = fods[0];
 
   const isDoubleDef = primaryType === 'double_definition';
   const isCrypticDef = primaryType === 'cryptic_definition';
   const isAndlit = primaryType === 'andlit';
   const noFodder = isDoubleDef || isCrypticDef || isAndlit;
 
+  const prettyType = (t: string | null | undefined) => (t ? t.replace(/_/g, ' ') : null);
+
+  const formatIndicatorList = (items: typeof inds) =>
+    items
+      .map(i => {
+        const sub = prettyType(i.indicator_type);
+        return sub ? `"${i.clue_text}" (${sub})` : `"${i.clue_text}"`;
+      })
+      .join(' and ');
+
+  const formatFodderList = (items: typeof fods) => items.map(f => `"${f.clue_text}"`).join(' + ');
+
   // ── Hint 1: Definition ─────────────────────────────────────────────────────
   let hint1Text: string;
   let hint1Highlight: string | null;
 
   if (isDoubleDef) {
-    // Both def and ind are definitions for double_definition
     hint1Text =
       def && ind
         ? `This clue has two definitions: "${def.clue_text}" and "${ind.clue_text}". The answer satisfies both.`
@@ -1484,12 +1506,11 @@ function buildHintsFromComponents(
     hint1Highlight = def?.clue_text ?? null;
   }
 
-  // ── Hint 2: Indicator ──────────────────────────────────────────────────────
+  // ── Hint 2: Indicator(s) ───────────────────────────────────────────────────
   let hint2Text: string;
   let hint2Highlight: string | null;
 
   if (isDoubleDef) {
-    // ind holds the second definition — already shown in Hint 1, so Hint 2 reinforces
     hint2Text =
       'There is no indicator word in this clue — both halves are plain definitions. Look for the boundary between them.';
     hint2Highlight = null;
@@ -1497,14 +1518,22 @@ function buildHintsFromComponents(
     hint2Text =
       'There is no separate indicator — the wordplay and definition are one and the same. Re-read the clue from a different angle.';
     hint2Highlight = null;
+  } else if (inds.length >= 2) {
+    hint2Text = `This clue has multiple indicators: ${formatIndicatorList(inds)}. Each one signals a different trick — apply them in the order they appear.`;
+    hint2Highlight = ind.clue_text;
+  } else if (ind) {
+    const sub = prettyType(ind.indicator_type);
+    hint2Text = sub
+      ? `"${ind.clue_text}" is the indicator (a ${sub} indicator) — it signals which wordplay trick to apply.`
+      : `"${ind.clue_text}" is the indicator — it tells you which wordplay trick to apply.`;
+    hint2Highlight = ind.clue_text;
   } else {
-    hint2Text = ind
-      ? `"${ind.clue_text}" is the indicator — it tells you which wordplay trick to apply.`
-      : 'Look for a signal word or phrase that tells you the cryptic trick (e.g. "mixed up", "back", "hidden in", "sounds like").';
-    hint2Highlight = ind?.clue_text ?? null;
+    hint2Text =
+      'Look for a signal word or phrase that tells you the cryptic trick (e.g. "mixed up", "back", "hidden in", "sounds like").';
+    hint2Highlight = null;
   }
 
-  // ── Hint 3: Fodder ─────────────────────────────────────────────────────────
+  // ── Hint 3: Fodder(s) ──────────────────────────────────────────────────────
   let hint3Text: string;
   let hint3Highlight: string | null;
 
@@ -1513,17 +1542,32 @@ function buildHintsFromComponents(
       ? 'Double definitions have no fodder. The trick is that both parts of the clue, read separately, define the same word.'
       : 'This clue type has no separate fodder — the cleverness is all in the phrasing.';
     hint3Highlight = null;
-  } else {
-    hint3Text = fod
-      ? `The wordplay material is: "${fod.clue_text}"`
-      : 'The wordplay material is somewhere in the clue — it may appear as a word, phrase, or synonym.';
+  } else if (fods.length >= 2) {
+    hint3Text = `The wordplay uses multiple pieces of material: ${formatFodderList(fods)}. Apply each indicator to its fodder, then combine the results.`;
     hint3Highlight = fod?.clue_text ?? null;
+  } else if (fod) {
+    hint3Text = `The wordplay material is: "${fod.clue_text}"`;
+    hint3Highlight = fod.clue_text;
+  } else {
+    hint3Text =
+      'The wordplay material is somewhere in the clue — it may appear as a word, phrase, or synonym.';
+    hint3Highlight = null;
   }
 
-  // ── Hint 4: Mechanism ──────────────────────────────────────────────────────
-  const hint4Text =
+  // ── Hint 4: Mechanism(s) ───────────────────────────────────────────────────
+  let hint4Text =
     MECHANISM_DESCRIPTIONS[primaryType] ??
     'Apply the cryptic mechanism to the fodder to produce the answer.';
+
+  // Compound clues benefit from a per-indicator sub-type roll-up.
+  if (primaryType === 'compound') {
+    const uniqueSubtypes = Array.from(
+      new Set(inds.map(i => i.indicator_type).filter(Boolean) as string[])
+    );
+    if (uniqueSubtypes.length >= 2) {
+      hint4Text += ` Tricks at play: ${uniqueSubtypes.map(s => s.replace(/_/g, ' ')).join(' + ')}.`;
+    }
+  }
 
   return [
     {

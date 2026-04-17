@@ -13,18 +13,31 @@ const PART_ROLE_MAP = {
   result: 'result',
 };
 
-// Maps wordplay types → clue_indicator_types.id values.
-// Only types that have a canonical indicator sub-type are listed.
-// Charade, double_definition, cryptic_definition, andlit, and compound
-// do not have a single classifiable indicator type, so they are omitted.
+// Fallback map from wordplay type → clue_indicator_types.id values, used only
+// when the clue response does not provide an explicit indicator_type. Preferred
+// source is clue.indicator_type (model-reported), which covers compound clues
+// correctly and avoids guessing for single-mechanism types.
+// Charade, double_definition, cryptic_definition, andlit, and compound have no
+// single classifiable indicator type, so they are omitted and fall back to null.
 const INDICATOR_TYPE_MAP = {
-  anagram:    'anagram',
-  reversal:   'reversal',
-  container:  'container',
-  hidden:     'hidden',
-  deletion:   'deletion',
-  homophone:  'homophone',
+  anagram:             'anagram',
+  reversal:            'reversal',
+  container:           'container',
+  hidden:              'hidden',
+  deletion:            'deletion',
+  homophone:           'homophone',
+  initial_letters:     'initial_letters',
+  final_letters:       'final_letters',
+  alternating_letters: 'alternating_letters',
+  spoonerism:          'spoonerism',
 };
+
+// Valid indicator_type IDs (mirrors clue_indicator_types in the DB).
+// Anything outside this set is treated as "no classified indicator".
+const VALID_INDICATOR_TYPES = new Set([
+  'anagram', 'reversal', 'container', 'hidden', 'deletion', 'homophone',
+  'initial_letters', 'final_letters', 'alternating_letters', 'spoonerism',
+]);
 
 /**
  * Returns variety constraints based on clue usage in the last 14 days.
@@ -147,18 +160,31 @@ export async function writeToDB(lexical, clue, verdict = {}, aiProvider, dbProvi
   }
 
   // 6. Insert clue_components (pedagogical breakdown — derived from clue_parts).
-  const indicatorType = INDICATOR_TYPE_MAP[lexical.type] ?? null;
+  // Each indicator component's indicator_type comes from, in order of preference:
+  //   1. part.indicator_subtype (per-indicator — REQUIRED for compound clues
+  //      where multiple indicators have DIFFERENT sub-types).
+  //   2. clue.indicator_type (primary/summary — model-reported top-level).
+  //   3. INDICATOR_TYPE_MAP[lexical.type] (derivation fallback for legacy payloads).
+  const topReportedType = clue.indicator_type && VALID_INDICATOR_TYPES.has(clue.indicator_type)
+    ? clue.indicator_type
+    : null;
+  const fallbackIndicatorType = topReportedType ?? INDICATOR_TYPE_MAP[lexical.type] ?? null;
+
   const components = clue.clue_parts
     .filter((part) => part.type) // skip structural nulls (link words, letter count)
     .map((part, index) => {
       const role = PART_ROLE_MAP[part.type] || 'link_word';
+      let perPartIndicatorType = null;
+      if (role === 'indicator') {
+        const sub = part.indicator_subtype;
+        perPartIndicatorType = sub && VALID_INDICATOR_TYPES.has(sub) ? sub : fallbackIndicatorType;
+      }
       return {
         clue_id: clueData.id,
         step_order: index + 1,
         role,
         clue_text: part.text.trim(),
-        // indicator_type is only valid on indicator components and only when classifiable
-        indicator_type: role === 'indicator' ? indicatorType : null,
+        indicator_type: perPartIndicatorType,
         // explanation is intentionally null for AI-generated clues to avoid spoiling the answer.
         // Human-authored clues can populate this via the admin UI for richer Hint 3 text.
         explanation: null,

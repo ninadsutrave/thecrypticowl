@@ -46,6 +46,47 @@ export async function judgeClue(clue, lexical) {
     };
   }
 
+  // 1a-bis. Sanity — reject clues that look like the model leaked meta-commentary
+  // ("wait, let me...", "actually this should be...", "sorry I meant", etc.) or
+  // multi-line text. Schema mode protects JSON shape but not string contents.
+  const clueText = String(clue.clue);
+  if (/[\r\n]/.test(clueText)) {
+    errors.push('Clue contains line breaks (should be a single line).');
+  }
+  if (clueText.length > 140) {
+    errors.push(`Clue is unreasonably long (${clueText.length} chars) — likely meta-text leakage.`);
+  }
+  // Narrow patterns for model self-correction / narration. Tightened to avoid
+  // false positives on legitimate cryptic surfaces: anchors (^) are used for
+  // narration openers, and context-only patterns require neighbouring
+  // self-correction language. Single words like "wait" / "actually" / "here's"
+  // are NOT blanket-banned — they can appear naturally in surfaces.
+  const metaPhrases = [
+    /^```/, // code fence at start
+    /^json\b/i, // literal "json" at start of string
+    /^here('?s| is)\b/i, // "Here's my clue:" style opener, only at start
+    /^note\s*:/i, // "Note: ..." only at start
+    /\bas an ai\b/i, // AI self-reference
+    /\bsorry\b/i, // rare in a genuine cryptic surface
+    /\bon second thought\b/i,
+    /\blet me (try|reconsider|rephrase|rewrite|correct)\b/i,
+    /\bi (apologi[sz]e|realize|realise)\b/i,
+    /\b(revised|corrected|updated|alternative|alternate|new) (clue|version|attempt)\b/i,
+    /\bwait,?\s+(let me|actually|no)\b/i, // "wait" only when in self-correction context
+  ];
+  for (const rx of metaPhrases) {
+    if (rx.test(clueText)) {
+      errors.push(`Clue contains meta-commentary or narration (matched ${rx}).`);
+      break;
+    }
+  }
+  // The sibling fields must be strings too. Anything else means the schema slipped.
+  for (const field of ['definition', 'indicator', 'fodder', 'wordplay_summary']) {
+    if (clue[field] !== undefined && typeof clue[field] !== 'string') {
+      errors.push(`Field "${field}" is not a string.`);
+    }
+  }
+
   // 1b. Answer leak (hidden type is exempt — the answer is embedded by design)
   if (type !== 'hidden' && clue.clue.toUpperCase().includes(answer)) {
     errors.push('Answer leaked in clue text.');

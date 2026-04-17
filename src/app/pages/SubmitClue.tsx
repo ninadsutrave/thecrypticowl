@@ -16,6 +16,10 @@ const WORDPLAY_TYPES: { id: ClueWordplayType; label: string }[] = [
   { id: 'reversal', label: 'Reversal' },
   { id: 'homophone', label: 'Homophone' },
   { id: 'deletion', label: 'Deletion' },
+  { id: 'initial_letters', label: 'Initial Letters' },
+  { id: 'final_letters', label: 'Final Letters' },
+  { id: 'alternating_letters', label: 'Alternating Letters' },
+  { id: 'spoonerism', label: 'Spoonerism' },
   { id: 'double_definition', label: 'Double Definition' },
   { id: 'cryptic_definition', label: 'Cryptic Definition' },
 ];

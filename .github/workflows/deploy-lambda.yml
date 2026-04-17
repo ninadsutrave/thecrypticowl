@@ -68,7 +68,7 @@ jobs:
               --function-name "$LAMBDA_NAME" \
               --runtime nodejs24.x \
               --handler index.handler \
-              --timeout 10 \
+              --timeout 600 \
               --memory-size 256 \
               --description "$DEPLOY_DESC" \
               --environment "$ENV_VARS"
@@ -97,7 +97,7 @@ jobs:
               --role "$LAMBDA_ROLE" \
               --handler index.handler \
               --zip-file fileb://function.zip \
-              --timeout 10 \
+              --timeout 600 \
               --memory-size 256 \
               --description "$DEPLOY_DESC" \
               --environment "$ENV_VARS" \

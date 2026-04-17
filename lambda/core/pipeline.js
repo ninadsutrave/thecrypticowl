@@ -79,11 +79,13 @@ export async function generateValidClue(callAI, aiProvider, dbProvider) {
         );
 
         if (verdict.judgeUnavailable) {
-          // Flash was down — this is a quality-gate failure, not a clue failure.
-          // Alert loudly and let the attempt counter drain so the lambda fails cleanly.
-          console.error('  QUALITY GATE BYPASSED — Flash judge unavailable. Draining attempts.');
-          attempts = MAX_ATTEMPTS; // force exit
-          break;
+          // Flash transiently failed even after its own internal retries. Don't
+          // burn the whole run on a single blip — continue to the next attempt.
+          // The client already handles 429/5xx/timeout retries; reaching here
+          // means sustained failure, not a single hiccup.
+          console.warn('  Flash judge unavailable for this attempt — continuing to next.');
+          feedback = null;
+          continue;
         }
 
         if (verdict.valid) {

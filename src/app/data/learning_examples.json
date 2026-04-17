@@ -34,9 +34,21 @@
       "desc": "Letters are rearranged (scrambled) to spell the answer. An indicator word signals this — look for words suggesting disorder, change, or brokenness.",
       "clue": "\"Stone broken becomes musical sounds (5)\"",
       "breakdown": [
-        { "label": "Definition", "text": "musical sounds", "color": "definition" },
-        { "label": "Indicator", "text": "broken", "color": "indicator" },
-        { "label": "Fodder", "text": "STONE", "color": "fodder" }
+        {
+          "label": "Definition",
+          "text": "musical sounds",
+          "color": "definition"
+        },
+        {
+          "label": "Indicator",
+          "text": "broken",
+          "color": "indicator"
+        },
+        {
+          "label": "Fodder",
+          "text": "STONE",
+          "color": "fodder"
+        }
       ],
       "answer": "TONES",
       "visual": ["S", "T", "O", "N", "E"],
@@ -63,8 +75,16 @@
       "desc": "The clue gives two completely separate definitions of the same answer — no wordplay at all. Both halves independently clue the exact same word.",
       "clue": "\"Game or fire-lighter (5)\"",
       "breakdown": [
-        { "label": "Definition 1", "text": "game", "color": "definition" },
-        { "label": "Definition 2", "text": "fire-lighter", "color": "definition" }
+        {
+          "label": "Definition 1",
+          "text": "game",
+          "color": "definition"
+        },
+        {
+          "label": "Definition 2",
+          "text": "fire-lighter",
+          "color": "definition"
+        }
       ],
       "answer": "MATCH",
       "visual": ["M", "A", "T", "C", "H"],
@@ -82,9 +102,21 @@
       "desc": "The answer is literally hiding inside consecutive letters of the clue text — no manipulation needed, just find the hidden letters.",
       "clue": "\"Masked abuser - vile and obsequious (7)\"",
       "breakdown": [
-        { "label": "Definition", "text": "obsequious", "color": "definition" },
-        { "label": "Indicator", "text": "Masked", "color": "indicator" },
-        { "label": "Hidden in", "text": "abuSER VILE", "color": "fodder" }
+        {
+          "label": "Definition",
+          "text": "obsequious",
+          "color": "definition"
+        },
+        {
+          "label": "Indicator",
+          "text": "Masked",
+          "color": "indicator"
+        },
+        {
+          "label": "Hidden in",
+          "text": "abuSER VILE",
+          "color": "fodder"
+        }
       ],
       "answer": "SERVILE",
       "visual": ["a", "b", "u", "S", "E", "R", "V", "I", "L", "E"],
@@ -102,9 +134,21 @@
       "desc": "Read a word backwards to get the answer. Indicator words suggest going back or returning.",
       "clue": "\"Market returned for a vehicle (4)\"",
       "breakdown": [
-        { "label": "Definition", "text": "vehicle", "color": "definition" },
-        { "label": "Indicator", "text": "returned", "color": "indicator" },
-        { "label": "Reversed", "text": "MART → TRAM", "color": "fodder" }
+        {
+          "label": "Definition",
+          "text": "vehicle",
+          "color": "definition"
+        },
+        {
+          "label": "Indicator",
+          "text": "returned",
+          "color": "indicator"
+        },
+        {
+          "label": "Reversed",
+          "text": "MART → TRAM",
+          "color": "fodder"
+        }
       ],
       "answer": "TRAM",
       "visual": ["M", "A", "R", "T"],
@@ -122,9 +166,21 @@
       "desc": "Two or more words or abbreviations are joined end-to-end like a charade.",
       "clue": "\"Doctor on the sick list makes a boring tool (5)\"",
       "breakdown": [
-        { "label": "Definition", "text": "boring tool", "color": "definition" },
-        { "label": "Part 1", "text": "DR (Doctor)", "color": "fodder" },
-        { "label": "Part 2", "text": "ILL (sick)", "color": "fodder" }
+        {
+          "label": "Definition",
+          "text": "boring tool",
+          "color": "definition"
+        },
+        {
+          "label": "Part 1",
+          "text": "DR (Doctor)",
+          "color": "fodder"
+        },
+        {
+          "label": "Part 2",
+          "text": "ILL (sick)",
+          "color": "fodder"
+        }
       ],
       "answer": "DRILL",
       "visual": ["D", "R", "I", "L", "L"],
@@ -142,9 +198,21 @@
       "desc": "One word is inserted inside another word. Indicator words suggest surrounding, enclosing, or being inside.",
       "clue": "\"Nothing in a bat for a vessel (4)\"",
       "breakdown": [
-        { "label": "Definition", "text": "vessel", "color": "definition" },
-        { "label": "Indicator", "text": "in", "color": "indicator" },
-        { "label": "Container", "text": "O (nothing) in BAT", "color": "fodder" }
+        {
+          "label": "Definition",
+          "text": "vessel",
+          "color": "definition"
+        },
+        {
+          "label": "Indicator",
+          "text": "in",
+          "color": "indicator"
+        },
+        {
+          "label": "Container",
+          "text": "O (nothing) in BAT",
+          "color": "fodder"
+        }
       ],
       "answer": "BOAT",
       "visual": ["B", "(", "O", ")", "A", "T"],
@@ -162,9 +230,21 @@
       "desc": "Remove a letter from a word — usually the first ('headless') or last ('tailless').",
       "clue": "\"Tree losing its tail is a beverage (3)\"",
       "breakdown": [
-        { "label": "Definition", "text": "beverage", "color": "definition" },
-        { "label": "Indicator", "text": "losing its tail", "color": "indicator" },
-        { "label": "Deletion", "text": "TEAK – K = TEA", "color": "fodder" }
+        {
+          "label": "Definition",
+          "text": "beverage",
+          "color": "definition"
+        },
+        {
+          "label": "Indicator",
+          "text": "losing its tail",
+          "color": "indicator"
+        },
+        {
+          "label": "Deletion",
+          "text": "TEAK – K = TEA",
+          "color": "fodder"
+        }
       ],
       "answer": "TEA",
       "visual": ["T", "E", "A", "K"],
@@ -182,9 +262,21 @@
       "desc": "The answer sounds like another word mentioned in the clue. Look for indicators suggesting hearing or speaking.",
       "clue": "\"A fruit that's heard in a couple (4)\"",
       "breakdown": [
-        { "label": "Definition", "text": "A fruit", "color": "definition" },
-        { "label": "Indicator", "text": "heard", "color": "indicator" },
-        { "label": "Sounds like", "text": "PAIR (couple)", "color": "fodder" }
+        {
+          "label": "Definition",
+          "text": "A fruit",
+          "color": "definition"
+        },
+        {
+          "label": "Indicator",
+          "text": "heard",
+          "color": "indicator"
+        },
+        {
+          "label": "Sounds like",
+          "text": "PAIR (couple)",
+          "color": "fodder"
+        }
       ],
       "answer": "PEAR",
       "visual": ["P", "A", "I", "R"],
@@ -202,9 +294,21 @@
       "desc": "Take specific letters (like every other, or just the starts) of words to form the answer.",
       "clue": "\"Start laying a wonderful new turf (4)\"",
       "breakdown": [
-        { "label": "Definition", "text": "turf", "color": "definition" },
-        { "label": "Indicator", "text": "Start", "color": "indicator" },
-        { "label": "Letters", "text": "L-A-W-N", "color": "fodder" }
+        {
+          "label": "Definition",
+          "text": "turf",
+          "color": "definition"
+        },
+        {
+          "label": "Indicator",
+          "text": "Start",
+          "color": "indicator"
+        },
+        {
+          "label": "Letters",
+          "text": "L-A-W-N",
+          "color": "fodder"
+        }
       ],
       "answer": "LAWN",
       "visual": [
@@ -235,17 +339,26 @@
   "compoundExamples": [
     {
       "title": "Anagram + Container",
-      "subtitle": "Rearrange letters around another word",
+      "subtitle": "Anagram one word, then slot it inside another",
       "emoji": "🔀📥",
       "mechanisms": ["Anagram", "Container"],
-      "clue": "\"Outburst as rant oddly reformed around drink (7)\"",
+      "clue": "\"Cape covers disturbed rut — to seize (7)\"",
       "steps": [
-        { "text": "Anagram: RANT oddly reformed → TAN T", "type": "indicator" },
-        { "text": "Container: DRINK (RUM) placed inside TAN T", "type": "fodder" },
-        { "text": "Result: TAN + RUM + T = TANTRUM (Outburst)", "type": "definition" }
+        {
+          "text": "Anagram: 'disturbed rut' → rearrange R, U, T to TUR",
+          "type": "indicator"
+        },
+        {
+          "text": "Container: CAPE (cloak) covers TUR → CAP(TUR)E",
+          "type": "fodder"
+        },
+        {
+          "text": "Result: CAPTURE = to seize",
+          "type": "definition"
+        }
       ],
-      "answer": "TANTRUM",
-      "tip": "The indicator 'reformed around' suggests both an anagram and a container mechanism."
+      "answer": "CAPTURE",
+      "tip": "'Disturbed' signals anagram, 'covers' signals container. Rearrange RUT to TUR, then slot it into CAPE to get CAPTURE."
     },
     {
       "title": "Charade + Abbreviation",
@@ -254,9 +367,18 @@
       "mechanisms": ["Charade", "Abbreviation"],
       "clue": "\"Burning love for nothing in wading bird (8)\"",
       "steps": [
-        { "text": "Part 1: FLAMING (burning)", "type": "fodder" },
-        { "text": "Part 2: O (love/nothing in tennis)", "type": "indicator" },
-        { "text": "Join: FLAMING + O = FLAMINGO (bird)", "type": "definition" }
+        {
+          "text": "Part 1: FLAMING (burning)",
+          "type": "fodder"
+        },
+        {
+          "text": "Part 2: O (love/nothing in tennis)",
+          "type": "indicator"
+        },
+        {
+          "text": "Join: FLAMING + O = FLAMINGO (bird)",
+          "type": "definition"
+        }
       ],
       "answer": "FLAMINGO",
       "tip": "Abbreviations like 'O' for love are common in British cryptic clues."
@@ -268,9 +390,18 @@
       "mechanisms": ["Deletion", "Reversal"],
       "clue": "\"Celebrity loses head and turns back to reveal vermin (3)\"",
       "steps": [
-        { "text": "Start: STAR (celebrity)", "type": "fodder" },
-        { "text": "Deletion: 'Loses head' → remove S → TAR", "type": "indicator" },
-        { "text": "Reversal: 'Turns back' → reverse TAR → RAT", "type": "definition" }
+        {
+          "text": "Start: STAR (celebrity)",
+          "type": "fodder"
+        },
+        {
+          "text": "Deletion: 'Loses head' → remove S → TAR",
+          "type": "indicator"
+        },
+        {
+          "text": "Reversal: 'Turns back' → reverse TAR → RAT",
+          "type": "definition"
+        }
       ],
       "answer": "RAT",
       "tip": "Each indicator word does a separate job — 'loses head' deletes, 'turns back' reverses."
@@ -282,9 +413,18 @@
       "mechanisms": ["Deletion", "Anagram"],
       "clue": "\"Salary lacking its tail, scrambled to mean adjacent (4)\"",
       "steps": [
-        { "text": "Start: EARNS (salary)", "type": "fodder" },
-        { "text": "Deletion: 'Lacking its tail' → remove S → EARN", "type": "indicator" },
-        { "text": "Anagram: 'Scrambled' → anagram EARN → NEAR", "type": "definition" }
+        {
+          "text": "Start: EARNS (salary)",
+          "type": "fodder"
+        },
+        {
+          "text": "Deletion: 'Lacking its tail' → remove S → EARN",
+          "type": "indicator"
+        },
+        {
+          "text": "Anagram: 'Scrambled' → anagram EARN → NEAR",
+          "type": "definition"
+        }
       ],
       "answer": "NEAR",
       "tip": "'Lacking its tail' quietly removes the last letter. Then 'scrambled' signals the anagram."
@@ -296,9 +436,18 @@
       "mechanisms": ["Hidden Word", "Reversal"],
       "clue": "\"Top card returning in the cafe (3)\"",
       "steps": [
-        { "text": "Hidden: 'thE CAfe' contains ECA", "type": "fodder" },
-        { "text": "Reversal: 'Returning' → reverse ECA → ACE", "type": "indicator" },
-        { "text": "Result: ACE (Top card)", "type": "definition" }
+        {
+          "text": "Hidden: 'thE CAfe' contains ECA",
+          "type": "fodder"
+        },
+        {
+          "text": "Reversal: 'Returning' → reverse ECA → ACE",
+          "type": "indicator"
+        },
+        {
+          "text": "Result: ACE (Top card)",
+          "type": "definition"
+        }
       ],
       "answer": "ACE",
       "tip": "A single indicator like 'returning' can flip a hidden word!"
@@ -310,71 +459,308 @@
       "mechanisms": ["Alternation", "Charade"],
       "clue": "\"Laundry basins wear the thumbs out unevenly, after a small (8)\"",
       "steps": [
-        { "text": "Alternation: 'wears the thumbs out' unevenly → WASHTUB", "type": "indicator" },
-        { "text": "Charade: 'small' → S", "type": "fodder" },
-        { "text": "Join: WASHTUB + S = WASHTUBS (basins)", "type": "definition" }
+        {
+          "text": "Alternation: 'wears the thumbs out' unevenly → WASHTUB",
+          "type": "indicator"
+        },
+        {
+          "text": "Charade: 'small' → S",
+          "type": "fodder"
+        },
+        {
+          "text": "Join: WASHTUB + S = WASHTUBS (basins)",
+          "type": "definition"
+        }
       ],
       "answer": "WASHTUBS",
       "tip": "Combine the alternation result (WASHTUB) with a common abbreviation (S for small)."
     }
   ],
   "synonyms": [
-    { "word": "flower", "cryptic": "river", "note": "something that flows" },
-    { "word": "doctor", "cryptic": "DR / MB / MD", "note": "medical title" },
-    { "word": "east", "cryptic": "E", "note": "compass point" },
-    { "word": "left", "cryptic": "L", "note": "compass / direction" },
-    { "word": "north", "cryptic": "N", "note": "compass point" },
-    { "word": "south", "cryptic": "S", "note": "compass point" },
-    { "word": "west", "cryptic": "W", "note": "compass point" },
-    { "word": "king", "cryptic": "K / R / ER", "note": "royalty" },
-    { "word": "queen", "cryptic": "Q / HM / R", "note": "royalty" },
-    { "word": "article", "cryptic": "A / AN / THE", "note": "grammar word" },
-    { "word": "hundred", "cryptic": "C / TON", "note": "number" },
-    { "word": "note", "cryptic": "A–G / DO / RE / MI", "note": "musical note" },
-    { "word": "old", "cryptic": "O / EX", "note": "prefix meaning former" },
-    { "word": "river", "cryptic": "NILE / EXE / DEE", "note": "UK rivers (short names)" },
-    { "word": "saint", "cryptic": "ST", "note": "abbreviation" },
-    { "word": "street", "cryptic": "ST / RD", "note": "abbreviation" },
-    { "word": "small", "cryptic": "S / WEE", "note": "size" },
-    { "word": "large", "cryptic": "L / BIG", "note": "size" },
-    { "word": "number", "cryptic": "NO / NB", "note": "abbreviation" },
-    { "word": "gold", "cryptic": "OR / AU", "note": "heraldry / chemistry" },
-    { "word": "silver", "cryptic": "AG", "note": "chemistry symbol" },
-    { "word": "right", "cryptic": "R / RT", "note": "direction / correct" },
-    { "word": "answer", "cryptic": "A / ANS", "note": "abbreviated" },
-    { "word": "about", "cryptic": "C / CA / RE", "note": "circa / regarding" },
-    { "word": "one", "cryptic": "I", "note": "Roman numeral" },
-    { "word": "five", "cryptic": "V", "note": "Roman numeral" },
-    { "word": "ten", "cryptic": "X", "note": "Roman numeral" },
-    { "word": "fifty", "cryptic": "L", "note": "Roman numeral" },
-    { "word": "hundred", "cryptic": "C", "note": "Roman numeral" },
-    { "word": "five hundred", "cryptic": "D", "note": "Roman numeral" },
-    { "word": "thousand", "cryptic": "M", "note": "Roman numeral" },
-    { "word": "Alpha", "cryptic": "A", "note": "NATO Phonetic" },
-    { "word": "Bravo", "cryptic": "B", "note": "NATO Phonetic" },
-    { "word": "Charlie", "cryptic": "C", "note": "NATO Phonetic" },
-    { "word": "Delta", "cryptic": "D", "note": "NATO Phonetic" },
-    { "word": "Echo", "cryptic": "E", "note": "NATO Phonetic" },
-    { "word": "Foxtrot", "cryptic": "F", "note": "NATO Phonetic" },
-    { "word": "Golf", "cryptic": "G", "note": "NATO Phonetic" },
-    { "word": "Hotel", "cryptic": "H", "note": "NATO Phonetic" },
-    { "word": "India", "cryptic": "I", "note": "NATO Phonetic" },
-    { "word": "Juliet", "cryptic": "J", "note": "NATO Phonetic" },
-    { "word": "Kilo", "cryptic": "K", "note": "NATO Phonetic" },
-    { "word": "Lima", "cryptic": "L", "note": "NATO Phonetic" },
-    { "word": "Mike", "cryptic": "M", "note": "NATO Phonetic" },
-    { "word": "November", "cryptic": "N", "note": "NATO Phonetic" },
-    { "word": "Oscar", "cryptic": "O", "note": "NATO Phonetic" },
-    { "word": "Papa", "cryptic": "P", "note": "NATO Phonetic" },
-    { "word": "Quebec", "cryptic": "Q", "note": "NATO Phonetic" },
-    { "word": "Romeo", "cryptic": "R", "note": "NATO Phonetic" },
-    { "word": "Sierra", "cryptic": "S", "note": "NATO Phonetic" },
-    { "word": "Tango", "cryptic": "T", "note": "NATO Phonetic" },
-    { "word": "Uniform", "cryptic": "U", "note": "NATO Phonetic" },
-    { "word": "Victor", "cryptic": "V", "note": "NATO Phonetic" },
-    { "word": "Whiskey", "cryptic": "W", "note": "NATO Phonetic" },
-    { "word": "X-ray", "cryptic": "X", "note": "NATO Phonetic" },
-    { "word": "Yankee", "cryptic": "Y", "note": "NATO Phonetic" },
-    { "word": "Zulu", "cryptic": "Z", "note": "NATO Phonetic" }
+    {
+      "word": "flower",
+      "cryptic": "river",
+      "note": "something that flows"
+    },
+    {
+      "word": "doctor",
+      "cryptic": "DR / MB / MD",
+      "note": "medical title"
+    },
+    {
+      "word": "east",
+      "cryptic": "E",
+      "note": "compass point"
+    },
+    {
+      "word": "left",
+      "cryptic": "L",
+      "note": "compass / direction"
+    },
+    {
+      "word": "north",
+      "cryptic": "N",
+      "note": "compass point"
+    },
+    {
+      "word": "south",
+      "cryptic": "S",
+      "note": "compass point"
+    },
+    {
+      "word": "west",
+      "cryptic": "W",
+      "note": "compass point"
+    },
+    {
+      "word": "king",
+      "cryptic": "K / R / ER",
+      "note": "royalty"
+    },
+    {
+      "word": "queen",
+      "cryptic": "Q / HM / R",
+      "note": "royalty"
+    },
+    {
+      "word": "article",
+      "cryptic": "A / AN / THE",
+      "note": "grammar word"
+    },
+    {
+      "word": "hundred",
+      "cryptic": "C / TON",
+      "note": "number"
+    },
+    {
+      "word": "note",
+      "cryptic": "A–G / DO / RE / MI",
+      "note": "musical note"
+    },
+    {
+      "word": "old",
+      "cryptic": "O / EX",
+      "note": "prefix meaning former"
+    },
+    {
+      "word": "river",
+      "cryptic": "NILE / EXE / DEE",
+      "note": "UK rivers (short names)"
+    },
+    {
+      "word": "saint",
+      "cryptic": "ST",
+      "note": "abbreviation"
+    },
+    {
+      "word": "street",
+      "cryptic": "ST / RD",
+      "note": "abbreviation"
+    },
+    {
+      "word": "small",
+      "cryptic": "S / WEE",
+      "note": "size"
+    },
+    {
+      "word": "large",
+      "cryptic": "L / BIG",
+      "note": "size"
+    },
+    {
+      "word": "number",
+      "cryptic": "NO / NB",
+      "note": "abbreviation"
+    },
+    {
+      "word": "gold",
+      "cryptic": "OR / AU",
+      "note": "heraldry / chemistry"
+    },
+    {
+      "word": "silver",
+      "cryptic": "AG",
+      "note": "chemistry symbol"
+    },
+    {
+      "word": "right",
+      "cryptic": "R / RT",
+      "note": "direction / correct"
+    },
+    {
+      "word": "answer",
+      "cryptic": "A / ANS",
+      "note": "abbreviated"
+    },
+    {
+      "word": "about",
+      "cryptic": "C / CA / RE",
+      "note": "circa / regarding"
+    },
+    {
+      "word": "one",
+      "cryptic": "I",
+      "note": "Roman numeral"
+    },
+    {
+      "word": "five",
+      "cryptic": "V",
+      "note": "Roman numeral"
+    },
+    {
+      "word": "ten",
+      "cryptic": "X",
+      "note": "Roman numeral"
+    },
+    {
+      "word": "fifty",
+      "cryptic": "L",
+      "note": "Roman numeral"
+    },
+    {
+      "word": "hundred",
+      "cryptic": "C",
+      "note": "Roman numeral"
+    },
+    {
+      "word": "five hundred",
+      "cryptic": "D",
+      "note": "Roman numeral"
+    },
+    {
+      "word": "thousand",
+      "cryptic": "M",
+      "note": "Roman numeral"
+    },
+    {
+      "word": "Alpha",
+      "cryptic": "A",
+      "note": "NATO Phonetic"
+    },
+    {
+      "word": "Bravo",
+      "cryptic": "B",
+      "note": "NATO Phonetic"
+    },
+    {
+      "word": "Charlie",
+      "cryptic": "C",
+      "note": "NATO Phonetic"
+    },
+    {
+      "word": "Delta",
+      "cryptic": "D",
+      "note": "NATO Phonetic"
+    },
+    {
+      "word": "Echo",
+      "cryptic": "E",
+      "note": "NATO Phonetic"
+    },
+    {
+      "word": "Foxtrot",
+      "cryptic": "F",
+      "note": "NATO Phonetic"
+    },
+    {
+      "word": "Golf",
+      "cryptic": "G",
+      "note": "NATO Phonetic"
+    },
+    {
+      "word": "Hotel",
+      "cryptic": "H",
+      "note": "NATO Phonetic"
+    },
+    {
+      "word": "India",
+      "cryptic": "I",
+      "note": "NATO Phonetic"
+    },
+    {
+      "word": "Juliet",
+      "cryptic": "J",
+      "note": "NATO Phonetic"
+    },
+    {
+      "word": "Kilo",
+      "cryptic": "K",
+      "note": "NATO Phonetic"
+    },
+    {
+      "word": "Lima",
+      "cryptic": "L",
+      "note": "NATO Phonetic"
+    },
+    {
+      "word": "Mike",
+      "cryptic": "M",
+      "note": "NATO Phonetic"
+    },
+    {
+      "word": "November",
+      "cryptic": "N",
+      "note": "NATO Phonetic"
+    },
+    {
+      "word": "Oscar",
+      "cryptic": "O",
+      "note": "NATO Phonetic"
+    },
+    {
+      "word": "Papa",
+      "cryptic": "P",
+      "note": "NATO Phonetic"
+    },
+    {
+      "word": "Quebec",
+      "cryptic": "Q",
+      "note": "NATO Phonetic"
+    },
+    {
+      "word": "Romeo",
+      "cryptic": "R",
+      "note": "NATO Phonetic"
+    },
+    {
+      "word": "Sierra",
+      "cryptic": "S",
+      "note": "NATO Phonetic"
+    },
+    {
+      "word": "Tango",
+      "cryptic": "T",
+      "note": "NATO Phonetic"
+    },
+    {
+      "word": "Uniform",
+      "cryptic": "U",
+      "note": "NATO Phonetic"
+    },
+    {
+      "word": "Victor",
+      "cryptic": "V",
+      "note": "NATO Phonetic"
+    },
+    {
+      "word": "Whiskey",
+      "cryptic": "W",
+      "note": "NATO Phonetic"
+    },
+    {
+      "word": "X-ray",
+      "cryptic": "X",
+      "note": "NATO Phonetic"
+    },
+    {
+      "word": "Yankee",
+      "cryptic": "Y",
+      "note": "NATO Phonetic"
+    },
+    {
+      "word": "Zulu",
+      "cryptic": "Z",
+      "note": "NATO Phonetic"
+    }
   ]
 }

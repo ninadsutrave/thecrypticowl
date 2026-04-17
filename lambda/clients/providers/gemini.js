@@ -15,6 +15,12 @@ const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 const MAX_RETRY_DELAY_MS = 120_000;
 /** How many times to retry a single call after a rate-limit (429) response. */
 const MAX_RATE_LIMIT_RETRIES = 2;
+/** How many times to retry a single call after a transient 5xx response. */
+const MAX_SERVER_ERROR_RETRIES = 2;
+/** Per-request timeout (ms) — fails fast so a hung connection can't drain the Lambda budget. */
+const REQUEST_TIMEOUT_MS = 90_000;
+/** HTTP status codes considered transient and worth retrying. */
+const TRANSIENT_STATUSES = new Set([500, 502, 503, 504]);
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -85,14 +91,33 @@ export async function callGemini(
 
   console.log(`[gemini] calling model: ${model} (temperature: ${baseConfig.temperature}${_retryCount ? `, retry #${_retryCount}` : ''})`);
 
-  const res = await fetch(
-    `${GEMINI_BASE_URL}${model}${GEMINI_GENERATE_ACTION}?key=${GEMINI_API_KEY}`,
-    {
-      method: HTTP_METHODS.POST,
-      headers: GEMINI_HEADERS,
-      body: JSON.stringify(body),
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+
+  let res;
+  try {
+    res = await fetch(
+      `${GEMINI_BASE_URL}${model}${GEMINI_GENERATE_ACTION}?key=${GEMINI_API_KEY}`,
+      {
+        method: HTTP_METHODS.POST,
+        headers: GEMINI_HEADERS,
+        body: JSON.stringify(body),
+        signal: controller.signal,
+      }
+    );
+  } catch (err) {
+    clearTimeout(timeoutId);
+    // Retry network failures (aborts, DNS, connection resets) as transient.
+    if (_retryCount < MAX_SERVER_ERROR_RETRIES) {
+      const delayMs = Math.min(5_000 * (1 + _retryCount), MAX_RETRY_DELAY_MS);
+      const reason = err.name === 'AbortError' ? `timeout after ${REQUEST_TIMEOUT_MS}ms` : err.message;
+      console.warn(`[gemini] network error on ${model} (${reason}). Waiting ${(delayMs / 1000).toFixed(1)}s before retry #${_retryCount + 1}…`);
+      await sleep(delayMs);
+      return callGemini(prompt, systemInstruction, responseSchema, model, baseConfig, _retryCount + 1);
     }
-  );
+    throw new Error(`Gemini network error (${model}): ${err.message}`);
+  }
+  clearTimeout(timeoutId);
 
   // ── Rate-limit handling ─────────────────────────────────────────────────────
   if (res.status === 429 && _retryCount < MAX_RATE_LIMIT_RETRIES) {
@@ -103,6 +128,14 @@ export async function callGemini(
     console.warn(`[gemini] 429 rate-limited on ${model}. Waiting ${(delayMs / 1000).toFixed(1)}s before retry #${_retryCount + 1}…`);
     await sleep(delayMs);
 
+    return callGemini(prompt, systemInstruction, responseSchema, model, baseConfig, _retryCount + 1);
+  }
+
+  // ── Transient 5xx handling — exponential backoff ────────────────────────────
+  if (TRANSIENT_STATUSES.has(res.status) && _retryCount < MAX_SERVER_ERROR_RETRIES) {
+    const delayMs = Math.min(5_000 * Math.pow(2, _retryCount), MAX_RETRY_DELAY_MS);
+    console.warn(`[gemini] ${res.status} on ${model}. Waiting ${(delayMs / 1000).toFixed(1)}s before retry #${_retryCount + 1}…`);
+    await sleep(delayMs);
     return callGemini(prompt, systemInstruction, responseSchema, model, baseConfig, _retryCount + 1);
   }
 

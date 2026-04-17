@@ -21,6 +21,14 @@ const FODDER_HINT_TEXT = {
     'The answer is spelled out consecutively, hidden across the words of the clue. Read the letters carefully.',
   deletion:
     'Remove certain letters from a word in the clue to get the answer. What needs to be dropped — the first letter, last letter, or something inside?',
+  initial_letters:
+    'Take the FIRST letter of each consecutive word in part of the clue — they spell the answer. Look for an indicator like "initially" or "leaders of".',
+  final_letters:
+    'Take the LAST letter of each consecutive word in part of the clue — they spell the answer. Look for an indicator like "ends of" or "ultimately".',
+  alternating_letters:
+    'Take every OTHER letter (odd or even positions) from a word or phrase — they spell the answer. Look for an indicator like "regularly" or "oddly".',
+  spoonerism:
+    'Swap the initial sounds of two words in the clue, as Reverend Spooner would. The result sounds like the answer.',
   charade:
     'Two or more parts of the clue join together in sequence to spell the answer. Try splitting the clue at a natural boundary.',
   homophone:

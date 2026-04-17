@@ -22,6 +22,10 @@ export type ClueWordplayType =
   | 'container'
   | 'hidden'
   | 'deletion'
+  | 'initial_letters'
+  | 'final_letters'
+  | 'alternating_letters'
+  | 'spoonerism'
   | 'charade'
   | 'homophone'
   | 'double_definition'
@@ -107,6 +111,7 @@ export interface DbDailyPuzzle {
     step_order: number;
     role: ClueComponentRole;
     clue_text: string;
+    indicator_type: ClueIndicatorType | null;
   }> | null;
 
   difficulty: PuzzleDifficulty;
@@ -243,7 +248,7 @@ export async function fetchPuzzleByDate(
           avatar_url
         ),
         clue_components (
-          step_order, role, clue_text
+          step_order, role, clue_text, indicator_type
         )
       )
     `
@@ -313,7 +318,7 @@ export async function fetchPuzzleByNumber(puzzleNumber: number): Promise<DbDaily
           avatar_url
         ),
         clue_components (
-          step_order, role, clue_text
+          step_order, role, clue_text, indicator_type
         )
       )
     `

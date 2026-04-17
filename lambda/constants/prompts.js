@@ -11,12 +11,33 @@ export const WORDPLAY_TYPES = [
   'container',
   'hidden',
   'deletion',
+  'initial_letters',
+  'final_letters',
+  'alternating_letters',
+  'spoonerism',
   'charade',
   'homophone',
   'double_definition',
   'cryptic_definition',
   'andlit',
   'compound',
+];
+
+// Indicator sub-type identifiers (mirror clue_indicator_types in 001_initial.sql).
+// An empty string signals "no classifiable single indicator" — valid for charade,
+// double_definition, cryptic_definition, andlit, and compound clues.
+export const INDICATOR_TYPES = [
+  'anagram',
+  'reversal',
+  'container',
+  'hidden',
+  'deletion',
+  'homophone',
+  'initial_letters',
+  'final_letters',
+  'alternating_letters',
+  'spoonerism',
+  '',
 ];
 
 // ─── RESPONSE SCHEMAS (Gemini JSON mode) ─────────────────────────────────────
@@ -36,6 +57,8 @@ export const LEXICAL_RESPONSE_SCHEMA = {
 export const CLUE_RESPONSE_SCHEMA = {
   type: 'OBJECT',
   properties: {
+    // The clue text WITHOUT the trailing letter count — the lambda appends "(N)"
+    // itself, since N is deducible from the answer and needn't burn a model token.
     clue: { type: 'STRING' },
     definition: { type: 'STRING' },
     // indicator: the signal word for most types; the second definition for double_definition;
@@ -43,6 +66,10 @@ export const CLUE_RESPONSE_SCHEMA = {
     indicator: { type: 'STRING' },
     // fodder: the raw letters or synonym being manipulated; empty string when not applicable.
     fodder: { type: 'STRING' },
+    // indicator_type: the specific indicator sub-category (mirrors clue_indicator_types in DB).
+    // For compound clues this is the *primary* indicator's sub-type. Use empty string for
+    // charade / double_definition / cryptic_definition / andlit / no classifiable indicator.
+    indicator_type: { type: 'STRING', enum: INDICATOR_TYPES },
     wordplay_summary: { type: 'STRING' },
     clue_parts: {
       type: 'ARRAY',
@@ -50,15 +77,29 @@ export const CLUE_RESPONSE_SCHEMA = {
         type: 'OBJECT',
         properties: {
           text: { type: 'STRING' },
-          // Omit `type` for structural segments (letter count, link words).
+          // Omit `type` for structural segments (link words).
           // Not in `required` — Gemini treats absent fields as optional; no nullable needed.
           type: { type: 'STRING' },
+          // For parts with type === 'indicator', the specific indicator sub-type.
+          // Critical for compound clues with multiple indicators (e.g. an anagram
+          // indicator + a homophone indicator in the same clue) — each indicator
+          // needs its own sub-type so the Hints UI and Learn view don't conflate them.
+          // Omit for non-indicator parts.
+          indicator_subtype: { type: 'STRING' },
         },
         required: ['text'],
       },
     },
   },
-  required: ['clue', 'definition', 'indicator', 'fodder', 'wordplay_summary', 'clue_parts'],
+  required: [
+    'clue',
+    'definition',
+    'indicator',
+    'fodder',
+    'indicator_type',
+    'wordplay_summary',
+    'clue_parts',
+  ],
 };
 
 // ─── LEXICAL PLANNER ──────────────────────────────────────────────────────────
@@ -78,7 +119,11 @@ MECHANISM SELECTION GUIDANCE:
 - reversal: word reversed gives another word (e.g. REWARD → DRAWER, STAR → RATS)
 - container: a word can be hidden inside another word with letters wrapping it
 - hidden: the answer is literally spelled out consecutively across words in the clue surface
-- deletion: removing a letter or letters from a word gives the answer
+- deletion: removing a specific letter or letters from a word gives the answer (e.g. decapitation, curtailment, heart-removal)
+- initial_letters: the answer is spelled by taking the first letter of each consecutive word in a phrase (acrostic)
+- final_letters: the answer is spelled by taking the last letter of each consecutive word in a phrase
+- alternating_letters: the answer is spelled by taking alternate letters (odd or even positions) from a word or phrase
+- spoonerism: swapping the initial sounds of two words in the fodder produces the answer (rare, advanced)
 - charade: two or more common words/abbreviations join consecutively to form the answer
 - homophone: the answer sounds like another word with a clear, unambiguous pronunciation
 - double_definition: the answer has two completely different meanings, each usable as a definition
@@ -120,12 +165,15 @@ Return a JSON object with:
 
 // Two exemplary clues — structurally unambiguous and mathematically correct.
 const CLUE_EXAMPLES = `
+(Note: all example clue strings omit the trailing "(N)" — you must omit it too. The system appends it.)
+
 EXAMPLE 1 — Anagram (type: "anagram"):
 {
-  "clue": "Small boat when ocean is disturbed (5)",
+  "clue": "Small boat when ocean is disturbed",
   "answer": "CANOE",
   "definition": "Small boat",
   "indicator": "disturbed",
+  "indicator_type": "anagram",
   "fodder": "OCEAN",
   "wordplay_summary": "Anagram (disturbed) of OCEAN = CANOE",
   "clue_parts": [
@@ -133,31 +181,75 @@ EXAMPLE 1 — Anagram (type: "anagram"):
     { "text": " when ",      "type": null },
     { "text": "ocean",       "type": "fodder" },
     { "text": " is ",        "type": null },
-    { "text": "disturbed",   "type": "indicator" },
-    { "text": " (5)",        "type": null }
+    { "text": "disturbed",   "type": "indicator", "indicator_subtype": "anagram" }
   ]
 }
 Verification: O-C-E-A-N sorted = A-C-E-N-O; C-A-N-O-E sorted = A-C-E-N-O ✓
 Surface reading: "Small boat when ocean is disturbed" — reads naturally about rough seas.
 
-EXAMPLE 2 — Reversal (type: "reversal"):
+EXAMPLE 2 — Compound: alternation + charade (type: "compound"):
 {
-  "clue": "Prize? Furniture turned around (6)",
-  "answer": "REWARD",
-  "definition": "Prize",
-  "indicator": "turned around",
-  "fodder": "DRAWER",
-  "wordplay_summary": "DRAWER (furniture) reversed = REWARD",
+  "clue": "Laundry basins — wears the thumbs out unevenly, after a small",
+  "answer": "WASHTUBS",
+  "definition": "Laundry basins",
+  "indicator": "unevenly",
+  "indicator_type": "alternating_letters",
+  "fodder": "wears the thumbs + small",
+  "wordplay_summary": "Alternate (odd-position) letters of 'wears the thumbs' (indicated by 'unevenly') = WASHTUB; + S (abbreviation of 'small') = WASHTUBS",
   "clue_parts": [
-    { "text": "Prize",         "type": "definition" },
-    { "text": "? ",            "type": null },
-    { "text": "Furniture",     "type": "fodder" },
-    { "text": " turned around","type": "indicator" },
-    { "text": " (6)",          "type": null }
+    { "text": "Laundry basins",   "type": "definition" },
+    { "text": " — ",              "type": null },
+    { "text": "wears the thumbs", "type": "fodder" },
+    { "text": " out ",            "type": null },
+    { "text": "unevenly",         "type": "indicator", "indicator_subtype": "alternating_letters" },
+    { "text": ", after a ",       "type": null },
+    { "text": "small",            "type": "fodder" }
   ]
 }
-Verification: R-E-W-A-R-D reversed = D-R-A-W-E-R ✓
-Surface reading: "Prize? Furniture turned around" — reads like someone moving furniture for a prize.
+Verification: "wears the thumbs" letters (spaces removed) = w-e-a-r-s-t-h-e-t-h-u-m-b-s (14). Odd positions 1,3,5,7,9,11,13 = W, A, S, H, T, U, B = WASHTUB ✓; + S (abbreviation of "small") = WASHTUBS = laundry basins ✓
+Surface reading: "Laundry basins — wears the thumbs out unevenly, after a small" — the dash separates the definition cleanly from the wordplay, and the surface evokes a physical laundry scene where hard scrubbing wears out one's thumbs. Use this template whenever a compound clue mixes an alternating-letters indicator with a charade join: the fodder-word boundaries must match the alternation mechanic exactly (odd positions of "wears the thumbs" genuinely spell WASHTUB — if they don't, the clue is broken).
+
+EXAMPLE 3 — Compound: homophone + charade (type: "compound"):
+{
+  "clue": "Buzzing worker, we're told, brings downpour — use your head",
+  "answer": "BRAIN",
+  "definition": "use your head",
+  "indicator": "we're told",
+  "indicator_type": "homophone",
+  "fodder": "Buzzing worker + downpour",
+  "wordplay_summary": "B (homophone of 'bee' = 'Buzzing worker', signalled by 'we're told') + RAIN ('downpour') = BRAIN",
+  "clue_parts": [
+    { "text": "Buzzing worker", "type": "fodder" },
+    { "text": ", ",             "type": null },
+    { "text": "we're told",     "type": "indicator", "indicator_subtype": "homophone" },
+    { "text": ", brings ",      "type": null },
+    { "text": "downpour",       "type": "fodder" },
+    { "text": " — ",            "type": null },
+    { "text": "use your head",  "type": "definition" }
+  ]
+}
+Verification: "bee" (a Buzzing worker) sounds like the letter B (homophone, signalled by "we're told"); RAIN = downpour; B + RAIN = BRAIN ✓. "use your head" = BRAIN (colloquial for thinking) ✓.
+Surface reading: "Buzzing worker, we're told, brings downpour — use your head" reads as a natural weather warning about an agitated pollinator preceding a storm. The misdirection is dual: (1) the homophone signal "we're told" disguises the letter B as the noise of a bee, and (2) "use your head" reads idiomatically as a casual warning but is actually the literal definition of BRAIN. This is the calibre of misdirection to aim for: the surface reads as one coherent piece of advice, the cryptic parse reveals two independent mechanisms.
+
+EXAMPLE 4 — Hidden word (type: "hidden"):
+{
+  "clue": "Snake concealed inside laser pentagram",
+  "answer": "SERPENT",
+  "definition": "Snake",
+  "indicator": "concealed inside",
+  "indicator_type": "hidden",
+  "fodder": "laser pentagram",
+  "wordplay_summary": "SERPENT is hidden consecutively in 'laSER PENTagram', signalled by 'concealed inside'",
+  "clue_parts": [
+    { "text": "Snake",             "type": "definition" },
+    { "text": " ",                 "type": null },
+    { "text": "concealed inside",  "type": "indicator", "indicator_subtype": "hidden" },
+    { "text": " ",                 "type": null },
+    { "text": "laser pentagram",   "type": "fodder" }
+  ]
+}
+Verification: concatenate "laser" + "pentagram" → l-a-S-E-R-P-E-N-T-a-g-r-a-m; letters 3–9 spell SERPENT exactly ✓. "Snake" = SERPENT ✓.
+Surface reading: "Snake concealed inside laser pentagram" evokes a mystical or ritual scene — a natural, evocative English phrase. The misdirection is sharp: solvers read "concealed inside" as atmospheric (something hidden within a ritual), while mechanically it is the hidden-word indicator signalling the answer sits literally embedded across the fodder words. This is the ideal hidden-word model: the fodder is always the LITERAL consecutive letters of the clue — never a synonym substitution — and the surface should read as a coherent standalone sentence.
 `;
 
 export const CLUE_GENERATOR_SYSTEM = `You are a world-class British cryptic crossword setter in the Ximenean tradition, with clues published in The Times, The Guardian, and The Telegraph.
@@ -173,24 +265,28 @@ XIMENEAN STANDARDS (non-negotiable):
 3. Fair indicators: Only use indicator words that genuinely signal the mechanism in standard British usage. Do not invent indicators.
 4. Elegant surface: The full clue must read like a natural, grammatical English sentence or phrase about something unrelated to the answer. The best clues are deceptive — solvers should be misled by the surface, then delighted when the mechanism clicks.
 5. No answer leakage: The answer word must not appear anywhere in the clue text.
-6. Letter count: Always end with the letter count in parentheses, e.g. "(5)" or "(3,4)" for multi-word answers.
+6. Letter count: DO NOT include the letter count "(N)" at the end of the clue. The system appends it automatically from the answer length — including it yourself will cause a duplicate.
 
 MECHANISM-SPECIFIC RULES:
-- anagram: the fodder must have exactly the same letters as the answer (rearranged). Indicator signals scrambling (e.g. "broken", "confused", "disturbed", "mixed", "roughly", "wild").
+- anagram: the fodder must have exactly the same letters as the answer (rearranged), or be a clear synonym of a word whose letters anagram to the answer. Indicator signals scrambling (e.g. "broken", "confused", "disturbed", "mixed", "roughly", "wild", "reformed").
 - reversal: the fodder reversed must equal the answer exactly. Indicator signals backwards (e.g. "back", "returning", "reversed", "up" for down-clues).
 - container: one word placed inside another forms the answer. Use "in", "holding", "around", "outside", "inside", "contains" as indicators.
 - hidden: the answer is spelled out consecutively across word boundaries in the surface. Indicator signals concealment (e.g. "in", "some of", "part of", "within", "hiding in"). The answer MUST actually appear letter-by-letter across the clue words.
-- deletion: removing specified letters (head, tail, heart, odd/even) gives the answer.
-- charade: parts read consecutively, often with cryptic meanings (e.g. DR = doctor, O = zero/love, RN = nurse).
-- homophone: the answer sounds like the fodder. Indicator signals sounds-like (e.g. "we hear", "reportedly", "they say", "sounds like", "in speech").
-- double_definition: two definitions, one at each end, both define the answer. No indicator, no fodder. Use "indicator" field for the second definition, "fodder" field as empty string.
-- cryptic_definition: a single witty/oblique definition that misdirects. No indicator, no fodder.
-- andlit: the entire clue is simultaneously wordplay and definition (often uses "!" in surface). Advanced — use sparingly.
-- compound: two or more mechanisms combined; each part must work independently.
+- deletion: removing specified letters from a fodder word (beheading, curtailing, heart-removing) gives the answer. Indicators: "mostly", "beheaded", "headless", "curtailed", "heartless", "topless", "endless".
+- initial_letters: the answer is formed from the FIRST letter of consecutive fodder words. Indicators: "initially", "leaders of", "starts of", "firstly", "heads of", "primarily".
+- final_letters: the answer is formed from the LAST letter of consecutive fodder words. Indicators: "ultimately", "ends of", "finally", "backs of", "lastly", "tails of".
+- alternating_letters: the answer is formed from alternating letters (odds or evens) of the fodder. Indicators: "regularly", "alternately", "oddly", "evenly", "every other".
+- spoonerism: swapping the initial sounds of two fodder words produces the answer. Indicator always references Reverend Spooner or tongue-twisting (e.g. "Spooner's", "said by Spooner", "reverend's").
+- charade: parts read consecutively, often with cryptic meanings (e.g. DR = doctor, O = zero/love, RN = nurse). No single indicator — positional link words like "after", "on", "with" glue parts.
+- homophone: the answer sounds like the fodder. Indicator signals sounds-like (e.g. "we hear", "reportedly", "they say", "sounds like", "in speech", "listening to", "audibly").
+- double_definition: two definitions, one at each end, both define the answer. No indicator, no fodder. Use "indicator" field for the second definition, "fodder" field as empty string. Set indicator_type to "". In clue_parts, tag the first definition with type "definition" and the second with type "indicator" (omit indicator_subtype) — the Hints UI uses this convention to surface both halves.
+- cryptic_definition: a single witty/oblique definition that misdirects. No indicator, no fodder. Set indicator_type to "".
+- andlit: the entire clue is simultaneously wordplay and definition (often uses "!" in surface). Advanced — use sparingly. Set indicator_type to "".
+- compound: two or more mechanisms combined; each part must work independently. Set indicator_type to the sub-type of the PRIMARY indicator (or "" if no single indicator dominates).
 
 ${CLUE_EXAMPLES}`;
 
-const CLUE_GENERATOR_PROMPT_BASE = `Generate a professional British cryptic clue for the answer "{{ANSWER}}".
+const CLUE_GENERATOR_PROMPT_BASE = `Generate a professional British cryptic clue for the answer "{{ANSWER}}" (length {{LENGTH}}).
 
 Wordplay mechanism: {{TYPE}}
 Anchor definition (use this exact meaning): {{DEFINITION}}
@@ -200,16 +296,18 @@ REQUIREMENTS:
 2. The wordplay for {{TYPE}} must be precise — the letters or synonyms must work out exactly.
 3. Surface reading must be a natural, misleading English sentence — the solver should be misdirected.
 4. Do NOT include the word "{{ANSWER}}" anywhere in the clue.
-5. End with the letter count: ({{LENGTH}}).
+5. DO NOT append the letter count "({{LENGTH}})" at the end of the clue — the system appends it automatically. The length is given purely so you can size the wordplay correctly.
 6. Return ONLY the JSON — no preamble, no explanation outside the JSON.
 
 FIELD INSTRUCTIONS:
-- clue: the complete clue string including the letter count in parentheses
+- clue: the pure clue sentence, NO trailing letter count
 - definition: the exact portion of the clue that is the definition
 - indicator: the signal word/phrase; for double_definition use the second definition; for cryptic_definition/andlit use empty string ""
+- indicator_type: one of: anagram, reversal, container, hidden, deletion, homophone, initial_letters, final_letters, alternating_letters, spoonerism, or "" (for charade, double_definition, cryptic_definition, andlit, or compound with no single dominant indicator)
 - fodder: the raw material being manipulated; for double_definition/cryptic_definition/andlit use empty string ""
 - wordplay_summary: one concise line explaining the wordplay (e.g. "Anagram of OCEAN = CANOE")
-- clue_parts: array of every segment of the clue with no gaps — segments must join to exactly reproduce the clue string`;
+- clue_parts: array of every segment of the clue with no gaps — segments must join to exactly reproduce the clue string (do NOT include a letter-count segment)
+- For each clue_parts item with type "indicator", ALSO set indicator_subtype to the specific sub-type (anagram/reversal/container/hidden/deletion/homophone/initial_letters/final_letters/alternating_letters/spoonerism). This is MANDATORY for compound clues that contain multiple indicators of different sub-types — each indicator part must carry its own indicator_subtype so the Hints UI can explain each trick separately. Omit indicator_subtype on non-indicator parts.`;
 
 /**
  * Builds the clue generation prompt, injecting answer/type/definition/length.
@@ -286,6 +384,9 @@ JUDGING CRITERIA:
    - charade: the parts must concatenate to spell the answer exactly.
    - container: one part placed inside the other must produce the answer exactly.
    - deletion: removing the specified letters from the fodder must yield the answer.
+   - initial_letters / final_letters: the first/last letter of each consecutive fodder word must spell the answer exactly.
+   - alternating_letters: the odd-indexed OR even-indexed letters of the fodder must spell the answer exactly.
+   - spoonerism: swapping the initial sounds of the two fodder words must produce the answer (British pronunciation).
    - homophone: the fodder must sound like the answer in standard British pronunciation.
    - double_definition: both definitions must independently and unambiguously define the answer.
    - cryptic_definition/andlit: the definition must be uniquely and fairly clued.

@@ -85,9 +85,9 @@ const FONT_BODY = "'Nunito', sans-serif";
 
 function todayLabel() {
   return new Date().toLocaleDateString('en-GB', {
-    weekday: 'long',
     day: 'numeric',
     month: 'long',
+    year: 'numeric',
   });
 }
 

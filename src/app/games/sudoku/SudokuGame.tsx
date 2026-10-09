@@ -8,7 +8,7 @@ import { useDailyPuzzle } from '../useDailyPuzzle';
 import { useGameState } from '../useGameState';
 import { parseSudoku } from './parse';
 import { SAMPLE_SUDOKU, type SudokuPuzzle } from './sample';
-import { VARIANTS, WEEKLY_ROTATION } from './variants';
+import { VARIANTS } from './variants';
 import { getSudokuTutorial } from './tutorial';
 import {
   cageOutline,
@@ -57,25 +57,6 @@ function SudokuRules({ puzzle }: { puzzle: SudokuPuzzle }) {
         <strong style={{ color: T.heading }}>Today's twist, {info.name}:</strong> {info.rule}
       </p>
       <p style={{ fontStyle: 'italic' }}>Example: {info.example}</p>
-      <div className="flex flex-wrap gap-1.5 pt-1" role="list" aria-label="Weekly variant rotation">
-        {WEEKLY_ROTATION.map(v => {
-          const today = v === puzzle.variant;
-          return (
-            <span
-              role="listitem"
-              key={v}
-              className="rounded-full px-2.5 py-1 text-xs font-extrabold border"
-              style={{
-                background: today ? ACCENT : 'transparent',
-                borderColor: today ? ACCENT : T.cardBorder,
-                color: today ? 'white' : T.textMuted,
-              }}
-            >
-              {VARIANTS[v].day} · {VARIANTS[v].name}
-            </span>
-          );
-        })}
-      </div>
       <p className="text-xs" style={{ color: T.textMuted }}>
         Tap a cell, then a number. Pencil mode adds small notes. Stuck? A hint reveals the number in
         the selected cell (or the next empty one). Keyboard: digits, arrows, Backspace, and N for

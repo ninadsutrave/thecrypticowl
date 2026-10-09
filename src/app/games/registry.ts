@@ -38,8 +38,7 @@ export const GAMES: readonly GameMeta[] = [
     name: 'Variant Sudoku',
     path: '/sudoku',
     emoji: '🔢',
-    blurb:
-      'Sudoku with a twist: a different rule each day of the week, from Kropki dots to Killer cages.',
+    blurb: 'Sudoku with a twist: a new extra rule every day, from Kropki dots to Killer cages.',
     accent: '#0EA5E9',
     accentStrong: '#0369A1',
     accentOnDark: '#7DD3FC',

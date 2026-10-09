@@ -128,6 +128,22 @@
     @apply bg-background text-foreground;
   }
 
+  /* Tailwind's reset gives buttons the arrow cursor; everything clickable
+     here shows the hand instead, and disabled controls say so. */
+  button:not(:disabled),
+  [role='button']:not([aria-disabled='true']),
+  [role='radio'],
+  [role='tab'],
+  summary,
+  select,
+  label[for] {
+    cursor: pointer;
+  }
+  button:disabled,
+  [aria-disabled='true'] {
+    cursor: not-allowed;
+  }
+
   /**
   * Default typography styles for HTML elements (h1-h4, p, label, button, input).
   * These are in @layer base, so Tailwind utility classes (like text-sm, text-lg) automatically override them.

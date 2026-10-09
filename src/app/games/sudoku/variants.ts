@@ -66,7 +66,7 @@ export const VARIANTS: Record<SudokuVariant, VariantInfo> = {
   },
 };
 
-/** Monday-first order, for the rotation strip on the rule card. */
+/** Every variant, in rotation order (shown in the tutorial). */
 export const WEEKLY_ROTATION: SudokuVariant[] = [
   'diagonal',
   'kropki',

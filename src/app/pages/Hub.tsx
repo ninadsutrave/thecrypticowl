@@ -39,9 +39,9 @@ export function Hub() {
   const done = GAMES.map(g => isDoneToday(g.id));
   const doneCount = done.filter(Boolean).length;
   const today = new Date().toLocaleDateString('en-GB', {
-    weekday: 'long',
     day: 'numeric',
     month: 'long',
+    year: 'numeric',
   });
 
   useEffect(() => {
@@ -92,7 +92,7 @@ export function Hub() {
             lineHeight: 1.15,
           }}
         >
-          Seven puzzles. One owl. <span style={{ color: T.brand }}>Every day.</span>
+          Seven puzzles. <span style={{ color: T.brand }}>Every day.</span>
         </h1>
         <p
           className="mt-2 max-w-xl"
@@ -163,7 +163,7 @@ function GameCard({
 
   return (
     <article
-      className="group relative h-full rounded-3xl border p-5 pt-6 flex flex-col overflow-hidden transition-[box-shadow,transform] duration-200 hover:-translate-y-0.5"
+      className="group relative h-full cursor-pointer rounded-3xl border p-5 pt-6 flex flex-col overflow-hidden transition-[box-shadow,transform] duration-200 hover:-translate-y-0.5"
       style={{
         background: T.cardBg,
         borderColor: done ? T.successBorder : T.cardBorder,

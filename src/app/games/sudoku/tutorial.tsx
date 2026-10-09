@@ -89,15 +89,15 @@ export function getSudokuTutorial(puzzle: SudokuPuzzle): TutorialStep[] {
         <div className="flex flex-wrap gap-1.5 justify-center max-w-[300px]">
           {WEEKLY_ROTATION.map(v => (
             <Pill key={v} color={v === puzzle.variant ? ACCENT : '#64748B'}>
-              {VARIANTS[v].day} · {VARIANTS[v].name}
+              {VARIANTS[v].name}
             </Pill>
           ))}
         </div>
       ),
       body: (
         <p>
-          Each day of the week has its own variant, all at medium difficulty. The clock starts when
-          you close this and pauses whenever you leave the page.
+          Each day brings one of seven twists, all at medium difficulty. The clock starts when you
+          close this and pauses whenever you leave the page.
         </p>
       ),
     },

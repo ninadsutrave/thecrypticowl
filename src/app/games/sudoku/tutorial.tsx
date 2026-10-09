@@ -96,8 +96,8 @@ export function getSudokuTutorial(puzzle: SudokuPuzzle): TutorialStep[] {
       ),
       body: (
         <p>
-          Each day of the week has its own variant, all at medium difficulty (about 5–6 minutes).
-          The clock starts when you close this and pauses whenever you leave the page.
+          Each day of the week has its own variant, all at medium difficulty. The clock starts when
+          you close this and pauses whenever you leave the page.
         </p>
       ),
     },

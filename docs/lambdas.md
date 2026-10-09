@@ -27,7 +27,7 @@ lambda/
 │   ├── cryptic/                 The original clue pipeline, moved here intact
 │   ├── sudoku/                  model · solver · generator · reviewer · judge
 │   ├── what-am-i/               candidates · prompts · generator · reviewer · judge
-│   ├── trivia/                  topics · prompts · generator · reviewer · judge · opentdb
+│   ├── trivia/                  topics · prompts · generator · reviewer · judge · bank
 │   ├── chronology/              selector · reviewer
 │   ├── chess/                   lichess · reviewer · judge
 │   └── cryptogram/              quotes · cipher · reviewer
@@ -71,13 +71,13 @@ flowchart LR
   model that plays the puzzle blind; for algorithmic games it re-solves or
   re-rates from the payload alone. A crashing judge rejects (fail-safe).
 - **fallback** (Trivia only) supplies a non-AI candidate when every attempt
-  fails.
+  fails: a hand-written question from `trivia/bank.js`.
 
 | Game | Generator | Reviewer (code) | Judge |
 |---|---|---|---|
 | Variant Sudoku | Seeded fill → clues read off the grid → givens stripped while unique → softened to medium | Solution obeys every rule; givens agree; variant clues present; cages tile the grid | Re-solves from the payload: exactly one solution, the stored one, within the medium search budget |
 | What Am I | Subject from `candidates.js`; clues by the AI from the Wikipedia article only | 5 clues, length, no answer/alias leak, every clue's evidence found in the source | Second model, blind: clue 1 alone must *not* solve it; all five *must*, and must be fair |
-| Trivia | 12 topics across categories; AI writes one question per article excerpt | 4 distinct options, no self-answering, evidence in source and naming the answer | Second model answers blind; keeps ≤2 per category, needs 10 survivors |
+| Trivia | Subject from `topics.js` (chosen for a surprising backstory); the AI writes one 70–130-word story question from the article only | Length and shape, ends by asking, no multiple choice, no answer/alias leak, 3–5 facts each cited from the source, fact cited too | Second model, blind: the first two sentences alone must *not* solve it; the full question *must*, rated medium or hard (not easy, not obscure), and fair |
 | Chronology | "On this day" feed: the most-read events and (deceased) people for the date, keyword-filtered for light topics, then screened by the judge model for suitability when a key is set | 6 events, distinct years, no year in the text, at least one close pair, none starts in place | Suitability screen (optional: falls back to keyword filters) |
 | Checkmate | Lichess puzzle API, mate in 3–5 | chess.js replay: legal, ends in mate, length matches, no shorter mate | Rating 1300–1800 and ≥500 plays |
 | Cryptogram | Unused quote from `quotes.js`, fresh derangement key, two mid-frequency givens | Length/variety band, valid key, givens present and not the commonest letter | — |
@@ -196,7 +196,7 @@ npx vitest run --project lambda
 |---|---|---|---|
 | What Am I answers (`candidates.js`) | 194 in 11 categories | ~5 months unique (smallest category) | < 3 unused in any category |
 | Cryptogram quotes (`quotes.js`) | 154 usable | ~5 months unique | < 45 unused |
-| Trivia topics (`topics.js`) | ~230 | Reused after 21 days with a new excerpt | — |
+| Trivia subjects (`topics.js`) | 323 in 9 categories | ~10 months unique, then least recent first | < 30 unused |
 | Lichess puzzles | Millions | — | — |
 | "On this day" | New each date | Events never repeat | — |
 

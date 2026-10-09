@@ -1,6 +1,5 @@
 /**
- * Outbound HTTP for puzzle sources (Wikipedia, Wikimedia feeds, Lichess,
- * Open Trivia DB).
+ * Outbound HTTP for puzzle sources (Wikipedia, Wikimedia feeds, Lichess).
  *
  * Every request carries a descriptive User-Agent with a contact address —
  * Wikimedia's API policy requires one and blocks generic agents — and has a

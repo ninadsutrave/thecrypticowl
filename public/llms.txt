@@ -1,6 +1,6 @@
 # The Cryptic Owl
 
-> Seven free daily puzzles, each about five minutes at medium difficulty: a variant sudoku, a British cryptic crossword clue, "What Am I Talking About?" (five clues to a hidden subject), a ten-question trivia quiz, Chronology (order six events from today's date), a chess mate-in-three-to-five, and a cryptogram of a famous saying. New puzzles every day at midnight local time.
+> Seven free daily puzzles at medium difficulty: a variant sudoku, a British cryptic crossword clue, "What Am I Talking About?" (five clues to a hidden subject), a single story-style trivia question answered in free text, Chronology (order six events from today's date), a chess mate-in-three-to-five, and a cryptogram of a famous saying. New puzzles every day at midnight local time.
 
 ## Puzzles
 

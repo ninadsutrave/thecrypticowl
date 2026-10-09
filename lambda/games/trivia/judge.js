@@ -1,53 +1,69 @@
-import { QUESTIONS_PER_DAY } from './reviewer.js';
-import { ANSWER_SCHEMA, buildSolverPrompt, SOLVER_SYSTEM } from './prompts.js';
+import { isCorrectGuess } from '../../shared/runtime/match.js';
+import { buildSolverPrompt, SOLVE_SCHEMA, SOLVER_SYSTEM } from './prompts.js';
 
-/** No category may supply more than this many of the day's questions. */
-const MAX_PER_CATEGORY = 2;
+/** The opening the judge sees first: the first two sentences, as a question. */
+export function opening(question) {
+  const sentences = question.split(/(?<=[.!?])\s+/);
+  return `${sentences.slice(0, 2).join(' ')} What is it?`;
+}
 
 /**
- * Blind-answer judge on a different model: it answers every question from
- * its own knowledge, without the source. A question survives only if the
- * judge picks the marked answer and flags no ambiguity or problem. The best
- * ten survivors (spread across categories) become the day's quiz.
+ * Blind-solve judge on a different model from the writer. It never sees the
+ * answer, and plays the question twice:
+ *
+ *   the opening alone → must NOT already name it (otherwise too easy)
+ *   the full question → MUST name it first (solvable, one clear answer),
+ *                       rated medium or hard, and fair
  */
 export async function judgeTrivia(candidate, ctx) {
-  const questions = candidate.payload.questions;
-  const out = await ctx.callJudge(buildSolverPrompt(questions), SOLVER_SYSTEM, ANSWER_SCHEMA);
-  const answers = out?.answers ?? [];
+  const { category, question, accepted } = candidate.payload;
 
-  const failures = [];
-  const survivors = questions.filter((q, i) => {
-    const a = answers[i];
-    const ok = a && a.choice === q.answer && !a.ambiguous && !a.problem;
-    if (!ok) {
-      failures.push(
-        `"${q.question}" — ${!a ? 'unanswered' : a.problem ? 'flagged as a problem' : a.ambiguous ? 'ambiguous' : `judge chose "${q.options[a.choice] ?? a.choice}"`}`
-      );
-    }
-    return ok;
-  });
-
-  const perCategory = new Map();
-  const chosen = [];
-  for (const q of survivors) {
-    const n = perCategory.get(q.category) ?? 0;
-    if (n >= MAX_PER_CATEGORY || chosen.length >= QUESTIONS_PER_DAY) continue;
-    perCategory.set(q.category, n + 1);
-    chosen.push(q);
-  }
-
-  if (chosen.length < QUESTIONS_PER_DAY) {
+  const early = await ctx.callJudge(
+    buildSolverPrompt(category, opening(question)),
+    SOLVER_SYSTEM,
+    SOLVE_SCHEMA
+  );
+  const earlyGuess = early?.guesses?.[0] ?? '';
+  if (isCorrectGuess(earlyGuess, accepted)) {
     return {
       ok: false,
-      feedback: `Only ${chosen.length} questions passed a blind check. Problems:\n${failures.join('\n')}`,
+      feedback: `The first two sentences give it away (a blind solver guessed "${earlyGuess}"). Open with more oblique facts and save the telling ones for the end.`,
     };
   }
-  // The topic was only needed for bookkeeping; the frontend doesn't show it.
-  const clean = chosen.map(({ topic: _topic, ...q }) => q);
+
+  const full = await ctx.callJudge(
+    buildSolverPrompt(category, question),
+    SOLVER_SYSTEM,
+    SOLVE_SCHEMA
+  );
+  const guesses = full?.guesses ?? [];
+  if (!isCorrectGuess(guesses[0] ?? '', accepted)) {
+    return {
+      ok: false,
+      feedback:
+        `The full question doesn't point clearly to the answer: a blind solver guessed ` +
+        `${guesses.map(g => `"${g}"`).join(', ') || 'nothing'}. Make the last facts more specific.`,
+    };
+  }
+  if (full.fair === false) {
+    return { ok: false, feedback: `Fairness problem: ${full.issues || 'unspecified'}` };
+  }
+  if (full.difficulty === 'easy') {
+    return {
+      ok: false,
+      feedback: 'Rated easy: most people would get it at once. Use less famous facts about it.',
+    };
+  }
+  if (full.difficulty === 'obscure') {
+    return {
+      ok: false,
+      feedback:
+        'Rated obscure: almost nobody could get it. Include one well-known fact near the end.',
+    };
+  }
   return {
     ok: true,
-    feedback: `${survivors.length}/${questions.length} passed a blind check`,
-    score: survivors.length,
-    payload: { questions: clean },
+    feedback: `opening alone didn't give it away; solved in full; rated ${full.difficulty}`,
+    score: full.difficulty === 'hard' ? 2 : 1,
   };
 }

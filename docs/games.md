@@ -20,7 +20,7 @@ today.
 | 1 | **Variant Sudoku** | Pure algorithm | 0 | Generator + solver |
 | 2 | **Cryptic Clue** | AI + mechanical verification | up to 9 + judge | Existing pipeline |
 | 3 | **What Am I Talking About?** | AI, grounded in Wikipedia | ~2–6 | Wikipedia / Wikidata |
-| 4 | **Trivia** | AI, grounded in Wikipedia | ~6–12 | Wikipedia (Open Trivia DB as fallback) |
+| 4 | **Trivia** | AI, grounded in Wikipedia | ~3–9 | Wikipedia (hand-written bank as fallback) |
 | 5 | **Chronology** | Factual data feed | 0 (1 optional) | Wikipedia "On this day" |
 | 6 | **Chess: Mate in N** | Curated dataset | 0 | Lichess puzzle database |
 | 7 | **Cryptogram** | Curated quote pool + algorithm | 0 | Public-domain quotes and proverbs |
@@ -61,12 +61,12 @@ puzzle and falls back to a labelled practice one only if it's missing. See
 | Variant Sudoku | Reveal the number in the selected (or next empty) cell | Unlimited, counted |
 | Cryptic Clue | Step-by-step: definition, indicator, fodder, wordplay | Up to 4, then reveal |
 | What Am I? | The answer's first letter and length (costs 1 point) | **One** |
-| Trivia | 50:50 on one question | **One per quiz** |
+| Trivia | The answer's first letter and word lengths | **One** |
 | Chronology | The year of the top unlocked event | **One** |
 | Checkmate | Show the next move | One per move, counted |
 | Cryptogram | Reveal one letter (the selected one, or the commonest unsolved) | Unlimited, counted |
 
-Hints used appear in the result line, e.g. "8/10 correct · 50:50".
+Hints used appear in the result line, e.g. "Guess 2 of 3 · hint".
 
 ---
 
@@ -202,36 +202,37 @@ controversies. Both the generator prompt and the judge enforce this.
 
 ### 4. Trivia
 
-A daily set of **10 multiple-choice questions** (about 30 seconds each, so
-5–6 minutes) across mixed categories: history, science, geography, arts,
-sport, pop culture. Medium difficulty: the kind of fact a well-read person
-half-remembers, not pub-quiz trivia nor specialist knowledge.
+**One question a day, told as a short story, answered in free text.** No
+options to pick from. Modelled on quiz-night questions: 70–130 words chaining
+3–5 surprising facts about one subject (an accidental origin, an odd name, an
+unexpected first use) from oblique to telling, ending with a direct question
+("Name the product."). Medium-hard: the solver has to connect the facts, not
+recall one.
 
 **Gameplay**
 
-- One question at a time, 4 options, one correct.
-- Show the source fact after each answer. It explains the answer and shows
-  where it came from.
-- Score out of 5; a shareable result grid.
+- Read the story, type the answer. Three guesses; small typos are forgiven
+  (the same matching as What Am I).
+- One hint: the answer's first letter and the length of each word, drawn as
+  letter slots.
+- Give up at any time. At the end: the answer, one more fact, and the
+  Wikipedia source.
 
 **Generation pipeline**
 
-1. **Pick sources (no AI).** For each category, take a Wikipedia article from a
-   curated category, a featured article, or the "On this day" feed. Filter by
-   pageviews so the topics are ones people have heard of.
-2. **Write the question (1 AI call per batch).** From the article text only:
-   question, correct answer, 3 plausible but wrong distractors, and the source
-   sentence that proves the answer.
-3. **Structural gate (free).**
-   - The source sentence exists in the article and contains the correct answer.
-   - The question text doesn't give the answer away.
-   - The 4 options are all different and similar in length and form (no
-     obvious odd one out).
-4. **Blind-answer gate (judge model).** The judge answers without seeing the
-   source. It must pick the marked answer, and must agree that no distractor
-   could also be right.
-5. **Fallback:** if generation fails, draw from **Open Trivia DB**
-   (CC BY-SA 4.0, needs attribution).
+1. **Pick the subject (no AI).** From `topics.js`: 323 Wikipedia articles in
+   9 categories, chosen for their backstories, none shared with What Am I.
+2. **Write the question (1 AI call).** From the article text only, with the
+   source sentence for each fact used, a closing fact, and any shorter answer
+   the question asks for ("Diesel" for Diesel engine).
+3. **Structural gate (free).** Length and sentence count; ends by asking for
+   the answer; no multiple-choice pattern; no answer or alias in the text;
+   every fact's sentence really in the source.
+4. **Blind-solve gate (judge model, 2 calls).** The opening two sentences
+   alone must *not* give it away; the full question must, as the judge's
+   first guess; rated medium or hard (not easy, not obscure); fair.
+5. **Fallback:** a hand-written question from `trivia/bank.js` (10, each
+   from its Wikipedia article).
 
 ---
 
@@ -482,7 +483,7 @@ value before trusting any estimate.
 |---|---|---|
 | Cryptic | per [ai-providers.md](./ai-providers.md), plus thinking | 5 / 15 calls |
 | What Am I | Generator 2,500 / 1,300; 2 blind-solve calls 1,000 / 160 | 1.5 / 4 |
-| Trivia (10 questions = 2 batches of 5) | Per batch: generator 6,800 / 1,750; blind-answer 900 / 150 | 1.4 / 3 per batch, then fall back to Open Trivia DB |
+| Trivia (one story question) | Generator 3,000 / 1,200; 2 blind-solve calls 800 / 150 | 1.5 / 4, then fall back to the bank |
 | Chronology | 600 / 250, one call; if it fails, keep the original text | 1 / 1 |
 
 **Monthly cost (30 days)**
@@ -491,7 +492,7 @@ value before trusting any estimate.
 |---|---:|---:|---:|
 | Cryptic Clue | 5 / 15 | **$2.33** | **$6.98** |
 | What Am I | 4.5 / 12 | $0.21 | $0.56 |
-| Trivia | 5.6 / 12 | $0.60 | $1.28 |
+| Trivia | 4.5 / 12 | $0.25 | $0.65 |
 | Chronology | 1 / 1 | $0.03 | $0.03 |
 | Variant Sudoku | 0 | $0 | $0 |
 | Chess | 0 | $0 | $0 |
@@ -525,7 +526,7 @@ Takeaways:
 | **AWS Lambda** | 7 game runs a day. Variant Sudoku is the heaviest: ~50 candidates × uniqueness checks, roughly 30–120 s at 1 GB. That's at most ~4K GB-s a month. | **$0**. Lambda's always-free tier is 400K GB-s and 1M requests a month. Without it, about $0.06/month. |
 | EventBridge, SNS alerts, CloudWatch Logs | A few more log lines and alerts | $0 (within free tiers) |
 | **Supabase** | Puzzles: a few KB per game per day, under 10 MB a year. Lichess subset and quote pool: about 1 MB each. | $0 on the free plan (500 MB). The thing that grows is `solve_history` as players are added, not puzzles. Pro ($25/month) is only needed at real user scale. |
-| Wikipedia / Wikidata / Wikimedia feeds, pageviews, Open Trivia DB | A handful of requests a day | $0. Send a descriptive `User-Agent`, as Wikimedia's API policy requires. |
+| Wikipedia / Wikidata / Wikimedia feeds, pageviews | A handful of requests a day | $0. Send a descriptive `User-Agent`, as Wikimedia's API policy requires. |
 | S3 + CloudFront (frontend) | More routes and the Sudoku and chess board code | ~$0. CloudFront's always-free tier (1 TB and 10M requests a month) covers hobby traffic. |
 
 ### Free tier vs paid
@@ -546,7 +547,7 @@ reliable for little or no extra cost:
    puzzle. A provider outage or quota cut then has a week to resolve before
    players notice. Extra cost: **$0**, since it's the same calls made earlier.
 2. **A fallback for every AI game.**
-   - Trivia → Open Trivia DB.
+   - Trivia → a hand-written bank (`trivia/bank.js`).
    - Chronology → original Wikipedia text.
    - What Am I → a small hand-checked reserve (~30 puzzles).
    - Cryptic → the existing provider fallback.

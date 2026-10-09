@@ -16,7 +16,7 @@ export interface SolveRecord {
   /** Active solving time — the clock pauses while the tab is hidden. */
   seconds: number;
   outcome: SolveOutcome;
-  /** Hints taken (cells revealed, 50:50s, letters shown, …). */
+  /** Hints taken (cells revealed, letters shown, moves shown, …). */
   hints: number;
   /** Wrong guesses, wrong moves, failed checks — whatever the game counts. */
   mistakes: number;

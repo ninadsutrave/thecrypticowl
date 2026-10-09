@@ -98,8 +98,7 @@ export function Hub() {
           className="mt-2 max-w-xl"
           style={{ color: T.textMuted, fontWeight: 600, fontSize: '1rem', lineHeight: 1.6 }}
         >
-          A fresh set of brain-teasers every morning, each about five minutes. Sudoku, cryptic
-          clues, trivia, chess and more.
+          A fresh set of brain-teasers every morning. Sudoku, cryptic clues, trivia, chess and more.
         </p>
 
         {/* Today's progress: one segment per game, filled in its colour. */}
@@ -182,20 +181,13 @@ function GameCard({
 
       <div className="flex items-start justify-between gap-3 mb-4">
         <GameIcon gameId={game.id} />
-        {done ? (
+        {done && (
           <span
             className="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-extrabold"
             style={{ background: T.successBg, color: isDark ? '#6EE7B7' : '#047857' }}
           >
             <CheckCircle2 size={13} aria-hidden />
             {record ? `Solved · ${formatClock(record.seconds)}` : 'Done'}
-          </span>
-        ) : (
-          <span
-            className="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-bold"
-            style={{ background: T.inputBg, color: T.textMuted }}
-          >
-            <Clock size={12} aria-hidden /> {game.minutes}
           </span>
         )}
       </div>

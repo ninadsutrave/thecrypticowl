@@ -28,8 +28,6 @@ export interface GameMeta {
   accentStrong: string;
   /** Accent for text on dark surfaces (≥ 4.5:1 on the dark card). */
   accentOnDark: string;
-  /** Typical solve time at the target (medium) difficulty. */
-  minutes: string;
   /** Beginner guide, where one exists. */
   tutorialPath?: string;
 }
@@ -45,7 +43,6 @@ export const GAMES: readonly GameMeta[] = [
     accent: '#0EA5E9',
     accentStrong: '#0369A1',
     accentOnDark: '#7DD3FC',
-    minutes: '5–6 min',
   },
   {
     id: 'cryptic',
@@ -57,7 +54,6 @@ export const GAMES: readonly GameMeta[] = [
     accent: '#7C3AED',
     accentStrong: '#6D28D9',
     accentOnDark: '#C4B5FD',
-    minutes: '5–6 min',
     tutorialPath: '/learn',
   },
   {
@@ -70,18 +66,17 @@ export const GAMES: readonly GameMeta[] = [
     accent: '#F97316',
     accentStrong: '#C2410C',
     accentOnDark: '#FDBA74',
-    minutes: '4–5 min',
   },
   {
     id: 'trivia',
     name: 'Trivia',
     path: '/trivia',
     emoji: '🧠',
-    blurb: 'Ten questions across geography, science, history, art and music. How many can you get?',
+    blurb:
+      'One question told as a short story. Connect the clues and type the answer: no options to pick from.',
     accent: '#10B981',
     accentStrong: '#047857',
     accentOnDark: '#6EE7B7',
-    minutes: '5–6 min',
   },
   {
     id: 'chronology',
@@ -93,7 +88,6 @@ export const GAMES: readonly GameMeta[] = [
     accent: '#D97706',
     accentStrong: '#B45309',
     accentOnDark: '#FCD34D',
-    minutes: '3–5 min',
   },
   {
     id: 'chess',
@@ -104,7 +98,6 @@ export const GAMES: readonly GameMeta[] = [
     accent: '#64748B',
     accentStrong: '#334155',
     accentOnDark: '#CBD5E1',
-    minutes: '3–5 min',
   },
   {
     id: 'cryptogram',
@@ -115,7 +108,6 @@ export const GAMES: readonly GameMeta[] = [
     accent: '#EC4899',
     accentStrong: '#BE185D',
     accentOnDark: '#F9A8D4',
-    minutes: '5–6 min',
   },
 ];
 

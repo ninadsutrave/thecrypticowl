@@ -7,6 +7,7 @@ import { spec as cryptogramSpec } from '../../../lambda/games/cryptogram/index.j
 import { toPuzzle } from '../../../lambda/games/chess/lichess.js';
 import { generateChronology } from '../../../lambda/games/chronology/selector.js';
 import { createRng } from '../../../lambda/shared/runtime/random.js';
+import { BANK as TRIVIA_BANK } from '../../../lambda/games/trivia/bank.js';
 import lichessFixture from '../../../lambda/games/chess/fixtures/lichess-J588J.json';
 import { parseSudoku } from './sudoku/parse';
 import { parseCryptogram } from './cryptogram/parse';
@@ -80,25 +81,25 @@ describe('Lambda payloads parse on the frontend', () => {
     ).not.toBeNull();
     expect(
       parseTrivia({
-        questions: [
-          {
-            category: 'Science',
-            question: 'Q?',
-            options: ['a', 'b', 'c', 'd'],
-            answer: 1,
-            fact: 'F',
-            source: { label: 'x', url: 'https://x' },
-          },
-        ],
+        category: 'Brands & products',
+        question: 'A story with a question at the end. Name it.',
+        answer: 'Play-Doh',
+        accepted: ['Play-Doh'],
+        fact: 'F',
+        source: { label: 'x', url: 'https://x' },
       })
-    ).toHaveLength(1);
+    ).not.toBeNull();
+  });
+
+  it('trivia bank questions parse', () => {
+    for (const entry of TRIVIA_BANK) expect(parseTrivia(entry.payload)).not.toBeNull();
   });
 
   it('rejects malformed payloads instead of crashing', () => {
     expect(parseSudoku({ variant: 'killer', size: 6 })).toBeNull();
     expect(parseCryptogram({ text: 'X', key: 'ABC' })).toBeNull();
     expect(parseChess({ fen: 'x', moves: ['zz'] })).toBeNull();
-    expect(parseTrivia({ questions: [{}] })).toBeNull();
+    expect(parseTrivia({ question: 'Q?', options: ['a', 'b'] })).toBeNull();
     expect(parseWhatAmI(null)).toBeNull();
   });
 });

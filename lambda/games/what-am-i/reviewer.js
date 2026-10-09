@@ -1,35 +1,8 @@
 import { isGrounded, normaliseText } from '../../shared/sources/wikipedia.js';
-
-/** Words too common to count as giving the answer away. */
-const COMMON = new Set(
-  'the and of for new great old big little mount saint city state united republic kingdom tower bridge house river island lake day night festival film show band company statue'.split(
-    ' '
-  )
-);
+import { containsTerm, leakTerms } from '../../shared/runtime/leaks.js';
 
 const MIN_WORDS = 6;
 const MAX_WORDS = 32;
-
-/** Distinctive words of the answer and aliases, e.g. "eiffel" for Eiffel Tower. */
-export function leakTerms(accepted) {
-  const terms = new Set();
-  for (const name of accepted) {
-    const n = normaliseText(name);
-    if (n.length >= 3) terms.add(n);
-    for (const w of n.split(' ')) if (w.length >= 5 && !COMMON.has(w)) terms.add(w);
-  }
-  return [...terms];
-}
-
-/**
- * Whether the clue uses the term as a word — or, for longer terms, as the
- * start of one: "Icelandic" gives away Iceland as surely as "Iceland" does.
- */
-function containsTerm(text, term) {
-  const t = term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-  const end = term.length >= 5 ? '' : '($| )';
-  return new RegExp(`(^| )${t}${end}`).test(` ${normaliseText(text)} `);
-}
 
 /**
  * Free, deterministic checks before any judge call: shape, length, no

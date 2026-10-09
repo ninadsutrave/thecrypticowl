@@ -1,78 +1,76 @@
 /** Prompts and schemas (Gemini dialect, converted per provider). */
 
-export const QUESTIONS_SCHEMA = {
+export const QUESTION_SCHEMA = {
   type: 'OBJECT',
   properties: {
-    questions: {
-      type: 'ARRAY',
-      items: {
-        type: 'OBJECT',
-        properties: {
-          topic: { type: 'STRING' },
-          question: { type: 'STRING' },
-          options: { type: 'ARRAY', items: { type: 'STRING' } },
-          answer: { type: 'INTEGER' },
-          fact: { type: 'STRING' },
-          evidence: { type: 'STRING' },
-        },
-        required: ['topic', 'question', 'options', 'answer', 'fact', 'evidence'],
-      },
-    },
+    question: { type: 'STRING' },
+    // One verbatim source sentence per fact the question uses.
+    evidence: { type: 'ARRAY', items: { type: 'STRING' } },
+    // The reveal shown after the puzzle ends, and the sentence proving it.
+    fact: { type: 'STRING' },
+    factEvidence: { type: 'STRING' },
+    // Shorter forms the question itself asks for ("Diesel" for Diesel engine).
+    alsoAccept: { type: 'ARRAY', items: { type: 'STRING' } },
   },
-  required: ['questions'],
+  required: ['question', 'evidence', 'fact', 'factEvidence', 'alsoAccept'],
 };
 
-export const WRITER_SYSTEM = `You write multiple-choice questions for a daily trivia quiz. Difficulty: MEDIUM — the kind of fact a well-read adult half-remembers. Not obscure, not pub-quiz obvious.
+/**
+ * The house style: one story-shaped question, answered in free text. Facts
+ * chain from oblique to telling, so the solver has to connect them rather
+ * than recall one fact, which is what makes it medium rather than easy.
+ */
+export const WRITER_SYSTEM = `You write the single daily trivia question for a puzzle site. It is a short story with a hidden answer, in the style of a good quiz night: the player reads it and types the answer. There are no options.
 
-For each source you are given, write exactly one question.
-Rules:
-- Use ONLY facts stated in that source. Never add outside knowledge.
-- "evidence": copy, verbatim, the sentence from the source that proves the correct answer.
-- Exactly 4 options. One is correct. The other three are plausible, clearly wrong, and of the same kind and length (all cities, all years, all names…).
-- "answer" is the 0-based index of the correct option. Vary its position.
-- The question must not contain or hint at the answer. No "which of these is NOT", no "all of the above".
-- "fact": one or two sentences, shown after answering, explaining the answer in an interesting way.
-- British English. Questions under 25 words.`;
+The shape:
+- 70 to 130 words, 4 to 6 sentences, ending with one direct question ("Name the product.", "What is this dish called?").
+- Chain 3 to 5 surprising facts about the HIDDEN SUBJECT: an accidental origin, an odd name, an unexpected first use, a strange record. Order them from oblique to telling, so the answer only clicks towards the end.
+- Medium-hard. A well-read adult should have to connect the facts, not recall one. The first two sentences must not identify the subject on their own.
+- Refer to the subject as "this product", "this film", "it" and so on. Never write the answer, any of its other names, or a distinctive part of them (e.g. "Bubble" for Bubble Wrap).
 
-export function buildWriterPrompt(sources, feedback) {
+The rules:
+- Use ONLY facts stated in the SOURCE TEXT. Never add outside knowledge, never exaggerate.
+- "evidence": for each fact you use, copy one sentence from the source that proves it, verbatim.
+- "fact": one sentence (at most 40 words) shown after the puzzle ends, a further fun detail from the source. It may name the answer. "factEvidence": the source sentence proving it, verbatim.
+- "alsoAccept": if the question asks for a shorter form than the subject's full name (e.g. "Diesel" for "Diesel engine"), list it. Otherwise leave it empty.
+- For a person: only their work and public achievements. Never health, relationships, legal matters or scandal.
+- British English. Conversational and playful, but accurate.
+
+An example of the style, for a different subject (Bubble Wrap):
+"In 1957 two engineers in New Jersey sealed a pair of shower curtains together, hoping to sell the result as a fashionable textured wallpaper. Nobody wanted to hang it. They tried pitching it as insulation for greenhouses; that flopped too. Its break came when a computer company needed a way to protect a new machine on its journey to customers. Today there is even an appreciation day for it on the last Monday of January. Name the product."`;
+
+export function buildWriterPrompt({ category, answer, excerpt, feedback }) {
   return [
-    feedback ? `A previous batch had problems — avoid them:\n${feedback}` : null,
-    ...sources.map(
-      (s, i) => `SOURCE ${i + 1} — topic "${s.topic}" (${s.category}):\n"""\n${s.text}\n"""`
-    ),
-    `Write one question per source (${sources.length} in total), in order, as JSON. Set "topic" to the source's topic.`,
+    `CATEGORY: ${category}`,
+    `HIDDEN SUBJECT (never write this or its other names): ${answer}`,
+    feedback ? `A previous attempt was rejected. Fix these problems:\n${feedback}` : null,
+    `SOURCE TEXT:\n"""\n${excerpt}\n"""`,
+    'Write the question as JSON.',
   ]
     .filter(Boolean)
     .join('\n\n');
 }
 
-export const ANSWER_SCHEMA = {
+export const SOLVE_SCHEMA = {
   type: 'OBJECT',
   properties: {
-    answers: {
-      type: 'ARRAY',
-      items: {
-        type: 'OBJECT',
-        properties: {
-          choice: { type: 'INTEGER' },
-          // True if more than one option could be right, or none is.
-          ambiguous: { type: 'BOOLEAN' },
-          // True if the question is factually doubtful or inappropriate.
-          problem: { type: 'BOOLEAN' },
-        },
-        required: ['choice', 'ambiguous', 'problem'],
-      },
-    },
+    guesses: { type: 'ARRAY', items: { type: 'STRING' } },
+    // Only meaningful on the full question.
+    difficulty: { type: 'STRING', enum: ['easy', 'medium', 'hard', 'obscure'] },
+    fair: { type: 'BOOLEAN' },
+    issues: { type: 'STRING' },
   },
-  required: ['answers'],
+  required: ['guesses', 'difficulty', 'fair', 'issues'],
 };
 
-export const SOLVER_SYSTEM = `You are an expert quiz player and fact-checker. For each multiple-choice question, give the 0-based index of the correct option from your own knowledge. Flag "ambiguous" if more than one option could be right or none is, and "problem" if the question is factually doubtful, misleading or inappropriate for a general audience.`;
+export const SOLVER_SYSTEM = `You are a sharp quiz player. You are shown a trivia question (sometimes only its opening) in a given category. Reply with your three best answers, most likely first, using the common English name.
 
-export function buildSolverPrompt(questions) {
-  return questions
-    .map(
-      (q, i) => `Q${i + 1}. ${q.question}\n${q.options.map((o, k) => `  ${k}) ${o}`).join('\n')}`
-    )
-    .join('\n\n');
+Also judge the question as a quiz setter would:
+- "difficulty": how a typical well-read adult at a pub quiz would find it. "easy" = most would get it from the first sentence or two; "medium" = most get it by the end with some thought; "hard" = a good minority; "obscure" = almost nobody could.
+- "fair": false if any statement is doubtful, the question fits several answers equally well, it is offensive, or (for a person) it touches health, relationships, legal matters or scandal. Explain any problem briefly in "issues", otherwise leave it empty.`;
+
+export function buildSolverPrompt(category, question) {
+  return [`CATEGORY: ${category}`, `QUESTION:\n${question}`, 'Your three best answers.'].join(
+    '\n\n'
+  );
 }

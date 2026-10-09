@@ -1,86 +1,80 @@
-import { excerpt, fetchArticle } from '../../shared/sources/wikipedia.js';
-import { buildWriterPrompt, QUESTIONS_SCHEMA, WRITER_SYSTEM } from './prompts.js';
-import { reviewQuestion } from './reviewer.js';
-import { CATEGORY_NAMES, TOPICS } from './topics.js';
+import {
+  excerpt,
+  fetchAliases,
+  fetchArticle,
+  normaliseText,
+} from '../../shared/sources/wikipedia.js';
+import { pickFresh } from '../../shared/runtime/pool.js';
+import { buildWriterPrompt, QUESTION_SCHEMA, WRITER_SYSTEM } from './prompts.js';
+import { ALL_TOPICS } from './topics.js';
 
-/** Written per day; the judge keeps the best ten. */
-export const CANDIDATE_QUESTIONS = 12;
-const BATCH = 6;
-const EXCERPT_CHARS = 2500;
+const EXCERPT_CHARS = 7000;
 
-/** Topics spread across categories: one per category before any repeats. */
-export function pickTopics(rng, used, count) {
-  const order = rng.shuffle(CATEGORY_NAMES);
-  const picks = [];
-  for (let round = 0; picks.length < count && round < 6; round++) {
-    for (const category of order) {
-      if (picks.length >= count) break;
-      const pool = TOPICS[category].filter(
-        t => !used.has(`wiki:${t}`) && !picks.some(p => p.topic === t)
-      );
-      if (pool.length) picks.push({ category, topic: rng.pick(pool) });
-    }
-  }
-  return picks;
+/** "Imagine (song)" → "Imagine": the disambiguator is Wikipedia's, not the answer's. */
+export function displayName(title) {
+  return title.replace(/\s*\([^)]*\)\s*$/, '').trim();
 }
 
 /**
- * Write the day's candidate questions: topics chosen in code, a random
- * stretch of each Wikipedia article as the only source, the generator model
- * writing one grounded question per source. Questions failing review are
- * dropped here, so the judge only sees sound ones.
+ * Names a player might reasonably type: the subject, its Wikidata aliases,
+ * and the writer's shorter forms. Very short or all-caps codes are dropped,
+ * and a shorter form only counts if it is part of a real name ("Diesel" for
+ * Diesel engine) — the writer can't widen the answer to something else.
+ */
+export function acceptedNames(answer, aliases = [], alsoAccept = []) {
+  const names = [answer, ...aliases]
+    .map(n => String(n).trim())
+    .filter(n => n.length >= 3 && n.length <= 60)
+    .filter(n => !/^[A-Z0-9]{2,4}$/.test(n));
+  const known = names.map(normaliseText);
+  const shorter = alsoAccept
+    .map(n => String(n).trim())
+    .filter(n => normaliseText(n).length >= 4)
+    .filter(n => known.some(k => ` ${k} `.includes(` ${normaliseText(n)} `)));
+  return [...new Set([...names, ...shorter])];
+}
+
+/**
+ * Pick today's subject (no AI), fetch its Wikipedia article and aliases, and
+ * have the generator model write one story question grounded in it.
  */
 export async function generateTrivia(ctx, deps = {}) {
   const getArticle = deps.fetchArticle ?? fetchArticle;
-  const picks = pickTopics(ctx.rng, ctx.used, CANDIDATE_QUESTIONS);
+  const getAliases = deps.fetchAliases ?? fetchAliases;
 
-  const fetched = await Promise.allSettled(picks.map(p => getArticle(p.topic)));
-  const sources = picks
-    .map((p, i) =>
-      fetched[i].status === 'fulfilled'
-        ? {
-            ...p,
-            url: fetched[i].value.url,
-            text: excerpt(fetched[i].value.text, ctx.rng, EXCERPT_CHARS),
-          }
-        : null
-    )
-    .filter(Boolean);
-  if (sources.length < 10) throw new Error(`only ${sources.length} Wikipedia sources loaded`);
+  // Each subject once; when the list runs dry, the least recently used
+  // returns, written from a different stretch of its article.
+  const { item: pick } = await pickFresh(ALL_TOPICS, t => `wiki:${t.title}`, ctx);
+  const article = await getArticle(pick.title);
+  const aliases = await getAliases(article.wikidataId).catch(() => []);
+  const answer = displayName(article.title);
+  const sourceText = excerpt(article.text, ctx.rng, EXCERPT_CHARS);
 
-  const kept = [];
-  const rejected = [];
-  for (let i = 0; i < sources.length; i += BATCH) {
-    const batch = sources.slice(i, i + BATCH);
-    const out = await ctx.callAI(
-      buildWriterPrompt(batch, ctx.feedback),
-      WRITER_SYSTEM,
-      QUESTIONS_SCHEMA
-    );
-    (out?.questions ?? []).forEach((q, k) => {
-      const src = batch.find(s => s.topic === q?.topic) ?? batch[k];
-      if (!src) return;
-      const errs = reviewQuestion(q, src.text, q?.evidence);
-      if (errs.length) {
-        rejected.push(`${src.topic}: ${errs.join(', ')}`);
-        return;
-      }
-      kept.push({
-        category: src.category,
-        question: String(q.question).trim(),
-        options: q.options.map(o => String(o).trim()),
-        answer: q.answer,
-        fact: String(q.fact).trim(),
-        source: { label: `${src.topic} on Wikipedia`, url: src.url },
-        topic: src.topic,
-      });
-    });
-  }
+  const out = await ctx.callAI(
+    buildWriterPrompt({
+      category: pick.category,
+      answer,
+      excerpt: sourceText,
+      feedback: ctx.feedback,
+    }),
+    WRITER_SYSTEM,
+    QUESTION_SCHEMA
+  );
 
   return {
-    payload: { questions: kept },
-    sourceKeys: kept.map(q => `wiki:${q.topic}`),
-    summary: `${kept.length} candidates written`,
-    rejected,
+    payload: {
+      category: pick.category,
+      question: String(out?.question ?? '').trim(),
+      answer,
+      accepted: acceptedNames(answer, aliases, out?.alsoAccept ?? []),
+      fact: String(out?.fact ?? '').trim(),
+      source: { label: `${article.title} on Wikipedia`, url: article.url },
+    },
+    sourceKeys: [`wiki:${pick.title}`],
+    summary: `${answer} (${pick.category})`,
+    // Not stored: what the reviewer needs to check grounding.
+    evidence: (out?.evidence ?? []).map(e => String(e).trim()),
+    factEvidence: String(out?.factEvidence ?? '').trim(),
+    sourceText,
   };
 }

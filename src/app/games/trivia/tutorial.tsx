@@ -1,62 +1,57 @@
 import type { TutorialStep } from '../TutorialFlow';
 import { Line, Pill, Stack } from '../tutorialVisuals';
+import { LetterPattern } from './LetterPattern';
 
 const ACCENT = '#10B981';
 
-// Example question about Canada — not in today's set.
-export function getTriviaTutorial(count: number): TutorialStep[] {
+// Example about the Ferris wheel — never the day's question.
+export function getTriviaTutorial(): TutorialStep[] {
   return [
     {
-      title: `${count} questions, one at a time`,
+      title: 'One question, told as a story',
       visual: (
         <Stack gap={6}>
-          <Line>What is the capital city of Canada?</Line>
-          <div className="grid grid-cols-2 gap-1.5" style={{ width: 280 }}>
-            <Line width={137}>Toronto</Line>
-            <Line width={137}>Ottawa</Line>
-            <Line width={137}>Vancouver</Line>
-            <Line width={137}>Montreal</Line>
-          </div>
+          <Line tone="muted">Chicago's 1893 fair wanted to outdo Paris's iron tower…</Line>
+          <Line tone="muted">A young bridge engineer sketched his answer over dinner…</Line>
+          <Line>It still carries his surname. What is it called?</Line>
         </Stack>
       ),
       body: (
         <p>
-          Geography, science, history, art, music and more, at medium difficulty. Tap an answer to
-          lock it in. There's no changing your mind!
+          Each sentence is a clue, from oblique to telling. Connect them: the answer usually clicks
+          near the end.
         </p>
       ),
     },
     {
-      title: 'Learn the story behind it',
+      title: 'Type your answer',
       visual: (
         <Stack gap={6}>
-          <Line tone="good">Ottawa ✓</Line>
-          <Line tone="muted">Queen Victoria chose Ottawa as the capital in 1857.</Line>
-        </Stack>
-      ),
-      body: <p>Right or wrong, you'll see the fact behind the answer before moving on.</p>,
-    },
-    {
-      title: 'One 50:50 per quiz',
-      visual: (
-        <Stack gap={6}>
-          <div className="grid grid-cols-2 gap-1.5" style={{ width: 280 }}>
-            <Line width={137} tone="muted">
-              <span className="line-through">Toronto</span>
-            </Line>
-            <Line width={137}>Ottawa</Line>
-            <Line width={137}>Vancouver</Line>
-            <Line width={137} tone="muted">
-              <span className="line-through">Montreal</span>
-            </Line>
-          </div>
-          <Pill color={ACCENT}>Two wrong answers removed</Pill>
+          <Line tone="bad">Big wheel ✗</Line>
+          <Line tone="good">Ferris wheel ✓</Line>
+          <Pill color={ACCENT}>3 guesses · typos forgiven</Pill>
         </Stack>
       ),
       body: (
         <p>
-          You get one hint for the whole quiz: a 50:50 that strikes out two wrong answers. Save it
-          for the question that stumps you.
+          There are no options to choose from. You get three guesses, and small slips in spelling
+          still count.
+        </p>
+      ),
+    },
+    {
+      title: 'One hint: the letter pattern',
+      visual: (
+        <Line tone="focus">
+          <span className="inline-flex items-center gap-2">
+            💡 <LetterPattern answer="Ferris wheel" />
+          </span>
+        </Line>
+      ),
+      body: (
+        <p>
+          Stuck? The hint shows the answer's first letter and the length of each word. It's noted in
+          your result.
         </p>
       ),
     },

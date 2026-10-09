@@ -1,15 +1,15 @@
-name: Deploy Lambda · Shikaku
+name: Deploy Lambda · Higher or Lower
 
 on:
   push:
     branches: [master]
     paths:
-      - 'lambda/games/shikaku/**'
+      - 'lambda/games/higher-lower/**'
       - 'lambda/shared/**'
       - 'lambda/package.json'
       - 'lambda/package-lock.json'
       - 'lambda/scripts/package.sh'
-      - '.github/workflows/deploy-lambda-shikaku.yml'
+      - '.github/workflows/deploy-lambda-higher-lower.yml'
       - '.github/workflows/_deploy-game-lambda.yml'
   workflow_dispatch:
     inputs:
@@ -19,17 +19,17 @@ on:
         default: false
 
 concurrency:
-  group: deploy-lambda-shikaku
+  group: deploy-lambda-higher-lower
   cancel-in-progress: false
 
 jobs:
   deploy:
     uses: ./.github/workflows/_deploy-game-lambda.yml
     with:
-      game: shikaku
+      game: higher-lower
       needs_ai: false
-      timeout: 120
+      timeout: 300
       memory: 256
-      schedule: ${{ vars.SHIKAKU_SCHEDULE || 'cron(30 3 * * ? *)' }}
+      schedule: ${{ vars.HIGHER_LOWER_SCHEDULE || 'cron(40 3 * * ? *)' }}
       skip_schedule: ${{ inputs.skip_schedule || false }}
     secrets: inherit

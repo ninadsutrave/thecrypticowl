@@ -10,7 +10,16 @@
  * Prints the reviewed (and, where the game has one, judged) payload — the
  * exact JSON the Lambda would store.
  */
-const GAMES = ['sudoku', 'what-am-i', 'trivia', 'chronology', 'chess', 'cryptogram', 'shikaku'];
+const GAMES = [
+  'sudoku',
+  'what-am-i',
+  'trivia',
+  'chronology',
+  'chess',
+  'cryptogram',
+  'slitherlink',
+  'higher-lower',
+];
 const [game, date] = process.argv.slice(2);
 
 if (!GAMES.includes(game)) {

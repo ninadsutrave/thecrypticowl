@@ -1,5 +1,5 @@
 import { StoreKeys, readJSON, writeJSON } from '../lib/localStore';
-import type { GameId } from './registry';
+import { GAMES, type GameId } from './registry';
 
 /**
  * The play history: one record per game per day the player finished it.
@@ -72,10 +72,15 @@ export function getSolveRecord(game: GameId, date = localDateKey()): SolveRecord
 }
 
 /** Every record on the device, newest first. */
+const LIVE_GAMES = new Set<string>(GAMES.map(g => g.id));
+
 export function getAllPlays(): PlayRecord[] {
   const log = readJSON<SolveLog>(StoreKeys.solves, {});
   const plays: PlayRecord[] = [];
   for (const [game, days] of Object.entries(log) as [GameId, Record<string, SolveRecord>][]) {
+    // Plays of a game no longer in the lineup stay stored but aren't shown:
+    // every page that lists plays looks the game up in the registry.
+    if (!LIVE_GAMES.has(game)) continue;
     for (const [date, r] of Object.entries(days ?? {})) {
       plays.push({ ...normalise(r), game, date });
     }

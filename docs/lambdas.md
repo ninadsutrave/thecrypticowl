@@ -31,7 +31,8 @@ lambda/
 │   ├── chronology/              selector · reviewer
 │   ├── chess/                   lichess · reviewer · judge
 │   ├── cryptogram/              quotes · cipher · reviewer
-│   └── shikaku/                 generator · solver · reviewer · judge
+│   ├── slitherlink/             model · generator · solver · reviewer · judge
+│   └── higher-lower/            themes · generator · reviewer
 └── scripts/
     ├── package.sh               Build one game's deployment zip
     └── preview.mjs              Generate a puzzle locally, no database
@@ -82,7 +83,8 @@ flowchart LR
 | Chronology | "On this day" feed: the most-read events and (deceased) people for the date, keyword-filtered for light topics, then screened by the judge model for suitability when a key is set | 6 events, distinct years, no year in the text, at least one close pair, none starts in place | Suitability screen (optional: falls back to keyword filters) |
 | Checkmate | Lichess puzzle API, mate in 3–5 | chess.js replay: legal, ends in mate, length matches, no shorter mate | Rating 1300–1800 and ≥500 plays |
 | Cryptogram | Unused quote from `quotes.js`, fresh derangement key, two mid-frequency givens | Length/variety band, valid key, givens present and not the commonest letter | — |
-| Shikaku | 10×10 grid cut into random rectangles of 2–12 cells; one clue placed in each, re-placed until the solver finds exactly one answer | Rectangles tile the grid exactly; each holds only its own clue, whose number is its area | Re-solves from the clues: unique, the stored answer, ≤30 guesses, and ≤45% of clues given away at the start |
+| Slitherlink | 8×8 loop drawn as the outline of a random hole-free blob; every cell's count, then clues removed (zeros first) while the solver still finds one loop within 12 guesses | One closed loop; every clue equals its cell's sides on it; ≥25% of cells clued | Re-solves from the clues: unique, the stored loop, ≤12 guesses |
+| Higher or Lower | Theme by date (7 rotating, see `themes.js`); Wikidata SPARQL for the best-known entries; a chain of 11 with a balanced up/down pattern, each step a fair pair | 11 distinct named items, values > 0, every step fair (no ties, ratio or gap in range), 3–7 ups, descriptions with no numbers or rankings | — (data, not judgement) |
 
 **Events** a handler accepts:
 
@@ -144,7 +146,8 @@ Model keys are written only to the AI Lambdas' environments.
 | cryptic | 256 MB | 600 s | 03:15 |
 | cryptogram | 256 MB | 120 s | 03:20 |
 | what-am-i | 256 MB | 600 s | 03:25 |
-| shikaku | 256 MB | 120 s | 03:30 |
+| slitherlink | 512 MB | 120 s | 03:30 |
+| higher-lower | 256 MB | 300 s | 03:40 |
 | trivia | 256 MB | 600 s | 03:35 |
 
 ---
@@ -184,7 +187,7 @@ node lambda/scripts/preview.mjs sudoku 2026-10-12
 ```
 
 Prints the reviewed, judged payload the Lambda would store, without a
-database. Sudoku, chronology, chess, cryptogram and shikaku need only network access;
+database. Sudoku, chronology, chess, cryptogram, slitherlink and higher-lower need only network access;
 what-am-i and trivia also need a model key (`GEMINI_API_KEY=…`).
 
 ```bash

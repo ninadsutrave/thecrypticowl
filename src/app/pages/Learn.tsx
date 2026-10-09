@@ -676,7 +676,7 @@ export function Learn() {
         className="sticky top-16 z-30 py-3 mb-8"
         style={{ background: T.stickyNavBg, backdropFilter: 'blur(12px)' }}
       >
-        <div className="flex gap-2 overflow-x-auto pb-1 hide-scrollbar">
+        <div className="flex gap-2 overflow-x-auto pb-1 hide-scrollbar [mask-image:linear-gradient(to_right,black_85%,transparent)] sm:[mask-image:none]">
           {SECTIONS.map((s, i) => (
             <m.button
               key={s}

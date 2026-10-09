@@ -273,8 +273,6 @@ export function Mascot({
 }: MascotProps) {
   const { isDark } = useDarkMode();
   const T = getTheme(isDark);
-  // `w-max` (with the max-width cap) stops the absolutely-positioned bubble
-  // shrinking to one word per line when the owl is alone in its row.
   const bubbleStyle = { background: T.bubbleBg, borderColor: T.bubbleBorder };
   const bounceAnimation =
     mood === 'celebrating'
@@ -285,29 +283,31 @@ export function Mascot({
           ? { y: [0, -4, 0], transition: { duration: 3, repeat: Infinity, ease: 'easeInOut' } }
           : {};
 
-  return (
-    <div className="relative inline-flex items-center">
-      {speechBubble && bubbleDirection === 'left' && (
-        <div className="absolute right-full mr-2 sm:mr-3 bottom-1 sm:bottom-4 z-10">
-          <div
-            className="relative border-2 rounded-2xl px-3 py-2 sm:px-4 sm:py-3 shadow-lg w-max max-w-[140px] sm:max-w-[200px]"
-            style={{ ...bubbleStyle, borderRadius: '18px 18px 4px 18px' }}
-          >
-            <p
-              style={{
-                fontFamily: "'Nunito', sans-serif",
-                fontSize: '0.75rem',
-                lineHeight: '1.35',
-                color: T.bubbleText,
-              }}
-              className="sm:text-[0.82rem]"
-            >
-              {speechBubble}
-            </p>
-          </div>
-        </div>
-      )}
+  // The bubble sits beside the owl in normal flow, so the pair centres
+  // together and can never run off a narrow screen.
+  const bubble = (corner: string) =>
+    speechBubble && (
+      <div
+        className="relative min-w-0 border-2 rounded-2xl px-3 py-2 sm:px-4 sm:py-3 shadow-lg max-w-[150px] sm:max-w-[220px] mb-1 sm:mb-4"
+        style={{ ...bubbleStyle, borderRadius: corner }}
+      >
+        <p
+          style={{
+            fontFamily: "'Nunito', sans-serif",
+            fontSize: '0.75rem',
+            lineHeight: '1.35',
+            color: T.bubbleText,
+          }}
+          className="sm:text-[0.82rem]"
+        >
+          {speechBubble}
+        </p>
+      </div>
+    );
 
+  return (
+    <div className="relative inline-flex items-end gap-2 sm:gap-3 max-w-full">
+      {bubbleDirection === 'left' && bubble('18px 18px 4px 18px')}
       <m.div
         style={{ width: size, height: size }}
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -316,27 +316,7 @@ export function Mascot({
       >
         <OwlSVG mood={mood} />
       </m.div>
-
-      {speechBubble && bubbleDirection === 'right' && (
-        <div className="absolute left-full ml-2 sm:ml-3 bottom-1 sm:bottom-4 z-10">
-          <div
-            className="relative border-2 rounded-2xl px-3 py-2 sm:px-4 sm:py-3 shadow-lg w-max max-w-[140px] sm:max-w-[220px]"
-            style={{ ...bubbleStyle, borderRadius: '18px 18px 18px 4px' }}
-          >
-            <p
-              style={{
-                fontFamily: "'Nunito', sans-serif",
-                fontSize: '0.75rem',
-                lineHeight: '1.35',
-                color: T.bubbleText,
-              }}
-              className="sm:text-[0.82rem]"
-            >
-              {speechBubble}
-            </p>
-          </div>
-        </div>
-      )}
+      {bubbleDirection === 'right' && bubble('18px 18px 18px 4px')}
     </div>
   );
 }

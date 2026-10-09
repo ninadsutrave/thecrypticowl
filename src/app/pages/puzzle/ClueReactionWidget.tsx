@@ -41,7 +41,7 @@ export function ClueReactionWidget({
         onClick={() => handleVote('like')}
         whileHover={{ scale: 1.12 }}
         whileTap={{ scale: 0.88 }}
-        className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border transition-colors"
+        className="flex items-center gap-1.5 px-3.5 min-h-[36px] rounded-full border transition-colors"
         style={{
           background: likeActive ? T.successBg : 'transparent',
           borderColor: likeActive ? '#10B981' : T.inputBorder,
@@ -58,7 +58,7 @@ export function ClueReactionWidget({
         onClick={() => handleVote('dislike')}
         whileHover={{ scale: 1.12 }}
         whileTap={{ scale: 0.88 }}
-        className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border transition-colors"
+        className="flex items-center gap-1.5 px-3.5 min-h-[36px] rounded-full border transition-colors"
         style={{
           background: dislikeActive ? T.wrongBg : 'transparent',
           borderColor: dislikeActive ? '#EF4444' : T.inputBorder,

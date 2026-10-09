@@ -320,7 +320,7 @@ function MoveButton({
       onClick={onClick}
       disabled={disabled}
       aria-label={label}
-      className="w-8 h-7 rounded-lg border flex items-center justify-center disabled:opacity-30"
+      className="w-10 h-9 rounded-lg border flex items-center justify-center disabled:opacity-30"
       style={{ borderColor: T.cardBorder, color: T.brandText, background: T.inputBg }}
     >
       {children}

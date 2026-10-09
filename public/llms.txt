@@ -1,6 +1,6 @@
 # The Cryptic Owl
 
-> Eight free daily puzzles at medium difficulty: a variant sudoku, a British cryptic crossword clue, "What Am I Talking About?" (five clues to a hidden subject), a single story-style trivia question answered in free text, Chronology (order six events from today's date), a chess mate-in-three-to-five, a cryptogram of a famous saying, and Shikaku (cut a grid into rectangles). New puzzles every day at midnight local time.
+> Nine free daily puzzles at medium difficulty: a variant sudoku, a British cryptic crossword clue, "What Am I Talking About?" (five clues to a hidden subject), a single story-style trivia question answered in free text, Chronology (order six events from today's date), a chess mate-in-three-to-five, a cryptogram of a famous saying, Slitherlink (draw one loop round the numbers), and Higher or Lower (ten close calls on a daily theme). New puzzles every day at midnight local time.
 
 ## Puzzles
 
@@ -12,7 +12,8 @@
 - [Chronology](https://thecrypticowl.com/chronology): put six "on this day" events in order
 - [Checkmate](https://thecrypticowl.com/chess): a forced mate in three to five moves, from the Lichess puzzle database
 - [Cryptogram](https://thecrypticowl.com/cryptogram): decode a public-domain quote or proverb
-- [Shikaku](https://thecrypticowl.com/shikaku): divide a 10×10 grid into rectangles, each holding one number equal to its area
+- [Slitherlink](https://thecrypticowl.com/slitherlink): draw a single loop on an 8×8 grid of dots; each number counts the loop's sides around it
+- [Higher or Lower](https://thecrypticowl.com/higher-lower): ten rounds of which is bigger, taller, longer or later, with numbers from Wikidata
 
 ## Learn
 

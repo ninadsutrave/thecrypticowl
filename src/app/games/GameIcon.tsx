@@ -1,10 +1,11 @@
 import {
+  ArrowUpDown,
   Brain,
   Crown,
   Grid3x3,
   Hourglass,
   KeyRound,
-  LayoutDashboard,
+  Route,
   MessageCircleQuestion,
   Puzzle,
   type LucideIcon,
@@ -25,7 +26,8 @@ const ICONS: Record<GameId, LucideIcon> = {
   chronology: Hourglass,
   chess: Crown,
   cryptogram: KeyRound,
-  shikaku: LayoutDashboard,
+  slitherlink: Route,
+  'higher-lower': ArrowUpDown,
 };
 
 /** The game's icon in its tinted tile. */

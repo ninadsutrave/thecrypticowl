@@ -99,7 +99,10 @@ export function Hub() {
             lineHeight: 1.15,
           }}
         >
-          {capitalise(COUNT_WORD)} puzzles. <span style={{ color: T.brand }}>Every day.</span>
+          {capitalise(COUNT_WORD)} puzzles.{' '}
+          <span className="whitespace-nowrap" style={{ color: T.brand }}>
+            Every day.
+          </span>
         </h1>
         <p
           className="mt-2 max-w-xl"
@@ -222,7 +225,7 @@ function GameCard({
             step-by-step walkthrough on the game page. */}
         <Link
           to={game.tutorialPath ?? `${game.path}?tutorial`}
-          className="relative z-10 inline-flex items-center gap-1 text-xs font-extrabold no-underline hover:underline"
+          className="relative z-10 inline-flex items-center gap-1 text-xs font-extrabold no-underline hover:underline min-h-[36px] -my-2.5"
           style={{ color: T.brandText }}
         >
           <BookOpen size={13} aria-hidden />{' '}

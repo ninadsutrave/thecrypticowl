@@ -24,9 +24,10 @@ today.
 | 5 | **Chronology** | Factual data feed | 0 (1 optional) | Wikipedia "On this day" |
 | 6 | **Chess: Mate in N** | Curated dataset | 0 | Lichess puzzle database |
 | 7 | **Cryptogram** | Curated quote pool + algorithm | 0 | Public-domain quotes and proverbs |
-| 8 | **Shikaku** | Pure algorithm | 0 | Generator + solver |
+| 8 | **Slitherlink** | Pure algorithm | 0 | Generator + solver |
+| 9 | **Higher or Lower** | Factual data + algorithm | 0 | Wikidata |
 
-**Status:** all eight are built end to end. Each game has its own Lambda
+**Status:** all nine are built end to end. Each game has its own Lambda
 (`lambda/games/<game>/`) that generates, reviews and judges a medium puzzle
 every night, a few days ahead, into `game_puzzles`; the app plays that day's
 puzzle and falls back to a labelled practice one only if it's missing. See
@@ -66,7 +67,8 @@ puzzle and falls back to a labelled practice one only if it's missing. See
 | Chronology | The year of the top unlocked event | **One** |
 | Checkmate | Show the next move | One per move, counted |
 | Cryptogram | Reveal one letter (the selected one, or the commonest unsolved) | Unlimited, counted |
-| Shikaku | Reveal one rectangle of the answer (under the cursor, or the next missing) | Unlimited, counted |
+| Slitherlink | Fix a wrong line, else draw a missing piece of the loop | Unlimited, counted |
+| Higher or Lower | A ballpark for the hidden number (one figure, or the decade) | **One** |
 
 Hints used appear in the result line, e.g. "Guess 2 of 3 · hint".
 
@@ -419,36 +421,65 @@ Proverbs with no author are always fine.
 
 ---
 
-### 8. Shikaku
+### 8. Slitherlink
 
-Cut a **10×10 grid into rectangles**. Each rectangle holds exactly one
-number, and that number is its area. Pure logic, no arithmetic beyond
-multiplication tables; it plays differently from every other game here
-(drawing shapes, not filling cells).
+Draw **one closed loop** along the lines of an 8×8 grid of dots. Each number
+says how many of its cell's four sides the loop uses. 8×8 keeps every line
+comfortably tappable on a small phone; replaced Shikaku in the lineup.
 
 **Gameplay**
 
-- Drag from one corner to the opposite one to draw a rectangle; drawing over
-  others replaces them. Tap a rectangle to remove it. Undo and Clear.
-- Keyboard: arrows move, Space marks each corner, Delete removes.
-- A rectangle that holds exactly one number equal to its area is filled in
-  colour; any other is drawn dashed red. The puzzle is solved when every
-  cell is covered by valid rectangles: there is exactly one way to do it.
+- Drag through the dots to draw (drag back to erase a stretch); tap a side to
+  cycle line → cross → nothing. Undo, Clear, and a hint that fixes a wrong
+  line or draws a missing piece.
+- Keyboard: arrows move a cursor dot; Shift + arrow draws or erases.
+- Numbers turn red when they have too many lines, fade once exactly met;
+  dots turn red where three lines meet. Solved when the lines form one loop
+  satisfying every number (there is exactly one).
 
 **Generation (no AI)**
 
-1. **Partition** the grid by repeatedly taking the first uncovered cell and
-   growing a random rectangle of 2–12 cells (sides up to 6) from it,
-   weighted towards 3–8 cells.
-2. **Place clues:** each rectangle's area in one of its cells, at random.
-3. **Solve** with an exact-cover solver (logic first: a clue with one
-   possible rectangle is placed; a cell only one clue can reach goes to that
-   clue). Keep only placements with **exactly one** answer, found within
-   30 guesses, with **at most 45%** of clues having a single possible
-   rectangle at the start (otherwise it's too easy). Up to 25 placements per
-   partition, then a new partition. In testing every seed succeeded, in
-   about 2 ms.
-4. **Judge:** re-solve from the clues alone and confirm the stored answer.
+1. **Loop:** grow a random blob of 42–60% of the cells, rejecting any step
+   that would leave a hole or make two cells touch only at a corner; the
+   blob's outline is then one simple loop.
+2. **Clues:** every cell's count, then remove clues, **zeros first** (the most
+   generous), keeping a removal only if the solver still finds exactly one
+   loop within 12 guesses. Stops at 22 clues.
+3. **Judge:** re-solve from the clues and confirm the stored loop.
+
+The solver uses the deductions people do: a met clue closes its other sides;
+a dot has 0 or 2 lines; a line may not close a small loop while other lines
+exist. In testing, every seed produced a puzzle in about 10 ms.
+
+---
+
+### 9. Higher or Lower
+
+**Ten close calls on a daily theme.** Each round shows one thing with its
+number and a new one with it hidden: higher or lower? The new one becomes the
+next round's known one.
+
+**Themes** (rotating by date, `lambda/games/higher-lower/themes.js`): city
+populations (city proper), country areas, mountain heights, river lengths,
+film release years, building heights, country populations. Company founding
+years were tried and dropped: Wikidata's dates are too often a merger or a
+re-registration.
+
+**Generation (no AI)**
+
+1. **Pool:** one Wikidata SPARQL query per theme, keeping the best-known
+   entries (most Wikipedia language editions; 100–150 per theme).
+2. **Descriptions:** Wikidata's one-liners, minus numbers ("1995 film by…")
+   and any clause with a ranking ("…, the largest in the world by area").
+3. **Chain:** an up/down pattern with 4–6 ups and never four the same way in
+   a row; then a random walk where each step is a **fair pair**: no ties,
+   values within a ratio band (e.g. 1.12–1.9× for cities) or year gap
+   (3–25 years for films).
+4. Items rest 60 days before returning. A later attempt moves to the next
+   theme, in case one query is failing.
+
+**Hint:** once per game, the hidden number to one significant figure (or
+its decade).
 
 ---
 
@@ -612,7 +643,6 @@ Not committed. Listed so the shared design doesn't rule them out.
 | Connections-style groups | LLM + judge | Very popular; red herrings are hard for small models |
 | Letter hive (Spelling Bee-style) | Pure algorithm | Needs a good common-word list |
 | Nonogram | Pure algorithm | Uniqueness check with a line solver |
-| Higher or lower | Wikidata numbers | Zero AI: pairs close but clearly different |
 | Numbers game (Countdown-style) | Pure algorithm | Solver checks the target can be reached |
 
 **Naming:** *Wordle*, *Connections*, *Spelling Bee* and *KenKen* are

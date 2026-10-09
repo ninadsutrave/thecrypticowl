@@ -53,10 +53,21 @@ export const router = createBrowserRouter([
         }),
       },
       {
-        path: 'shikaku',
+        path: 'higher-lower',
         lazy: async () => ({
-          Component: (await import('./games/shikaku/ShikakuGame')).ShikakuGame,
+          Component: (await import('./games/higher-lower/HigherLowerGame')).HigherLowerGame,
         }),
+      },
+      {
+        path: 'slitherlink',
+        lazy: async () => ({
+          Component: (await import('./games/slitherlink/SlitherlinkGame')).SlitherlinkGame,
+        }),
+      },
+      {
+        // Shikaku was briefly in the lineup; Slitherlink took its place.
+        path: 'shikaku',
+        loader: () => redirect('/slitherlink'),
       },
       {
         // The old cryptic-only landing page; the puzzle grid replaced it.

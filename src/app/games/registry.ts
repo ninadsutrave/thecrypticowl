@@ -14,7 +14,8 @@ export type GameId =
   | 'chronology'
   | 'chess'
   | 'cryptogram'
-  | 'shikaku';
+  | 'slitherlink'
+  | 'higher-lower';
 
 export interface GameMeta {
   id: GameId;
@@ -110,15 +111,25 @@ export const GAMES: readonly GameMeta[] = [
     accentOnDark: '#F9A8D4',
   },
   {
-    id: 'shikaku',
-    name: 'Shikaku',
-    path: '/shikaku',
-    emoji: '▦',
+    id: 'slitherlink',
+    name: 'Slitherlink',
+    path: '/slitherlink',
+    emoji: '➰',
     blurb:
-      'Cut the grid into rectangles. Each holds exactly one number, and that number is its area.',
+      'Draw one loop along the dotted lines. Each number says how many of its four sides the loop uses.',
     accent: '#6366F1',
     accentStrong: '#4338CA',
     accentOnDark: '#A5B4FC',
+  },
+  {
+    id: 'higher-lower',
+    name: 'Higher or Lower',
+    path: '/higher-lower',
+    emoji: '↕️',
+    blurb: 'Bigger city? Taller tower? Later film? Ten close calls, one theme a day.',
+    accent: '#14B8A6',
+    accentStrong: '#0F766E',
+    accentOnDark: '#5EEAD4',
   },
 ];
 

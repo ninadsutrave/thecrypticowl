@@ -311,7 +311,7 @@ function GameHeader({
       <div className="flex items-center justify-between mb-3">
         <Link
           to="/"
-          className="inline-flex items-center gap-1.5 text-sm font-bold no-underline hover:underline"
+          className="inline-flex items-center gap-1.5 text-sm font-bold no-underline hover:underline min-h-[40px] -my-2"
           style={{ color: T.brandText }}
         >
           <ArrowLeft size={15} /> All puzzles

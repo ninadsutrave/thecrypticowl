@@ -619,7 +619,7 @@ export function Puzzle() {
                 value={answer}
                 onChange={e => setAnswer(e.target.value.replace(/[^a-zA-Z]/g, ''))}
                 onKeyDown={e => e.key === 'Enter' && handleSubmit()}
-                placeholder={loading ? 'Loading…' : 'Enter your answer ...'}
+                placeholder={loading ? 'Loading…' : 'Your answer'}
                 className="flex-1 py-3 sm:py-4 px-3 sm:px-4 rounded-2xl border-2 focus:outline-none transition-all min-w-0"
                 style={{
                   borderColor: T.inputBorder,

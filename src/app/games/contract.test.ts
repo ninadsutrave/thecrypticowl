@@ -8,9 +8,13 @@ import { toPuzzle } from '../../../lambda/games/chess/lichess.js';
 import { generateChronology } from '../../../lambda/games/chronology/selector.js';
 import { createRng } from '../../../lambda/shared/runtime/random.js';
 import { BANK as TRIVIA_BANK } from '../../../lambda/games/trivia/bank.js';
-import { generateShikaku } from '../../../lambda/games/shikaku/generator.js';
-import { parseShikaku } from './shikaku/parse';
-import { isSolved as shikakuSolved } from './shikaku/logic';
+import { generateSlitherlink } from '../../../lambda/games/slitherlink/generator.js';
+import { parseSlitherlink } from './slitherlink/parse';
+import { parseHigherLower } from './higher-lower/parse';
+import { generateHigherLower } from '../../../lambda/games/higher-lower/generator.js';
+import { THEMES as HL_THEMES } from '../../../lambda/games/higher-lower/themes.js';
+import hlFilms from '../../../lambda/games/higher-lower/fixtures/film-year.json';
+import { isSolved as slitherSolved, makeGrid as slitherGrid, LINE } from './slitherlink/logic';
 import lichessFixture from '../../../lambda/games/chess/fixtures/lichess-J588J.json';
 import { parseSudoku } from './sudoku/parse';
 import { parseCryptogram } from './cryptogram/parse';
@@ -94,11 +98,30 @@ describe('Lambda payloads parse on the frontend', () => {
     ).not.toBeNull();
   });
 
-  it('shikaku: parses, and the stored answer solves it on the board', () => {
-    const p = generateShikaku(createRng(5));
-    const parsed = parseShikaku(p);
+  it('slitherlink: parses, and the stored loop solves it on the board', () => {
+    const p = generateSlitherlink(createRng(5));
+    const parsed = parseSlitherlink(p);
     expect(parsed).not.toBeNull();
-    expect(shikakuSolved(parsed!.solution, parsed!)).toBe(true);
+    const marks = [...p.solution].map(ch => (ch === '1' ? LINE : 0));
+    expect(slitherSolved(slitherGrid(p.rows, p.cols), marks, p.clues)).toBe(true);
+  });
+
+  it('higher or lower: every theme round-trips', async () => {
+    for (let k = 0; k < HL_THEMES.length; k++) {
+      const date = new Date(Date.UTC(2026, 0, 1 + k)).toISOString().slice(0, 10);
+      const c = await generateHigherLower(
+        { date, attempt: 1, rng: createRng(k), used: new Set() },
+        // Real films for year themes; for the rest, spread-out values in
+        // the same shape. What's tested is the payload, not the data.
+        {
+          fetchPool: async theme =>
+            theme.format === 'year'
+              ? hlFilms
+              : hlFilms.map((x, i) => ({ ...x, value: 1000 * 1.07 ** i })),
+        }
+      );
+      expect(parseHigherLower(c.payload)).not.toBeNull();
+    }
   });
 
   it('trivia bank questions parse', () => {

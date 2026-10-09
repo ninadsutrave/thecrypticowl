@@ -65,12 +65,18 @@ jobs:
             memory: 256
             schedule_var: CRYPTOGRAM_SCHEDULE
             default_schedule: 'cron(20 3 * * ? *)'
-          - game: shikaku
+          - game: slitherlink
             needs_ai: false
             timeout: 120
-            memory: 256
-            schedule_var: SHIKAKU_SCHEDULE
+            memory: 512
+            schedule_var: SLITHERLINK_SCHEDULE
             default_schedule: 'cron(30 3 * * ? *)'
+          - game: higher-lower
+            needs_ai: false
+            timeout: 300
+            memory: 256
+            schedule_var: HIGHER_LOWER_SCHEDULE
+            default_schedule: 'cron(40 3 * * ? *)'
     uses: ./.github/workflows/_deploy-game-lambda.yml
     with:
       game: ${{ matrix.game }}

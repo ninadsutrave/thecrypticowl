@@ -198,7 +198,7 @@ npx vitest run --project lambda
 | Cryptogram quotes (`quotes.js`) | 154 usable | ~5 months unique | < 45 unused |
 | Trivia subjects (`topics.js`) | 323 in 9 categories | ~10 months unique, then least recent first | < 30 unused |
 | Lichess puzzles | Millions | — | — |
-| "On this day" | New each date | Events never repeat | — |
+| "On this day" | 17–28 usable events per date | Fresh for ~2–4 years per date; then at most 2 events unused for 3 years per puzzle, then older events in new mixes (never fails) | — |
 
 **Pools never run dry** (`shared/runtime/pool.js`): when every entry has been
 used, a generator takes one not used in the last year, then six months, then

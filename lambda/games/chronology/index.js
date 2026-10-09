@@ -5,8 +5,9 @@ import { generateChronology } from './selector.js';
 /**
  * Chronology: six events from Wikipedia's "On this day" feed for the
  * puzzle's date, chosen in code for medium difficulty, screened for
- * suitability by the judge model when one is available. An event is never
- * reused (tracked by source key), so next year's 9 October is a new set.
+ * suitability by the judge model when one is available. Events are tracked
+ * by source key: fresh ones first, and once a date runs short, at most two
+ * not used in the last three years (selector.js § reuse tiers).
  */
 export const spec = {
   game: 'chronology',

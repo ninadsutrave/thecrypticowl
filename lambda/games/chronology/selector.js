@@ -176,13 +176,38 @@ export function famous(candidates, views) {
   return [...top('event'), ...top('birth')];
 }
 
-/** Six events meeting the strictest difficulty rung this feed allows. */
-export function pickEvents(candidates, rng, used) {
-  const pool = candidates.filter(c => !used.has(`event:${c.id}`));
-  if (pool.length < EVENTS_PER_DAY) throw new Error(`only ${pool.length} usable events`);
+/**
+ * When a date runs short of fresh events, old ones come back: first at most
+ * `MAX_REUSED` per puzzle, from events not used in the last three years;
+ * only if that can't make a set, any number, from ever more recent windows.
+ * Each puzzle is still a new mix of six, and no date ever goes without one.
+ */
+export const MAX_REUSED = 2;
+export const REUSE_TIERS = [
+  { days: 3 * 365, max: MAX_REUSED },
+  { days: 3 * 365, max: EVENTS_PER_DAY },
+  { days: 2 * 365, max: EVENTS_PER_DAY },
+  { days: 365, max: EVENTS_PER_DAY },
+];
+
+const keyOf = e => `event:${e.id}`;
+
+/**
+ * Six events meeting the strictest difficulty rung the pool allows, with at
+ * most `maxReused` of them from `reusable`. Throws when no set fits.
+ */
+export function pickEvents(candidates, rng, used, { reusable = [], maxReused = 0 } = {}) {
+  const fresh = candidates.filter(c => !used.has(keyOf(c)));
+  const old = maxReused > 0 ? reusable : [];
+  const pool = [...fresh, ...old];
+  if (fresh.length + Math.min(old.length, maxReused) < EVENTS_PER_DAY) {
+    throw new Error(`only ${fresh.length} fresh events (+${old.length} reusable)`);
+  }
+  const oldKeys = new Set(old.map(keyOf));
   for (const rung of DIFFICULTY_LADDER) {
     for (let t = 0; t < 400; t++) {
       const pick = rng.shuffle(pool).slice(0, EVENTS_PER_DAY);
+      if (pick.filter(e => oldKeys.has(keyOf(e))).length > maxReused) continue;
       if (pick.filter(e => e.kind === 'birth').length > MAX_BIRTHS) continue;
       const years = pick.map(e => e.year);
       const perCentury = new Map();
@@ -196,6 +221,34 @@ export function pickEvents(candidates, rng, used) {
     }
   }
   throw new Error('no set of events with a close pair and a wide span in this feed');
+}
+
+/**
+ * Fresh events if they make a set; otherwise down the reuse tiers. Returns
+ * the pick and how many of its events were reused.
+ */
+export async function pickWithReuse(candidates, ctx) {
+  try {
+    return { pick: pickEvents(candidates, ctx.rng, ctx.used), reused: 0 };
+  } catch (err) {
+    if (!ctx.usedSince) throw err;
+    let last = err;
+    for (const tier of REUSE_TIERS) {
+      const recent = await ctx.usedSince(tier.days);
+      const reusable = candidates.filter(c => ctx.used.has(keyOf(c)) && !recent.has(keyOf(c)));
+      try {
+        const pick = pickEvents(candidates, ctx.rng, ctx.used, {
+          reusable,
+          maxReused: tier.max,
+        });
+        const reused = pick.filter(e => ctx.used.has(keyOf(e))).length;
+        return { pick, reused };
+      } catch (tierErr) {
+        last = tierErr;
+      }
+    }
+    throw last;
+  }
 }
 
 /**
@@ -225,10 +278,9 @@ export async function generateChronology(ctx, deps = {}) {
   const pool = deps.fetchOnThisDay
     ? null
     : await sourcesFor(ctx.date, getFeed, getViews, ctx.callJudge);
-  const picked = pickEvents(
+  const { pick: picked, reused } = await pickWithReuse(
     pool ?? (await uncachedSources(ctx.date, getFeed, getViews, ctx.callJudge)),
-    ctx.rng,
-    ctx.used
+    ctx
   );
   const events = derange(picked, ctx.rng).map(({ id, text, year, url }) => ({
     id,
@@ -239,9 +291,10 @@ export async function generateChronology(ctx, deps = {}) {
   return {
     payload: { day: dayLabel(ctx.date), events },
     sourceKeys: events.map(e => `event:${e.id}`),
-    summary: events
-      .map(e => e.year)
-      .sort((a, b) => a - b)
-      .join(', '),
+    summary:
+      events
+        .map(e => e.year)
+        .sort((a, b) => a - b)
+        .join(', ') + (reused ? ` (${reused} reused)` : ''),
   };
 }

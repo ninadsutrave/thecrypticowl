@@ -72,6 +72,44 @@ describe('selection', () => {
     ).toEqual(['B']);
   });
 
+  describe('reusing old events', () => {
+    const key = y => `event:${y}-p${y}`;
+    const sources = { fetchOnThisDay: async () => feed, fetchMonthlyViews: async () => views };
+    const run = (used, usedSince) =>
+      generateChronology(
+        { date: '2026-10-09', rng: createRng(7), used: new Set(used.map(key)), usedSince },
+        sources
+      );
+
+    it('uses only fresh events while there are enough', async () => {
+      const usedSince = vi.fn();
+      const c = await run([1446, 1999], usedSince);
+      expect(usedSince).not.toHaveBeenCalled();
+      expect(c.summary).not.toMatch(/reused/);
+    });
+
+    it('tops up a short date with at most two events not used in three years', async () => {
+      const used = [1446, 1701, 1874, 1888, 1940, 1962];
+      const c = await run(used, async () => new Set());
+      const reused = c.payload.events.filter(e => used.includes(e.year));
+      expect(reused.length).toBeGreaterThan(0);
+      expect(reused.length).toBeLessThanOrEqual(2);
+      expect(c.summary).toMatch(/\(\d reused\)/);
+    });
+
+    it('never reuses an event inside the window, stepping down to shorter ones', async () => {
+      const all = years;
+      const recentWithin = days => async d => new Set(d > days ? all.map(key) : []);
+      const c = await run(all, recentWithin(365));
+      expect(c.payload.events).toHaveLength(6);
+      await expect(run(all, async () => new Set(all.map(key)))).rejects.toThrow();
+    });
+
+    it('fails as before when the handler gives no reuse history', async () => {
+      await expect(run(years, undefined)).rejects.toThrow(/fresh events/);
+    });
+  });
+
   it('labels the day', () => {
     expect(dayLabel('2026-03-01')).toBe('1 March');
   });

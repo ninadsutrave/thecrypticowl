@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { m } from 'motion/react';
-import { ExternalLink, Lightbulb } from 'lucide-react';
+import { ExternalLink, Lightbulb, RotateCcw } from 'lucide-react';
 import { Chess, type Square } from 'chess.js';
 import { useDarkMode } from '../../context/DarkModeContext';
 import { getTheme } from '../../theme';
@@ -13,6 +12,7 @@ import { SAMPLE_CHESS, type ChessPuzzle } from './sample';
 import { getChessTutorial } from './tutorial';
 import { BOARD_PALETTES, Board, type BoardCell, type BoardPalette } from './Board';
 import { StoreKeys, readRaw, writeRaw } from '../../lib/localStore';
+import { applyUci, isOnLine, pickReply, solverMoveCount } from './logic';
 
 /** Delay before the computer plays its move, so the solver can follow it. */
 const REPLY_DELAY_MS = 650;
@@ -34,8 +34,9 @@ export function ChessGame() {
             their replies.
           </p>
           <p>
-            Tap a piece, then a highlighted square. A wrong move is taken back and counted, but
-            doesn't end the puzzle. Stuck? A hint shows you the next move.
+            Play any legal move: the computer defends as well as it can. Any checkmate within{' '}
+            {puzzle.mateIn} moves counts. If you run out of moves without mate, try again or see the
+            solution. Stuck? A hint shows you the next move of the main line.
           </p>
           <p>
             Puzzle{' '}
@@ -59,34 +60,29 @@ export function ChessGame() {
   );
 }
 
-function applyUci(game: Chess, move: string) {
-  return game.move({ from: move.slice(0, 2), to: move.slice(2, 4), promotion: move[4] });
-}
-
 function ChessBoard({ puzzle, api }: { puzzle: ChessPuzzle; api: PlayApi }) {
   const { isDark } = useDarkMode();
   const T = getTheme(isDark);
-  // How far through `puzzle.moves` we are. Saved, so a reload resumes the line.
-  const [ply, setPly] = useGameState(api, 'ply', 0);
-  const [mistakes, setMistakes] = useGameState(api, 'mistakes', 0);
+  // Every move played since the puzzle position, the setup move first.
+  // Saved, so a reload resumes exactly where the solver was — on the
+  // puzzle's line or off it.
+  const [history, setHistory] = useGameState<string[]>(api, 'moves', []);
+  // Restarts after running out of moves without mate.
+  const [retries, setRetries] = useGameState(api, 'retries', 0);
   const [hints, setHints] = useGameState(api, 'hints', 0);
-  // The ply whose move the last hint revealed, so a reload keeps showing it.
-  const [hintPly, setHintPly] = useGameState<number | null>(api, 'hintPly', null);
+  // The history length at which the last hint was shown, so a reload keeps it.
+  const [hintAt, setHintAt] = useGameState<number | null>(api, 'hintAt', null);
+  const [gaveUp, setGaveUp] = useGameState(api, 'gaveUp', false);
 
   const game = useRef<Chess | null>(null);
   if (!game.current) {
-    // Rebuild the saved position by replaying the line up to `ply`.
     const g = new Chess(puzzle.fen);
-    puzzle.moves.slice(0, ply).forEach(mv => applyUci(g, mv));
+    history.forEach(mv => applyUci(g, mv));
     game.current = g;
   }
   const [, setFen] = useState(() => game.current!.fen());
   const [selected, setSelected] = useState<Square | null>(null);
   const [targets, setTargets] = useState<Square[]>([]);
-  const [lastMove, setLastMove] = useState<string | null>(() =>
-    ply > 0 ? puzzle.moves[ply - 1] : null
-  );
-  const [feedback, setFeedback] = useState<string | null>(null);
   const [palette, setPalette] = useState<BoardPalette>(() =>
     readRaw(StoreKeys.chessBoard) === 'owl' ? 'owl' : 'classic'
   );
@@ -94,69 +90,93 @@ function ChessBoard({ puzzle, api }: { puzzle: ChessPuzzle; api: PlayApi }) {
     setPalette(p);
     writeRaw(StoreKeys.chessBoard, p);
   };
-  const [shake, setShake] = useState(0);
 
   // The solver plays the side to move *after* the setup move.
   const playerColor = puzzle.fen.split(' ')[1] === 'w' ? 'b' : 'w';
-  const solverTurn = ply % 2 === 1 && ply < puzzle.moves.length && !api.finished;
+  const g = game.current;
+  const onLine = isOnLine(history, puzzle.moves);
+  const used = solverMoveCount(history);
+  const movesLeft = puzzle.mateIn - used;
+  // The defender found a mate of their own.
+  const solverMated = g.isCheckmate() && g.turn() === playerColor;
+  // Out of moves without mate, a draw, or mated: the attempt is over.
+  const outOfMoves =
+    !api.finished &&
+    history.length > 0 &&
+    (solverMated || (!g.isCheckmate() && (g.isGameOver() || movesLeft <= 0)));
+  const solverTurn = !api.finished && !outOfMoves && history.length > 0 && g.turn() === playerColor;
+  const lastMove = history.length ? history[history.length - 1] : null;
 
-  const playScripted = useCallback(
-    (index: number) => {
-      applyUci(game.current!, puzzle.moves[index]);
+  const play = useCallback(
+    (uci: string) => {
+      applyUci(game.current!, uci);
       setFen(game.current!.fen());
-      setLastMove(puzzle.moves[index]);
-      setPly(index + 1);
+      setHistory(h => [...h, uci]);
     },
-    [puzzle.moves, setPly]
+    [setHistory]
   );
 
-  // Opponent moves: the setup move at ply 0, then each reply.
+  // The opponent: the setup move, then the puzzle's scripted replies while
+  // the solver stays on its line, or its own best defence once they leave it.
   useEffect(() => {
-    if (api.finished || ply % 2 !== 0 || ply >= puzzle.moves.length) return;
-    const id = setTimeout(() => playScripted(ply), ply === 0 ? 900 : REPLY_DELAY_MS);
+    const g = game.current!;
+    if (api.finished || g.isGameOver() || (history.length > 0 && g.turn() === playerColor)) return;
+    if (history.length > 0 && solverMoveCount(history) >= puzzle.mateIn) return;
+    const scripted = isOnLine(history, puzzle.moves) ? puzzle.moves[history.length] : undefined;
+    const reply = scripted ?? pickReply(g.fen());
+    if (!reply) return;
+    const id = setTimeout(() => play(reply), history.length === 0 ? 900 : REPLY_DELAY_MS);
     return () => clearTimeout(id);
-  }, [ply, puzzle.moves.length, playScripted, api.finished]);
+  }, [history, puzzle.moves, puzzle.mateIn, playerColor, play, api.finished]);
+
+  const finish = (outcome: 'solved' | 'failed') => {
+    const parts =
+      outcome === 'solved'
+        ? [
+            retries === 0 ? 'First try' : `${retries + 1} tries`,
+            hints > 0 ? `${hints} hint${hints === 1 ? '' : 's'}` : null,
+          ]
+        : ['Solution shown'];
+    api.complete({
+      outcome,
+      score: parts.filter(Boolean).join(' · '),
+      hints,
+      mistakes: retries,
+      details: { puzzleId: puzzle.source.id, mateIn: puzzle.mateIn },
+      grid:
+        outcome === 'solved'
+          ? `${'♟️'.repeat(puzzle.mateIn)}${retries ? ` 🔁×${retries}` : ' ✨'}${hints ? ` 💡×${hints}` : ''}`
+          : `${'♟️'.repeat(puzzle.mateIn)} ❌`,
+    });
+  };
 
   const tryMove = (from: Square, to: Square) => {
     const g = game.current!;
-    const expected = puzzle.moves[ply];
+    const expected = onLine ? puzzle.moves[history.length] : undefined;
     const piece = g.get(from);
     const promoting = piece?.type === 'p' && (to[1] === '8' || to[1] === '1');
-    const promotion = promoting ? (expected?.[4] ?? 'q') : undefined;
-
-    g.move({ from, to, promotion });
-    const finalMove = ply === puzzle.moves.length - 1;
-    // Any mate on the last move counts — the Lichess convention.
-    const accepted =
-      `${from}${to}${promotion ?? ''}` === expected || (finalMove && g.isCheckmate());
-
+    // Promote as the solution does when this is its move; a queen otherwise.
+    const promotion = promoting
+      ? expected?.startsWith(`${from}${to}`) && expected[4]
+        ? expected[4]
+        : 'q'
+      : undefined;
     setSelected(null);
     setTargets([]);
-    if (!accepted) {
-      g.undo();
-      setMistakes(n => n + 1);
-      setShake(n => n + 1);
-      setFeedback('Not the winning move. Look for something more forcing.');
-      return;
-    }
-    setFeedback(null);
+    play(`${from}${to}${promotion ?? ''}`);
+    // Any mate counts, not only the puzzle's own line (the Lichess convention).
+    if (g.isCheckmate()) finish('solved');
+  };
+
+  /** Back to the position after the setup move, for another go. */
+  const retry = () => {
+    const g = new Chess(puzzle.fen);
+    applyUci(g, puzzle.moves[0]);
+    game.current = g;
     setFen(g.fen());
-    setLastMove(`${from}${to}`);
-    setPly(ply + 1);
-    if (finalMove) {
-      const parts = [
-        mistakes === 0 ? 'Perfect' : `${mistakes} wrong move${mistakes === 1 ? '' : 's'}`,
-        hints > 0 ? `${hints} hint${hints === 1 ? '' : 's'}` : null,
-      ];
-      api.complete({
-        outcome: 'solved',
-        score: parts.filter(Boolean).join(' · '),
-        hints,
-        mistakes,
-        details: { puzzleId: puzzle.source.id, mateIn: puzzle.mateIn },
-        grid: `${'♟️'.repeat(puzzle.mateIn)}${mistakes ? ` ❌×${mistakes}` : ' ✨'}${hints ? ` 💡×${hints}` : ''}`,
-      });
-    }
+    setHistory([puzzle.moves[0]]);
+    setHintAt(null);
+    setRetries(n => n + 1);
   };
 
   const movable = (sq: Square) => solverTurn && game.current!.get(sq)?.color === playerColor;
@@ -171,32 +191,53 @@ function ChessBoard({ puzzle, api }: { puzzle: ChessPuzzle; api: PlayApi }) {
     setTargets(game.current!.moves({ square: sq, verbose: true }).map(mv => mv.to));
   };
 
-  const showHint = () => {
-    if (!solverTurn || hintPly === ply) return;
-    setHints(n => n + 1);
-    setHintPly(ply);
+  /** Give up: play the puzzle's own line out on the board and end it. */
+  const revealSolution = () => {
+    const g = new Chess(puzzle.fen);
+    puzzle.moves.forEach(mv => applyUci(g, mv));
+    game.current = g;
+    setFen(g.fen());
+    setHistory(puzzle.moves);
+    setGaveUp(true);
+    finish('failed');
   };
 
-  const g = game.current;
+  const showHint = () => {
+    if (!solverTurn || !onLine || hintAt === history.length) return;
+    setHints(n => n + 1);
+    setHintAt(history.length);
+  };
+
   const board = g.board();
   const turn = g.turn();
   const checkSquare = g.inCheck()
     ? (board.flat().find(c => c?.type === 'k' && c.color === turn)?.square ?? null)
     : null;
-  const hintActive = solverTurn && hintPly === ply;
-  const hintMove = hintActive ? puzzle.moves[ply] : null;
+  const hintActive = solverTurn && onLine && hintAt === history.length;
+  const hintMove = hintActive ? puzzle.moves[history.length] : null;
   const hintSan = hintMove ? applyUci(new Chess(g.fen()), hintMove).san : null;
-  const movesLeft = Math.ceil((puzzle.moves.length - ply) / 2);
-
   const side = playerColor === 'w' ? 'White' : 'Black';
+  // The solution in notation, for after the puzzle ends.
+  const solutionSan = (() => {
+    const sg = new Chess(puzzle.fen);
+    return puzzle.moves.map(mv => applyUci(sg, mv).san).slice(1);
+  })();
 
   const status = api.finished
-    ? 'Checkmate! ♛'
-    : ply === 0
-      ? 'Your opponent is moving…'
-      : solverTurn
-        ? `Your move as ${side}: mate in ${movesLeft}.`
-        : 'Opponent is replying…';
+    ? gaveUp
+      ? 'The solution, played out.'
+      : 'Checkmate! ♛'
+    : outOfMoves
+      ? solverMated
+        ? 'Checkmated! Your opponent struck first.'
+        : g.isStalemate()
+          ? 'Stalemate. The game is drawn, not won.'
+          : `Not checkmate. You've used all ${puzzle.mateIn} move${puzzle.mateIn === 1 ? '' : 's'}.`
+      : history.length === 0
+        ? 'Your opponent is moving…'
+        : solverTurn
+          ? `Your move as ${side}: mate in ${movesLeft}.`
+          : 'Opponent is replying…';
 
   return (
     <div className="flex flex-col items-center gap-3">
@@ -204,10 +245,7 @@ function ChessBoard({ puzzle, api }: { puzzle: ChessPuzzle; api: PlayApi }) {
         {status}
       </p>
 
-      <m.div
-        key={shake}
-        animate={shake ? { x: [0, -8, 8, -5, 5, 0] } : {}}
-        transition={{ duration: 0.35 }}
+      <div
         className="relative select-none"
         style={{
           width: 'min(100%, 440px)',
@@ -233,14 +271,39 @@ function ChessBoard({ puzzle, api }: { puzzle: ChessPuzzle; api: PlayApi }) {
           onMove={tryMove}
           palette={palette}
         />
-      </m.div>
+      </div>
 
-      {feedback && (
-        <p
-          className="text-sm font-bold rounded-xl px-3 py-2 border"
+      {outOfMoves && (
+        <div
+          className="w-full max-w-[440px] rounded-2xl border px-4 py-3 text-sm font-bold"
           style={{ background: T.wrongBg, borderColor: T.wrongBorder, color: T.text }}
         >
-          {feedback}
+          <p className="m-0">
+            There's a forced mate in {puzzle.mateIn} from the starting position. Try another way in,
+            or see the solution.
+          </p>
+          <div className="mt-3 flex gap-2">
+            <button
+              onClick={retry}
+              className="flex-1 inline-flex items-center justify-center gap-1.5 rounded-xl py-2 font-extrabold"
+              style={{ background: T.brand, color: '#FFFFFF' }}
+            >
+              <RotateCcw size={14} aria-hidden /> Try again
+            </button>
+            <button
+              onClick={revealSolution}
+              className="flex-1 rounded-xl py-2 border font-extrabold"
+              style={{ borderColor: T.cardBorder, color: T.text, background: T.cardBg }}
+            >
+              Show solution
+            </button>
+          </div>
+        </div>
+      )}
+
+      {api.finished && (
+        <p className="text-sm font-bold text-center" style={{ color: T.textMuted }}>
+          {gaveUp ? 'Solution' : 'The puzzle line'}: {solutionSan.join(' ')}
         </p>
       )}
 
@@ -284,7 +347,12 @@ function ChessBoard({ puzzle, api }: { puzzle: ChessPuzzle; api: PlayApi }) {
         ))}
       </div>
 
-      {!api.finished && (
+      {!api.finished && !outOfMoves && history.length > 1 && !onLine && (
+        <p className="text-xs font-bold text-center" style={{ color: T.textMuted }}>
+          You've left the puzzle's main line, so hints are off. Any mate still counts.
+        </p>
+      )}
+      {!api.finished && !outOfMoves && onLine && (
         <button
           onClick={showHint}
           disabled={!solverTurn || hintActive}

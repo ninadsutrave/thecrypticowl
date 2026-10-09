@@ -11,7 +11,7 @@ import {
   LogOut,
   Heart,
 } from 'lucide-react';
-import { useState, useEffect, useLayoutEffect, useRef } from 'react';
+import { useState, useEffect, useLayoutEffect, useRef, lazy, Suspense } from 'react';
 import { m, AnimatePresence } from 'motion/react';
 import { useDarkMode } from '../context/DarkModeContext';
 import { getTheme } from '../theme';
@@ -19,8 +19,12 @@ import { useStreak } from '../hooks/useStreak';
 import { useAuth } from '../context/AuthContext';
 import { fetchAppLikesCount, addAppLike, isSupabaseConfigured } from '../../lib/supabase';
 import { useOnlineStatus } from '../hooks/useOnlineStatus';
-import { NoInternet } from './NoInternet';
 import { StoreKeys, readRaw, writeRaw } from '../lib/localStore';
+
+// Off the critical path, but fetched once the page is idle: by the time the
+// connection drops, the offline screen is already in memory.
+const loadNoInternet = () => import('./NoInternet');
+const NoInternet = lazy(() => loadNoInternet().then(mod => ({ default: mod.NoInternet })));
 
 function LikeButton({ isDark }: { isDark: boolean }) {
   const [liked, setLiked] = useState(() => {
@@ -155,6 +159,16 @@ export function Root() {
     // refreshStreak identity is stable across renders; location.pathname is the only trigger
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [location.pathname]);
+
+  useEffect(() => {
+    const warm = () => void loadNoInternet().catch(() => {});
+    if ('requestIdleCallback' in window) {
+      const id = window.requestIdleCallback(warm, { timeout: 5000 });
+      return () => window.cancelIdleCallback(id);
+    }
+    const id = setTimeout(warm, 3000);
+    return () => clearTimeout(id);
+  }, []);
 
   const navLinks = [
     { to: '/', label: 'Puzzles', icon: LayoutGrid, requiresAuth: false },
@@ -515,7 +529,15 @@ export function Root() {
 
       {/* The nav and footer stay put so the solver is never stranded on a
           dead screen — only the content area is replaced. */}
-      <main className="flex-grow">{isOffline ? <NoInternet /> : <Outlet />}</main>
+      <main className="flex-grow">
+        {isOffline ? (
+          <Suspense fallback={null}>
+            <NoInternet />
+          </Suspense>
+        ) : (
+          <Outlet />
+        )}
+      </main>
 
       {/* Footer */}
       <footer

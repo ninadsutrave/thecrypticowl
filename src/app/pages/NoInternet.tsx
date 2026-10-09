@@ -104,8 +104,8 @@ export function NoInternet({ onRetry }: { onRetry?: () => void }) {
             marginBottom: '1.75rem',
           }}
         >
-          We can't reach today's clue without a connection. Check your Wi-Fi or mobile data — this
-          page will come back on its own the moment you're back online.
+          We can't fetch today's puzzles without a connection. Check your Wi-Fi or mobile data —
+          this page will come back on its own the moment you're back online.
         </p>
 
         <div

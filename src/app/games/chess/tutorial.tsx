@@ -70,8 +70,8 @@ export function getChessTutorial(mateIn: number): TutorialStep[] {
       ),
       body: (
         <p>
-          A wrong move is taken back straight away. It doesn't end the puzzle, but it's counted in
-          your result.
+          Any legal move is allowed and the computer defends. If it isn't checkmate after your{' '}
+          {mateIn} moves, you can try again or see the solution.
         </p>
       ),
     },

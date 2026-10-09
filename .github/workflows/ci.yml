@@ -110,7 +110,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        game: [cryptic, sudoku, what-am-i, trivia, chronology, chess, cryptogram]
+        game: [cryptic, sudoku, what-am-i, trivia, chronology, chess, cryptogram, shikaku]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4

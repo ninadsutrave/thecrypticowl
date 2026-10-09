@@ -24,8 +24,9 @@ today.
 | 5 | **Chronology** | Factual data feed | 0 (1 optional) | Wikipedia "On this day" |
 | 6 | **Chess: Mate in N** | Curated dataset | 0 | Lichess puzzle database |
 | 7 | **Cryptogram** | Curated quote pool + algorithm | 0 | Public-domain quotes and proverbs |
+| 8 | **Shikaku** | Pure algorithm | 0 | Generator + solver |
 
-**Status:** all seven are built end to end. Each game has its own Lambda
+**Status:** all eight are built end to end. Each game has its own Lambda
 (`lambda/games/<game>/`) that generates, reviews and judges a medium puzzle
 every night, a few days ahead, into `game_puzzles`; the app plays that day's
 puzzle and falls back to a labelled practice one only if it's missing. See
@@ -65,6 +66,7 @@ puzzle and falls back to a labelled practice one only if it's missing. See
 | Chronology | The year of the top unlocked event | **One** |
 | Checkmate | Show the next move | One per move, counted |
 | Cryptogram | Reveal one letter (the selected one, or the commonest unsolved) | Unlimited, counted |
+| Shikaku | Reveal one rectangle of the answer (under the cursor, or the next missing) | Unlimited, counted |
 
 Hints used appear in the result line, e.g. "Guess 2 of 3 · hint".
 
@@ -417,6 +419,39 @@ Proverbs with no author are always fine.
 
 ---
 
+### 8. Shikaku
+
+Cut a **10×10 grid into rectangles**. Each rectangle holds exactly one
+number, and that number is its area. Pure logic, no arithmetic beyond
+multiplication tables; it plays differently from every other game here
+(drawing shapes, not filling cells).
+
+**Gameplay**
+
+- Drag from one corner to the opposite one to draw a rectangle; drawing over
+  others replaces them. Tap a rectangle to remove it. Undo and Clear.
+- Keyboard: arrows move, Space marks each corner, Delete removes.
+- A rectangle that holds exactly one number equal to its area is filled in
+  colour; any other is drawn dashed red. The puzzle is solved when every
+  cell is covered by valid rectangles: there is exactly one way to do it.
+
+**Generation (no AI)**
+
+1. **Partition** the grid by repeatedly taking the first uncovered cell and
+   growing a random rectangle of 2–12 cells (sides up to 6) from it,
+   weighted towards 3–8 cells.
+2. **Place clues:** each rectangle's area in one of its cells, at random.
+3. **Solve** with an exact-cover solver (logic first: a clue with one
+   possible rectangle is placed; a cell only one clue can reach goes to that
+   clue). Keep only placements with **exactly one** answer, found within
+   30 guesses, with **at most 45%** of clues having a single possible
+   rectangle at the start (otherwise it's too easy). Up to 25 placements per
+   partition, then a new partition. In testing every seed succeeded, in
+   about 2 ms.
+4. **Judge:** re-solve from the clues alone and confirm the stored answer.
+
+---
+
 ## Shared architecture
 
 These changes are needed regardless of which game ships first.
@@ -577,6 +612,7 @@ Not committed. Listed so the shared design doesn't rule them out.
 | Connections-style groups | LLM + judge | Very popular; red herrings are hard for small models |
 | Letter hive (Spelling Bee-style) | Pure algorithm | Needs a good common-word list |
 | Nonogram | Pure algorithm | Uniqueness check with a line solver |
+| Higher or lower | Wikidata numbers | Zero AI: pairs close but clearly different |
 | Numbers game (Countdown-style) | Pure algorithm | Solver checks the target can be reached |
 
 **Naming:** *Wordle*, *Connections*, *Spelling Bee* and *KenKen* are

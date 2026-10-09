@@ -4,6 +4,7 @@ import {
   Grid3x3,
   Hourglass,
   KeyRound,
+  LayoutDashboard,
   MessageCircleQuestion,
   Puzzle,
   type LucideIcon,
@@ -24,6 +25,7 @@ const ICONS: Record<GameId, LucideIcon> = {
   chronology: Hourglass,
   chess: Crown,
   cryptogram: KeyRound,
+  shikaku: LayoutDashboard,
 };
 
 /** The game's icon in its tinted tile. */

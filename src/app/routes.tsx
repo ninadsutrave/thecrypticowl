@@ -53,6 +53,12 @@ export const router = createBrowserRouter([
         }),
       },
       {
+        path: 'shikaku',
+        lazy: async () => ({
+          Component: (await import('./games/shikaku/ShikakuGame')).ShikakuGame,
+        }),
+      },
+      {
         // The old cryptic-only landing page; the puzzle grid replaced it.
         path: 'about',
         loader: () => redirect('/'),

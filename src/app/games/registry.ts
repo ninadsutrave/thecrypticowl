@@ -13,7 +13,8 @@ export type GameId =
   | 'trivia'
   | 'chronology'
   | 'chess'
-  | 'cryptogram';
+  | 'cryptogram'
+  | 'shikaku';
 
 export interface GameMeta {
   id: GameId;
@@ -107,6 +108,17 @@ export const GAMES: readonly GameMeta[] = [
     accent: '#EC4899',
     accentStrong: '#BE185D',
     accentOnDark: '#F9A8D4',
+  },
+  {
+    id: 'shikaku',
+    name: 'Shikaku',
+    path: '/shikaku',
+    emoji: '▦',
+    blurb:
+      'Cut the grid into rectangles. Each holds exactly one number, and that number is its area.',
+    accent: '#6366F1',
+    accentStrong: '#4338CA',
+    accentOnDark: '#A5B4FC',
   },
 ];
 

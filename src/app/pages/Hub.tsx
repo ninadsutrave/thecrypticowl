@@ -11,6 +11,13 @@ import { formatClock, getSolveRecord } from '../games/solveRecords';
 
 const FONT_HEADING = "'Outfit', sans-serif";
 
+/** The lineup's size in words, so the copy follows the registry. */
+const COUNT_WORD =
+  ['zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten'][
+    GAMES.length
+  ] ?? String(GAMES.length);
+const capitalise = (s: string) => s[0].toUpperCase() + s.slice(1);
+
 function useMidnightCountdown() {
   const [left, setLeft] = useState('');
   useEffect(() => {
@@ -50,9 +57,9 @@ export function Hub() {
 
   const bubble =
     doneCount === 0
-      ? 'Seven fresh puzzles today. Where shall we start? 🦉'
+      ? `${capitalise(COUNT_WORD)} fresh puzzles today. Where shall we start? 🦉`
       : doneCount === GAMES.length
-        ? 'All seven done. Owl-standing work! 🏆'
+        ? `All ${COUNT_WORD} done. Owl-standing work! 🏆`
         : `${doneCount} down, ${GAMES.length - doneCount} to go! 💪`;
 
   return (
@@ -92,7 +99,7 @@ export function Hub() {
             lineHeight: 1.15,
           }}
         >
-          Seven puzzles. <span style={{ color: T.brand }}>Every day.</span>
+          {capitalise(COUNT_WORD)} puzzles. <span style={{ color: T.brand }}>Every day.</span>
         </h1>
         <p
           className="mt-2 max-w-xl"

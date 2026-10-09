@@ -8,6 +8,9 @@ import { toPuzzle } from '../../../lambda/games/chess/lichess.js';
 import { generateChronology } from '../../../lambda/games/chronology/selector.js';
 import { createRng } from '../../../lambda/shared/runtime/random.js';
 import { BANK as TRIVIA_BANK } from '../../../lambda/games/trivia/bank.js';
+import { generateShikaku } from '../../../lambda/games/shikaku/generator.js';
+import { parseShikaku } from './shikaku/parse';
+import { isSolved as shikakuSolved } from './shikaku/logic';
 import lichessFixture from '../../../lambda/games/chess/fixtures/lichess-J588J.json';
 import { parseSudoku } from './sudoku/parse';
 import { parseCryptogram } from './cryptogram/parse';
@@ -89,6 +92,13 @@ describe('Lambda payloads parse on the frontend', () => {
         source: { label: 'x', url: 'https://x' },
       })
     ).not.toBeNull();
+  });
+
+  it('shikaku: parses, and the stored answer solves it on the board', () => {
+    const p = generateShikaku(createRng(5));
+    const parsed = parseShikaku(p);
+    expect(parsed).not.toBeNull();
+    expect(shikakuSolved(parsed!.solution, parsed!)).toBe(true);
   });
 
   it('trivia bank questions parse', () => {

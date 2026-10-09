@@ -34,7 +34,7 @@ export function WrongFeedback({
       <div className="flex-1">
         <p
           style={{
-            fontFamily: "'Fredoka One', cursive",
+            fontFamily: "'Outfit', sans-serif",
             fontSize: '0.95rem',
             color: '#BE123C',
             marginBottom: 2,
@@ -83,7 +83,7 @@ export function AlreadySolvedBanner({
     >
       <span className="text-2xl">✅</span>
       <div className="flex-1">
-        <p style={{ fontFamily: "'Fredoka One', cursive", fontSize: '0.95rem', color: '#059669' }}>
+        <p style={{ fontFamily: "'Outfit', sans-serif", fontSize: '0.95rem', color: '#059669' }}>
           You've already solved today's puzzle!
         </p>
         <p

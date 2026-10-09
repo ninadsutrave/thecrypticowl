@@ -2,7 +2,6 @@ import { Outlet, NavLink, useLocation } from 'react-router';
 import {
   Menu,
   X,
-  BookOpen,
   LayoutGrid,
   BarChart3,
   Sun,
@@ -159,9 +158,9 @@ export function Root() {
 
   const navLinks = [
     { to: '/', label: 'Puzzles', icon: LayoutGrid, requiresAuth: false },
-    { to: '/learn', label: 'Tutorial', icon: BookOpen, requiresAuth: false },
-    // One stats destination: the cryptic XP/archive page is linked from it,
-    // not a second, confusingly similar tab.
+    // The cryptic tutorial lives on the cryptic card and puzzle page, not
+    // here: every other game has its own walkthrough. One stats destination
+    // too: the cryptic XP/archive page is linked from it.
     { to: '/stats', label: 'Stats', icon: BarChart3, requiresAuth: false },
   ];
 
@@ -182,7 +181,7 @@ export function Root() {
             <span
               className="whitespace-nowrap"
               style={{
-                fontFamily: "'Fredoka One', cursive",
+                fontFamily: "'Outfit', sans-serif",
                 fontSize: 'clamp(1.1rem, 4vw, 1.25rem)',
                 color: T.brandStrong,
                 letterSpacing: '-0.01em',
@@ -231,7 +230,7 @@ export function Root() {
                 <span className="text-sm sm:text-base">🔥</span>
                 <span
                   style={{
-                    fontFamily: "'Fredoka One', cursive",
+                    fontFamily: "'Outfit', sans-serif",
                     fontSize: '0.9rem',
                     color: T.streakText,
                   }}

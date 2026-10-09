@@ -134,7 +134,7 @@ function LetterBox({ letter, color, small }: { letter: string; color: string; sm
         background: color + '22',
         border: `2px solid ${color}`,
         color,
-        fontFamily: "'Fredoka One', cursive",
+        fontFamily: "'Outfit', sans-serif",
       }}
     >
       {letter}
@@ -237,7 +237,7 @@ function PartsOfClue({ isDark }: { isDark: boolean }) {
             <div className="text-2xl mb-2">{part.emoji}</div>
             <h3
               style={{
-                fontFamily: "'Fredoka One', cursive",
+                fontFamily: "'Outfit', sans-serif",
                 fontSize: '1rem',
                 color: activePart === part.key ? partText(part.key as string, isDark) : T.text,
                 marginBottom: 4,
@@ -360,7 +360,7 @@ function WordplayTab({ type, isDark }: { type: WordplayType; isDark: boolean }) 
             className="hidden sm:inline"
             style={{
               color: type.color,
-              fontFamily: "'Fredoka One', cursive",
+              fontFamily: "'Outfit', sans-serif",
               fontSize: '1.2rem',
               margin: '0 4px',
             }}
@@ -371,7 +371,7 @@ function WordplayTab({ type, isDark }: { type: WordplayType; isDark: boolean }) 
             className="sm:hidden self-center"
             style={{
               color: type.color,
-              fontFamily: "'Fredoka One', cursive",
+              fontFamily: "'Outfit', sans-serif",
               fontSize: '1.2rem',
             }}
           >
@@ -389,7 +389,7 @@ function WordplayTab({ type, isDark }: { type: WordplayType; isDark: boolean }) 
             >
               <span
                 style={{
-                  fontFamily: "'Fredoka One', cursive",
+                  fontFamily: "'Outfit', sans-serif",
                   color: '#059669',
                   fontSize: '0.9rem',
                 }}
@@ -455,7 +455,7 @@ function WordplayPreview({
       <div className="flex items-center justify-between mb-6">
         <h2
           style={{
-            fontFamily: "'Fredoka One', cursive",
+            fontFamily: "'Outfit', sans-serif",
             fontSize: '1.8rem',
             color: T.heading,
           }}
@@ -483,7 +483,7 @@ function WordplayPreview({
             <div className="text-2xl mb-2">{topic.emoji}</div>
             <h3
               style={{
-                fontFamily: "'Fredoka One', cursive",
+                fontFamily: "'Outfit', sans-serif",
                 fontSize: '1rem',
                 color: topic.color,
                 marginBottom: 4,
@@ -524,7 +524,7 @@ function CompoundExampleCard({
         <div>
           <h3
             style={{
-              fontFamily: "'Fredoka One', cursive",
+              fontFamily: "'Outfit', sans-serif",
               fontSize: '1.1rem',
               color: T.text,
             }}
@@ -614,7 +614,7 @@ function CompoundExampleCard({
                 </span>
                 <span
                   className="font-black text-lg"
-                  style={{ color: '#059669', fontFamily: "'Fredoka One', cursive" }}
+                  style={{ color: '#059669', fontFamily: "'Outfit', sans-serif" }}
                 >
                   {ex.answer}
                 </span>
@@ -658,7 +658,7 @@ export function Learn() {
         </div>
         <h1
           style={{
-            fontFamily: "'Fredoka One', cursive",
+            fontFamily: "'Outfit', sans-serif",
             fontSize: '2.2rem',
             color: T.heading,
             marginBottom: 8,
@@ -716,7 +716,7 @@ export function Learn() {
               >
                 <h2
                   style={{
-                    fontFamily: "'Fredoka One', cursive",
+                    fontFamily: "'Outfit', sans-serif",
                     fontSize: '1.6rem',
                     color: T.heading,
                     marginBottom: 16,
@@ -740,7 +740,7 @@ export function Learn() {
                     >
                       <p
                         style={{
-                          fontFamily: "'Fredoka One', cursive",
+                          fontFamily: "'Outfit', sans-serif",
                           color: T.definitionText,
                           fontSize: '1rem',
                           marginBottom: 4,
@@ -768,7 +768,7 @@ export function Learn() {
                     >
                       <p
                         style={{
-                          fontFamily: "'Fredoka One', cursive",
+                          fontFamily: "'Outfit', sans-serif",
                           color: T.fodderText,
                           fontSize: '1rem',
                           marginBottom: 4,
@@ -797,7 +797,7 @@ export function Learn() {
               >
                 <h3
                   style={{
-                    fontFamily: "'Fredoka One', cursive",
+                    fontFamily: "'Outfit', sans-serif",
                     fontSize: '1.2rem',
                     color: T.heading,
                     marginBottom: 4,
@@ -907,7 +907,7 @@ export function Learn() {
               <div>
                 <h2
                   style={{
-                    fontFamily: "'Fredoka One', cursive",
+                    fontFamily: "'Outfit', sans-serif",
                     fontSize: '1.5rem',
                     color: T.heading,
                     marginBottom: 4,
@@ -992,7 +992,7 @@ export function Learn() {
               <div>
                 <h2
                   style={{
-                    fontFamily: "'Fredoka One', cursive",
+                    fontFamily: "'Outfit', sans-serif",
                     fontSize: '1.5rem',
                     color: T.heading,
                     marginBottom: 4,
@@ -1032,7 +1032,7 @@ export function Learn() {
               <div>
                 <h2
                   style={{
-                    fontFamily: "'Fredoka One', cursive",
+                    fontFamily: "'Outfit', sans-serif",
                     fontSize: '1.5rem',
                     color: T.heading,
                     marginBottom: 4,
@@ -1088,7 +1088,7 @@ export function Learn() {
                         <div
                           style={{
                             fontSize: '1.25rem',
-                            fontFamily: "'Fredoka One', cursive",
+                            fontFamily: "'Outfit', sans-serif",
                             color: T.brandStrong,
                             lineHeight: 1.2,
                           }}
@@ -1106,7 +1106,7 @@ export function Learn() {
                         className="text-lg font-black"
                         style={{
                           color: '#059669',
-                          fontFamily: "'Fredoka One', cursive",
+                          fontFamily: "'Outfit', sans-serif",
                         }}
                       >
                         {s.cryptic}

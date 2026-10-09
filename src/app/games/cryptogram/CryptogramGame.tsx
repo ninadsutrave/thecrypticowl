@@ -217,7 +217,7 @@ function CryptogramBoard({ puzzle, api }: { puzzle: CryptogramPuzzle; api: PlayA
                   <span
                     className="w-7 h-8 sm:w-8 sm:h-9 rounded-lg flex items-center justify-center border-b-[3px]"
                     style={{
-                      fontFamily: "'Fredoka One', cursive",
+                      fontFamily: "'Outfit', sans-serif",
                       fontSize: '1.15rem',
                       background: isActive ? `${ACCENT}26` : locked ? T.successBg : T.inputBg,
                       borderColor: isActive ? ACCENT : locked ? T.successBorder : T.inputBorder,
@@ -343,7 +343,7 @@ function CipherPopup({
   return (
     <Modal open={open} onClose={onClose} label="The coded quote" maxWidth={560}>
       <div className="p-5 sm:p-6 space-y-4">
-        <h2 style={{ fontFamily: "'Fredoka One', cursive", fontSize: '1.3rem', color: T.heading }}>
+        <h2 style={{ fontFamily: "'Outfit', sans-serif", fontSize: '1.3rem', color: T.heading }}>
           📜 The coded quote
         </h2>
         <div>

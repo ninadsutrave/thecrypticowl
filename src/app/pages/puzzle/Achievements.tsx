@@ -30,7 +30,7 @@ export function Achievements({ isDark }: { isDark: boolean }) {
           <Trophy size={22} style={{ color: '#D97706' }} />
           <h3
             style={{
-              fontFamily: "'Fredoka One', cursive",
+              fontFamily: "'Outfit', sans-serif",
               fontSize: '1.2rem',
               color: T.heading,
             }}

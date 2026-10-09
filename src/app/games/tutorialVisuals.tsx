@@ -56,7 +56,7 @@ export function Cells({
             style={{
               width: size,
               height: size,
-              fontFamily: "'Fredoka One', cursive",
+              fontFamily: "'Outfit', sans-serif",
               fontSize: size * 0.48,
               ...toneStyle(tones?.[i]),
             }}

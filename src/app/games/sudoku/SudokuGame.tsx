@@ -275,7 +275,7 @@ function SudokuBoard({ puzzle, api }: { puzzle: SudokuPuzzle; api: PlayApi }) {
               {v ? (
                 <span
                   style={{
-                    fontFamily: "'Fredoka One', cursive",
+                    fontFamily: "'Outfit', sans-serif",
                     fontSize: n === 6 ? 'clamp(1.3rem, 6vw, 1.9rem)' : 'clamp(1rem, 4.5vw, 1.5rem)',
                     color: isConflict
                       ? '#EF4444'
@@ -344,7 +344,7 @@ function SudokuBoard({ puzzle, api }: { puzzle: SudokuPuzzle; api: PlayApi }) {
                 onClick={() => enter(d)}
                 className="py-3 rounded-2xl border-2 transition-transform active:scale-95"
                 style={{
-                  fontFamily: "'Fredoka One', cursive",
+                  fontFamily: "'Outfit', sans-serif",
                   fontSize: '1.3rem',
                   background: T.cardBg,
                   borderColor: T.cardBorder,
@@ -617,7 +617,7 @@ function SandwichFrame({
     <span
       key={key}
       className="flex items-center justify-center"
-      style={{ fontFamily: "'Fredoka One', cursive", fontSize: '0.95rem', color: T.heading }}
+      style={{ fontFamily: "'Outfit', sans-serif", fontSize: '0.95rem', color: T.heading }}
     >
       {v ?? ''}
       {v != null && <span className="sr-only"> sandwich sum</span>}

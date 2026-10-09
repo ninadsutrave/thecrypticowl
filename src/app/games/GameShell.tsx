@@ -80,7 +80,7 @@ interface GameShellProps {
   children: (api: PlayApi) => ReactNode;
 }
 
-const FONT_HEADING = "'Fredoka One', cursive";
+const FONT_HEADING = "'Outfit', sans-serif";
 const FONT_BODY = "'Nunito', sans-serif";
 
 function todayLabel() {

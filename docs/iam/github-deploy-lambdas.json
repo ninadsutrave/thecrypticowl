@@ -1,0 +1,39 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "ManageGameLambdas",
+      "Effect": "Allow",
+      "Action": [
+        "lambda:CreateFunction",
+        "lambda:GetFunction",
+        "lambda:GetFunctionConfiguration",
+        "lambda:UpdateFunctionCode",
+        "lambda:UpdateFunctionConfiguration",
+        "lambda:PublishVersion",
+        "lambda:AddPermission",
+        "lambda:InvokeFunction"
+      ],
+      "Resource": "arn:aws:lambda:*:161807613175:function:crypticowl-*"
+    },
+    {
+      "Sid": "DailySchedules",
+      "Effect": "Allow",
+      "Action": ["events:PutRule", "events:PutTargets", "events:DescribeRule"],
+      "Resource": "arn:aws:events:*:161807613175:rule/crypticowl-*"
+    },
+    {
+      "Sid": "LogGroups",
+      "Effect": "Allow",
+      "Action": ["logs:CreateLogGroup", "logs:PutRetentionPolicy"],
+      "Resource": "arn:aws:logs:*:161807613175:log-group:/aws/lambda/crypticowl-*"
+    },
+    {
+      "Sid": "PassExecutionRoleToLambda",
+      "Effect": "Allow",
+      "Action": "iam:PassRole",
+      "Resource": "arn:aws:iam::161807613175:role/*",
+      "Condition": { "StringEquals": { "iam:PassedToService": "lambda.amazonaws.com" } }
+    }
+  ]
+}

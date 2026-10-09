@@ -29,7 +29,7 @@ export function HintCard({
             style={{
               background: hint.color,
               color: 'white',
-              fontFamily: "'Fredoka One', cursive",
+              fontFamily: "'Outfit', sans-serif",
               fontSize: '0.85rem',
             }}
           >
@@ -38,7 +38,7 @@ export function HintCard({
           <div className="flex-1">
             <h3
               style={{
-                fontFamily: "'Fredoka One', cursive",
+                fontFamily: "'Outfit', sans-serif",
                 fontSize: '1rem',
                 color: hint.color,
                 marginBottom: 4,

@@ -30,6 +30,8 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
           cache: npm
       - run: npm ci
+      # The contract test imports Lambda modules, which resolve lambda/ deps.
+      - run: npm ci --prefix lambda
       - run: npm run lint
       - run: npm run format:check
       - run: npm run typecheck
@@ -146,7 +148,7 @@ jobs:
         run: |
           set -euo pipefail
           URL="${{ vars.SITE_URL || 'https://thecrypticowl.com' }}"
-          for path in "/" "/learn" "/puzzle/1" "/sudoku" "/fonts/fredoka-one-latin.woff2"; do
+          for path in "/" "/learn" "/puzzle/1" "/sudoku" "/fonts/outfit-700-latin.woff2"; do
             code=$(curl -sS -o /dev/null -w '%{http_code}' --max-time 20 "$URL$path")
             echo "$path → $code"
             [ "$code" = "200" ] || { echo "::error::$URL$path returned $code"; exit 1; }

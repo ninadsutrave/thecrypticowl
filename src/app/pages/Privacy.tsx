@@ -81,7 +81,7 @@ export function Privacy() {
       >
         <h1
           style={{
-            fontFamily: "'Fredoka One', cursive",
+            fontFamily: "'Outfit', sans-serif",
             fontSize: '2.5rem',
             color: T.brandStrong,
             marginBottom: '1rem',
@@ -111,7 +111,7 @@ export function Privacy() {
             >
               <h2
                 style={{
-                  fontFamily: "'Fredoka One', cursive",
+                  fontFamily: "'Outfit', sans-serif",
                   fontSize: '1.5rem',
                   color: T.brand,
                   marginBottom: '0.75rem',

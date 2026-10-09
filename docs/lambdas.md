@@ -164,12 +164,13 @@ Model keys are written only to the AI Lambdas' environments.
 ### First-time setup
 
 1. Apply migrations 003 and 004: `supabase db push`.
-2. Set the secrets and `CONTACT_EMAIL` above.
-3. Run *Deploy Lambdas · All games*.
-4. Invoke each new Lambda once to fill the window now rather than at 03:00:
-   ```bash
-   aws lambda invoke --function-name crypticowl-sudoku --payload '{}' --cli-binary-format raw-in-base64-out out.json
-   ```
+2. Give the deploy user (`github-deploy-user`) the policy in
+   [`iam/github-deploy-lambdas.json`](iam/github-deploy-lambdas.json): it may
+   create and update `crypticowl-*` functions, their daily EventBridge rules
+   and log groups, and pass the execution role to Lambda.
+3. Set the secrets and `CONTACT_EMAIL` above.
+4. Run *Deploy Lambdas · All games*. Each deploy also queues a first run, so
+   puzzles appear within a few minutes rather than at 03:00.
 
 ---
 

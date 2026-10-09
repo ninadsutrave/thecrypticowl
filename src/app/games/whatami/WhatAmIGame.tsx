@@ -135,7 +135,7 @@ function WhatAmIBoard({ puzzle, api }: { puzzle: WhatAmIPuzzle; api: PlayApi }) 
                   <span
                     className="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 text-sm"
                     style={{
-                      fontFamily: "'Fredoka One', cursive",
+                      fontFamily: "'Outfit', sans-serif",
                       background: visible ? `${ACCENT}22` : 'transparent',
                       color: visible ? ACCENT : T.textMuted,
                       border: `2px solid ${visible ? ACCENT : T.cardBorder}`,
@@ -188,7 +188,7 @@ function WhatAmIBoard({ puzzle, api }: { puzzle: WhatAmIPuzzle; api: PlayApi }) 
           <p style={{ color: T.textMuted, fontWeight: 800, fontSize: '0.75rem', margin: 0 }}>
             THE ANSWER WAS
           </p>
-          <p style={{ fontFamily: "'Fredoka One', cursive", fontSize: '1.8rem', color: T.heading }}>
+          <p style={{ fontFamily: "'Outfit', sans-serif", fontSize: '1.8rem', color: T.heading }}>
             {puzzle.answer}
           </p>
           <a

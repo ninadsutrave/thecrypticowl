@@ -152,7 +152,7 @@ export function SubmitClue() {
             <div>
               <h1
                 style={{
-                  fontFamily: "'Fredoka One', cursive",
+                  fontFamily: "'Outfit', sans-serif",
                   fontSize: '1.5rem',
                   color: T.heading,
                   margin: 0,
@@ -179,7 +179,7 @@ export function SubmitClue() {
                 </div>
                 <h2
                   style={{
-                    fontFamily: "'Fredoka One', cursive",
+                    fontFamily: "'Outfit', sans-serif",
                     fontSize: '1.5rem',
                     color: '#10B981',
                     marginBottom: '0.5rem',
@@ -382,7 +382,7 @@ export function SubmitClue() {
                   <h3
                     className="mb-4"
                     style={{
-                      fontFamily: "'Fredoka One', cursive",
+                      fontFamily: "'Outfit', sans-serif",
                       fontSize: '1.1rem',
                       color: T.heading,
                     }}

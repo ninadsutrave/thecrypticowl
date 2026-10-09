@@ -46,7 +46,7 @@ export function NotFound() {
 
         <h1
           style={{
-            fontFamily: "'Fredoka One', cursive",
+            fontFamily: "'Outfit', sans-serif",
             fontSize: '4rem',
             color: T.brandStrong,
             lineHeight: 1,
@@ -58,7 +58,7 @@ export function NotFound() {
 
         <h2
           style={{
-            fontFamily: "'Fredoka One', cursive",
+            fontFamily: "'Outfit', sans-serif",
             fontSize: '1.5rem',
             color: T.text,
             marginBottom: '1.5rem',

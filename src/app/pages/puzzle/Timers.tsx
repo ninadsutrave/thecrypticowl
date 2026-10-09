@@ -13,7 +13,7 @@ export function SolveTimer({ startTime, stopped }: { startTime: number; stopped:
   const m = Math.floor(elapsed / 60);
   const s = elapsed % 60;
   return (
-    <span style={{ fontFamily: "'Fredoka One', cursive" }}>
+    <span style={{ fontFamily: "'Outfit', sans-serif" }}>
       {m}:{s.toString().padStart(2, '0')}
     </span>
   );
@@ -62,7 +62,7 @@ export function NextPuzzleCountdown({ isDark }: { isDark: boolean }) {
       </p>
       <p
         style={{
-          fontFamily: "'Fredoka One', cursive",
+          fontFamily: "'Outfit', sans-serif",
           fontSize: '1.8rem',
           color: '#7C3AED',
           letterSpacing: '0.04em',

@@ -199,7 +199,7 @@ function ChronologyBoard({ puzzle, api }: { puzzle: ChronologyPuzzle; api: PlayA
               <span
                 className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0"
                 style={{
-                  fontFamily: "'Fredoka One', cursive",
+                  fontFamily: "'Outfit', sans-serif",
                   background: `${ACCENT}22`,
                   color: ACCENT,
                 }}

@@ -240,7 +240,7 @@ export function Puzzle() {
         </div>
         <h2
           style={{
-            fontFamily: "'Fredoka One', cursive",
+            fontFamily: "'Outfit', sans-serif",
             fontSize: '1.6rem',
             color: T.brandStrong,
             marginBottom: 8,
@@ -385,7 +385,7 @@ export function Puzzle() {
                   <>
                     <p
                       style={{
-                        fontFamily: "'Fredoka One', cursive",
+                        fontFamily: "'Outfit', sans-serif",
                         fontSize: '0.85rem',
                         color: '#7C3AED',
                         marginBottom: 2,
@@ -573,7 +573,7 @@ export function Puzzle() {
                       >
                         <span
                           style={{
-                            fontFamily: "'Fredoka One', cursive",
+                            fontFamily: "'Outfit', sans-serif",
                             color: '#5B21B6',
                             fontSize: '1.2rem',
                           }}
@@ -623,7 +623,7 @@ export function Puzzle() {
                 className="flex-1 py-3 sm:py-4 px-3 sm:px-4 rounded-2xl border-2 focus:outline-none transition-all min-w-0"
                 style={{
                   borderColor: T.inputBorder,
-                  fontFamily: "'Fredoka One', cursive",
+                  fontFamily: "'Outfit', sans-serif",
                   // 16px minimum prevents iOS Safari from zooming on input focus
                   fontSize: '1rem',
                   color: T.text,
@@ -740,7 +740,7 @@ export function Puzzle() {
                 <div className="flex items-center justify-between">
                   <h3
                     style={{
-                      fontFamily: "'Fredoka One', cursive",
+                      fontFamily: "'Outfit', sans-serif",
                       fontSize: '1rem',
                       color: T.heading,
                     }}

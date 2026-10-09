@@ -84,7 +84,7 @@ export function NoInternet({ onRetry }: { onRetry?: () => void }) {
 
         <h1
           style={{
-            fontFamily: "'Fredoka One', cursive",
+            fontFamily: "'Outfit', sans-serif",
             fontSize: 'clamp(1.6rem, 6vw, 2.2rem)',
             color: T.heading,
             lineHeight: 1.15,

@@ -160,7 +160,7 @@ export function SuccessState({
         >
           <h2
             style={{
-              fontFamily: "'Fredoka One', cursive",
+              fontFamily: "'Outfit', sans-serif",
               fontSize: '2.2rem',
               color: wasRevealed ? '#D97706' : '#7C3AED',
               marginBottom: 4,
@@ -201,14 +201,14 @@ export function SuccessState({
         >
           <div className="flex items-center gap-2">
             <span
-              style={{ fontFamily: "'Fredoka One', cursive", fontSize: '1.3rem', color: 'white' }}
+              style={{ fontFamily: "'Outfit', sans-serif", fontSize: '1.3rem', color: 'white' }}
             >
               🦉
             </span>
             <div>
               <p
                 style={{
-                  fontFamily: "'Fredoka One', cursive",
+                  fontFamily: "'Outfit', sans-serif",
                   fontSize: '1rem',
                   color: 'white',
                   margin: 0,
@@ -300,7 +300,7 @@ export function SuccessState({
           >
             <p
               style={{
-                fontFamily: "'Fredoka One', cursive",
+                fontFamily: "'Outfit', sans-serif",
                 fontSize: '1.1rem',
                 color: hintsUsed === 0 ? '#059669' : hintsUsed <= 2 ? '#D97706' : '#DC2626',
                 marginBottom: 2,
@@ -347,7 +347,7 @@ export function SuccessState({
               <ExternalLink size={11} style={{ color: '#7C3AED' }} />
               <span
                 style={{
-                  fontFamily: "'Fredoka One', cursive",
+                  fontFamily: "'Outfit', sans-serif",
                   fontSize: '0.82rem',
                   color: '#7C3AED',
                 }}
@@ -425,9 +425,7 @@ export function SuccessState({
       >
         {!countsTowardProgress ? (
           <>
-            <p
-              style={{ fontFamily: "'Fredoka One', cursive", fontSize: '1.5rem', color: '#D97706' }}
-            >
+            <p style={{ fontFamily: "'Outfit', sans-serif", fontSize: '1.5rem', color: '#D97706' }}>
               {wasRevealed ? 'No XP this time 🙈' : 'Practice clue 🎯'}
             </p>
             <p
@@ -447,7 +445,7 @@ export function SuccessState({
           <>
             <m.div animate={{ scale: [1, 1.15, 1] }} transition={{ duration: 0.5, delay: 0.6 }}>
               <span
-                style={{ fontFamily: "'Fredoka One', cursive", fontSize: '2rem', color: '#7C3AED' }}
+                style={{ fontFamily: "'Outfit', sans-serif", fontSize: '2rem', color: '#7C3AED' }}
               >
                 +{xpEarned} XP
               </span>
@@ -474,7 +472,7 @@ export function SuccessState({
                 <div key={i}>
                   <p
                     style={{
-                      fontFamily: "'Fredoka One', cursive",
+                      fontFamily: "'Outfit', sans-serif",
                       fontSize: '1.2rem',
                       color: '#7C3AED',
                     }}
@@ -525,7 +523,7 @@ export function SuccessState({
               style={{
                 background: 'linear-gradient(135deg, #7C3AED, #5B21B6)',
                 color: 'white',
-                fontFamily: "'Fredoka One', cursive",
+                fontFamily: "'Outfit', sans-serif",
                 fontSize: '1.4rem',
               }}
             >

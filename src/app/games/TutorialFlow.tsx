@@ -63,7 +63,7 @@ export function TutorialFlow({
 
         <h2
           style={{
-            fontFamily: "'Fredoka One', cursive",
+            fontFamily: "'Outfit', sans-serif",
             fontSize: '1.3rem',
             color: T.heading,
             marginBottom: 6,

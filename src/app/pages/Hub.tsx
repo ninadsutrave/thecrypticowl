@@ -9,7 +9,7 @@ import { GameIcon } from '../games/GameIcon';
 import { isDoneToday } from '../games/progress';
 import { formatClock, getSolveRecord } from '../games/solveRecords';
 
-const FONT_HEADING = "'Fredoka One', cursive";
+const FONT_HEADING = "'Outfit', sans-serif";
 
 function useMidnightCountdown() {
   const [left, setLeft] = useState('');

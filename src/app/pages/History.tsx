@@ -93,7 +93,7 @@ function SignInGate({ isDark }: { isDark: boolean }) {
               top: `${10 + (i % 3) * 30}%`,
               fontSize: 40 + (i % 3) * 12,
               color: ['#C4B5FD', '#A7F3D0', '#FDE68A'][i % 3],
-              fontFamily: "'Fredoka One', cursive",
+              fontFamily: "'Outfit', sans-serif",
               opacity: isDark ? 0.05 : 0.1,
             }}
             animate={{ y: [0, -14, 0], rotate: [0, 4, -4, 0] }}
@@ -144,7 +144,7 @@ function SignInGate({ isDark }: { isDark: boolean }) {
 
           <h1
             style={{
-              fontFamily: "'Fredoka One', cursive",
+              fontFamily: "'Outfit', sans-serif",
               fontSize: '1.8rem',
               color: T.heading,
               marginBottom: '0.5rem',
@@ -248,7 +248,7 @@ function StatCard({
       <div style={{ fontSize: '1.6rem', marginBottom: '0.25rem' }}>{emoji}</div>
       <div
         style={{
-          fontFamily: "'Fredoka One', cursive",
+          fontFamily: "'Outfit', sans-serif",
           fontSize: '1.5rem',
           color: T.brandStrong,
         }}
@@ -319,7 +319,7 @@ function SolveRow({
         <div className="flex items-center gap-1">
           <Zap size={13} style={{ color: '#F59E0B' }} />
           <span
-            style={{ fontFamily: "'Fredoka One', cursive", color: '#F59E0B', fontSize: '0.9rem' }}
+            style={{ fontFamily: "'Outfit', sans-serif", color: '#F59E0B', fontSize: '0.9rem' }}
           >
             +{record.xp_earned} XP
           </span>
@@ -563,7 +563,7 @@ function SolveInsights({
         </div>
         <div
           style={{
-            fontFamily: "'Fredoka One', cursive",
+            fontFamily: "'Outfit', sans-serif",
             fontSize: '1.35rem',
             color: badgeColor,
             lineHeight: 1,
@@ -585,7 +585,7 @@ function SolveInsights({
     >
       <h3
         style={{
-          fontFamily: "'Fredoka One', cursive",
+          fontFamily: "'Outfit', sans-serif",
           fontSize: '1.1rem',
           color: T.brandStrong,
           marginBottom: '0.75rem',
@@ -888,7 +888,7 @@ export function Progress() {
                 >
                   <span
                     style={{
-                      fontFamily: "'Fredoka One', cursive",
+                      fontFamily: "'Outfit', sans-serif",
                       fontSize: '1.5rem',
                       color: T.brandText,
                     }}
@@ -900,7 +900,7 @@ export function Progress() {
               <div>
                 <h2
                   style={{
-                    fontFamily: "'Fredoka One', cursive",
+                    fontFamily: "'Outfit', sans-serif",
                     fontSize: '1.3rem',
                     color: T.heading,
                     margin: 0,
@@ -985,7 +985,7 @@ export function Progress() {
         >
           <h3
             style={{
-              fontFamily: "'Fredoka One', cursive",
+              fontFamily: "'Outfit', sans-serif",
               fontSize: '1.1rem',
               color: T.brandStrong,
               marginBottom: '0.75rem',
@@ -1048,7 +1048,7 @@ export function Progress() {
                 <div>
                   <h3
                     style={{
-                      fontFamily: "'Fredoka One', cursive",
+                      fontFamily: "'Outfit', sans-serif",
                       fontSize: '1.1rem',
                       color: T.heading,
                       margin: 0,
@@ -1083,7 +1083,7 @@ export function Progress() {
         >
           <h3
             style={{
-              fontFamily: "'Fredoka One', cursive",
+              fontFamily: "'Outfit', sans-serif",
               fontSize: '1.1rem',
               color: T.brandStrong,
               marginBottom: '0.75rem',
@@ -1134,7 +1134,7 @@ export function Progress() {
           <div className="flex items-center justify-between mb-3">
             <h3
               style={{
-                fontFamily: "'Fredoka One', cursive",
+                fontFamily: "'Outfit', sans-serif",
                 fontSize: '1.1rem',
                 color: T.brandStrong,
               }}

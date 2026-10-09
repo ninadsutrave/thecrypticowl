@@ -11,7 +11,7 @@ import { calendarWeeks, computeHistoryStats } from '../games/historyStats';
 import { syncPlayHistory } from '../games/playHistory';
 import { GameIcon } from '../games/GameIcon';
 
-const FONT_HEADING = "'Fredoka One', cursive";
+const FONT_HEADING = "'Outfit', sans-serif";
 const WEEKS = 18;
 const PAGE = 30;
 

@@ -6,7 +6,9 @@ import {
   syncLocalStatsToSupabase,
   resetSupabaseClient,
 } from '../../lib/supabase';
-import { getStoredStreakData } from '../hooks/useStreak';
+import { getStoredStreakData, reloadStreakData } from '../hooks/useStreak';
+import { clearUserData } from '../lib/localStore';
+import { syncPlayHistory } from '../games/playHistory';
 
 // ─── TYPES ────────────────────────────────────────────────────────────────────
 
@@ -78,6 +80,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if ((event === 'SIGNED_IN' || event === 'INITIAL_SESSION') && session?.user) {
           const localData = getStoredStreakData();
           await syncLocalStatsToSupabase(session.user.id, localData);
+          // Every game's play history, both ways (see games/playHistory.ts).
+          // Best-effort: a failed sync retries on the next page load.
+          await syncPlayHistory(session.user.id).catch(err =>
+            console.warn('[auth] play history sync failed:', err?.message ?? err)
+          );
         }
       }).data.subscription;
     };
@@ -141,13 +148,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const signOut = () => {
-    // ── Step 1: wipe localStorage synchronously ──────────────────────────────
-    // Supabase v2 stores the session under keys prefixed "sb-<project-ref>-".
-    // Removing them now guarantees that getSession() returns null on the very
-    // next page load, regardless of what the SDK does afterward.
-    Object.keys(localStorage)
-      .filter(k => k.startsWith('sb-'))
-      .forEach(k => localStorage.removeItem(k));
+    // ── Step 1: wipe local state synchronously ───────────────────────────────
+    // Supabase v2 stores the session under keys prefixed "sb-<project-ref>-";
+    // removing them guarantees getSession() returns null on the very next page
+    // load regardless of what the SDK does afterward.
+    //
+    // This also clears the app's own `tco-*` keys. Previously only `sb-*` was
+    // removed, so the streak, XP, solve history, reactions and puzzle cache
+    // all survived sign-out — and the next person to sign in on the device
+    // inherited them, then had them merged up into their own server row.
+    clearUserData();
+    // Drop the in-memory snapshot too, so nothing re-persists it on the way out.
+    reloadStreakData();
 
     // ── Step 2: fire-and-forget server-side token revocation ─────────────────
     // NEVER awaited. The Supabase JS v2 SDK acquires a Web Lock before it

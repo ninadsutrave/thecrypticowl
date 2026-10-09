@@ -1,0 +1,76 @@
+name: Deploy Lambdas · All games
+
+# Manual: deploy every game's Lambda at once — first-time setup, or after
+# rotating a shared secret. Day to day, each game deploys on its own when its
+# code (or shared/) changes.
+
+on:
+  workflow_dispatch:
+    inputs:
+      skip_schedule:
+        description: 'Skip reconciling the EventBridge schedules'
+        type: boolean
+        default: false
+
+jobs:
+  deploy:
+    name: ${{ matrix.game }}
+    # Same group as the game's own workflow: the two never deploy at once.
+    concurrency:
+      group: deploy-lambda-${{ matrix.game }}
+      cancel-in-progress: false
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - game: cryptic
+            needs_ai: true
+            timeout: 600
+            memory: 256
+            schedule_var: LAMBDA_SCHEDULE
+            default_schedule: 'cron(15 3 * * ? *)'
+          - game: sudoku
+            needs_ai: false
+            timeout: 300
+            memory: 1024
+            schedule_var: SUDOKU_SCHEDULE
+            default_schedule: 'cron(0 3 * * ? *)'
+          - game: what-am-i
+            needs_ai: true
+            timeout: 600
+            memory: 256
+            schedule_var: WHAT_AM_I_SCHEDULE
+            default_schedule: 'cron(25 3 * * ? *)'
+          - game: trivia
+            needs_ai: true
+            timeout: 600
+            memory: 256
+            schedule_var: TRIVIA_SCHEDULE
+            default_schedule: 'cron(35 3 * * ? *)'
+          - game: chronology
+            needs_ai: true
+            timeout: 300
+            memory: 256
+            schedule_var: CHRONOLOGY_SCHEDULE
+            default_schedule: 'cron(5 3 * * ? *)'
+          - game: chess
+            needs_ai: false
+            timeout: 300
+            memory: 512
+            schedule_var: CHESS_SCHEDULE
+            default_schedule: 'cron(10 3 * * ? *)'
+          - game: cryptogram
+            needs_ai: false
+            timeout: 120
+            memory: 256
+            schedule_var: CRYPTOGRAM_SCHEDULE
+            default_schedule: 'cron(20 3 * * ? *)'
+    uses: ./.github/workflows/_deploy-game-lambda.yml
+    with:
+      game: ${{ matrix.game }}
+      needs_ai: ${{ matrix.needs_ai }}
+      timeout: ${{ matrix.timeout }}
+      memory: ${{ matrix.memory }}
+      schedule: ${{ vars[matrix.schedule_var] || matrix.default_schedule }}
+      skip_schedule: ${{ inputs.skip_schedule }}
+    secrets: inherit

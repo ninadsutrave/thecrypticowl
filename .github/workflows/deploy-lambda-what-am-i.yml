@@ -1,0 +1,35 @@
+name: Deploy Lambda · What Am I
+
+on:
+  push:
+    branches: [master]
+    paths:
+      - 'lambda/games/what-am-i/**'
+      - 'lambda/shared/**'
+      - 'lambda/package.json'
+      - 'lambda/package-lock.json'
+      - 'lambda/scripts/package.sh'
+      - '.github/workflows/deploy-lambda-what-am-i.yml'
+      - '.github/workflows/_deploy-game-lambda.yml'
+  workflow_dispatch:
+    inputs:
+      skip_schedule:
+        description: 'Skip reconciling the EventBridge schedule'
+        type: boolean
+        default: false
+
+concurrency:
+  group: deploy-lambda-what-am-i
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    uses: ./.github/workflows/_deploy-game-lambda.yml
+    with:
+      game: what-am-i
+      needs_ai: true
+      timeout: 600
+      memory: 256
+      schedule: ${{ vars.WHAT_AM_I_SCHEDULE || 'cron(25 3 * * ? *)' }}
+      skip_schedule: ${{ inputs.skip_schedule || false }}
+    secrets: inherit

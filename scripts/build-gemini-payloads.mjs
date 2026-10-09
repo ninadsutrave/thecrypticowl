@@ -25,8 +25,8 @@ import {
   JUDGE_SYSTEM,
   JUDGE_RESPONSE_SCHEMA,
   buildJudgePrompt,
-} from '../lambda/constants/prompts.js';
-import { GEMINI_CONFIG, GEMINI_JUDGE_CONFIG } from '../lambda/constants/gemini.js';
+} from '../lambda/games/cryptic/constants/prompts.js';
+import { GEMINI_CONFIG, GEMINI_JUDGE_CONFIG } from '../lambda/shared/constants/gemini.js';
 
 const stage = process.argv[2];
 

@@ -40,7 +40,7 @@ export function NotFound() {
           </m.div>
           <div
             className="absolute -bottom-4 left-1/2 -translate-x-1/2 w-32 h-4 blur-xl rounded-full opacity-20"
-            style={{ background: isDark ? '#A78BFA' : '#5B21B6' }}
+            style={{ background: T.brandStrong }}
           />
         </div>
 
@@ -48,7 +48,7 @@ export function NotFound() {
           style={{
             fontFamily: "'Fredoka One', cursive",
             fontSize: '4rem',
-            color: isDark ? '#C4B5FD' : '#5B21B6',
+            color: T.brandStrong,
             lineHeight: 1,
             marginBottom: '1rem',
           }}
@@ -64,7 +64,7 @@ export function NotFound() {
             marginBottom: '1.5rem',
           }}
         >
-          Clue Not Found!
+          Page Not Found!
         </h2>
 
         <p
@@ -97,19 +97,19 @@ export function NotFound() {
             </m.button>
           </NavLink>
 
-          <NavLink to="/puzzle" className="no-underline w-full sm:w-auto">
+          <NavLink to="/cryptic" className="no-underline w-full sm:w-auto">
             <m.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               className="flex items-center justify-center gap-2 px-8 py-3 rounded-full font-bold border-2 w-full"
               style={{
-                borderColor: isDark ? '#4C3580' : '#C4B5FD',
-                color: isDark ? '#C4B5FD' : '#7C3AED',
-                background: isDark ? '#261845' : '#F5F0FF',
+                borderColor: T.brandBorder,
+                color: T.brandText,
+                background: T.brandSurface,
               }}
             >
               <Search size={18} />
-              Solve Daily
+              Today's cryptic
             </m.button>
           </NavLink>
         </div>

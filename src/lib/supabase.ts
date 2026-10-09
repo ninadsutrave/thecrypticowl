@@ -44,6 +44,49 @@ export function resetSupabaseClient(): void {
   _clientPromise = null;
 }
 
+/**
+ * How long a read may take before we give up and render something.
+ *
+ * Without a bound, a blocked or very slow network leaves the puzzle page on
+ * its loading skeleton indefinitely — the fetch never settles, so the code
+ * that would show the fallback clue never runs. An ad blocker that filters
+ * `*.supabase.co`, a captive portal, or a stalled DNS lookup all produce
+ * exactly that. Eight seconds is well past a slow-3G round trip and well
+ * short of a user deciding the site is broken.
+ */
+const READ_TIMEOUT_MS = 8_000;
+
+/**
+ * Resolve to `fallback` if `promise` has not settled in time.
+ *
+ * The underlying request is not cancelled — it may still populate the cache —
+ * but the UI stops waiting on it.
+ */
+function withTimeout<T>(
+  promise: Promise<T>,
+  fallback: T,
+  label: string,
+  timeoutMs = READ_TIMEOUT_MS
+): Promise<T> {
+  return new Promise<T>(resolve => {
+    const timer = setTimeout(() => {
+      console.warn(`[supabase] ${label} timed out after ${timeoutMs}ms`);
+      resolve(fallback);
+    }, timeoutMs);
+
+    promise
+      .then(value => {
+        clearTimeout(timer);
+        resolve(value);
+      })
+      .catch(err => {
+        clearTimeout(timer);
+        console.warn(`[supabase] ${label} failed:`, err?.message ?? err);
+        resolve(fallback);
+      });
+  });
+}
+
 // ─── ENUMS (mirror the PostgreSQL lookup tables / enums in 001_initial.sql) ───
 
 export type ClueWordplayType =
@@ -251,9 +294,16 @@ export interface DbClueSubmission {
  * If no puzzle exists for `isoDate`, automatically tries the previous day (once).
  * Returns null if neither date has a published puzzle.
  */
-export async function fetchPuzzleByDate(
+export function fetchPuzzleByDate(
   isoDate: string,
-  _allowFallback = true
+  allowFallback = true
+): Promise<DbDailyPuzzle | null> {
+  return withTimeout(fetchPuzzleByDateUncapped(isoDate, allowFallback), null, 'fetchPuzzleByDate');
+}
+
+async function fetchPuzzleByDateUncapped(
+  isoDate: string,
+  allowFallback = true
 ): Promise<DbDailyPuzzle | null> {
   const supabase = await getSupabaseClient();
   if (!isSupabaseConfigured) return null;
@@ -296,12 +346,12 @@ export async function fetchPuzzleByDate(
 
   // No puzzle for this date — try yesterday (only one level of fallback)
   if (!data || data.length === 0 || !data[0].clues) {
-    if (_allowFallback) {
+    if (allowFallback) {
       const [y, m, d] = isoDate.split('-').map(Number);
       const prev = new Date(y, m - 1, d - 1);
       const prevISO = `${prev.getFullYear()}-${String(prev.getMonth() + 1).padStart(2, '0')}-${String(prev.getDate()).padStart(2, '0')}`;
       console.info('[supabase] No puzzle for today — falling back to', prevISO);
-      return fetchPuzzleByDate(prevISO, false);
+      return fetchPuzzleByDateUncapped(prevISO, false);
     }
     return null;
   }
@@ -328,7 +378,11 @@ export async function fetchPuzzleByDate(
  * Fetch a published puzzle by its sequential puzzle number (e.g. 42).
  * Returns null if not found or not published.
  */
-export async function fetchPuzzleByNumber(puzzleNumber: number): Promise<DbDailyPuzzle | null> {
+export function fetchPuzzleByNumber(puzzleNumber: number): Promise<DbDailyPuzzle | null> {
+  return withTimeout(fetchPuzzleByNumberUncapped(puzzleNumber), null, 'fetchPuzzleByNumber');
+}
+
+async function fetchPuzzleByNumberUncapped(puzzleNumber: number): Promise<DbDailyPuzzle | null> {
   const supabase = await getSupabaseClient();
   if (!isSupabaseConfigured) return null;
   const { data, error } = await supabase
@@ -547,6 +601,82 @@ export async function callRecordSolve(
     return false;
   }
   return data as boolean;
+}
+
+// ─── GENERATED DAILY PUZZLES (every game but cryptic) ─────────────────────────
+
+/**
+ * The day's puzzle for a game from `game_puzzles` (migration 004), written
+ * ahead of time by that game's Lambda. Null when none exists yet, the network
+ * fails, or Supabase isn't configured — callers fall back to a practice puzzle.
+ */
+export function fetchGamePuzzle(game: string, isoDate: string): Promise<unknown | null> {
+  // Shorter than other reads: the player is looking at a loading board, and
+  // a practice puzzle is a better answer than a long wait.
+  return withTimeout(fetchGamePuzzleUncapped(game, isoDate), null, 'fetchGamePuzzle', 4_000);
+}
+
+async function fetchGamePuzzleUncapped(game: string, isoDate: string): Promise<unknown | null> {
+  if (!isSupabaseConfigured) return null;
+  const supabase = await getSupabaseClient();
+  const { data, error } = await supabase
+    .from('game_puzzles')
+    .select('payload')
+    .eq('game', game)
+    .eq('puzzle_date', isoDate)
+    .maybeSingle();
+  if (error) throw error;
+  return data?.payload ?? null;
+}
+
+// ─── GAME PLAY HISTORY (all games) ────────────────────────────────────────────
+
+/** A row of `game_plays` (migration 003). */
+export interface DbGamePlay {
+  user_id: string;
+  game: string;
+  puzzle_date: string;
+  outcome: 'solved' | 'failed' | 'revealed';
+  seconds: number;
+  hints_used: number;
+  mistakes: number;
+  score: string | null;
+  details: Record<string, number | string | boolean>;
+  completed_at: string;
+}
+
+/** Every play the user has recorded, newest first. */
+export function fetchGamePlays(userId: string): Promise<DbGamePlay[]> {
+  return withTimeout(fetchGamePlaysUncapped(userId), [], 'fetchGamePlays');
+}
+
+async function fetchGamePlaysUncapped(userId: string): Promise<DbGamePlay[]> {
+  if (!isSupabaseConfigured) return [];
+  const supabase = await getSupabaseClient();
+  const { data, error } = await supabase
+    .from('game_plays')
+    .select('*')
+    .eq('user_id', userId)
+    .order('puzzle_date', { ascending: false });
+  if (error) throw error;
+  return (data ?? []) as DbGamePlay[];
+}
+
+/**
+ * Insert plays, skipping any (user, game, date) already stored — the first
+ * finish of a day is final, so a re-sync can never overwrite it.
+ */
+export async function insertGamePlays(rows: DbGamePlay[]): Promise<boolean> {
+  if (!isSupabaseConfigured || rows.length === 0) return true;
+  const supabase = await getSupabaseClient();
+  const { error } = await supabase
+    .from('game_plays')
+    .upsert(rows, { onConflict: 'user_id,game,puzzle_date', ignoreDuplicates: true });
+  if (error) {
+    console.warn('[supabase] insertGamePlays:', error.message);
+    return false;
+  }
+  return true;
 }
 
 // ─── CLUE REACTIONS ───────────────────────────────────────────────────────────

@@ -36,7 +36,7 @@ BASE_URL="https://generativelanguage.googleapis.com/v1beta/models"
 GEN_MODEL="gemini-2.5-pro"
 JUDGE_MODEL="gemini-2.5-flash"
 
-# Always run from the repo root so the node helper can resolve ../lambda/constants.
+# Always run from the repo root so the node helper can resolve ../lambda/shared/constants.
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 cd "$REPO_ROOT"

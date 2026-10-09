@@ -1,0 +1,37 @@
+name: Deploy Lambda · Variant Sudoku
+
+# CPU-bound solver: more memory buys more CPU on Lambda.
+
+on:
+  push:
+    branches: [master]
+    paths:
+      - 'lambda/games/sudoku/**'
+      - 'lambda/shared/**'
+      - 'lambda/package.json'
+      - 'lambda/package-lock.json'
+      - 'lambda/scripts/package.sh'
+      - '.github/workflows/deploy-lambda-sudoku.yml'
+      - '.github/workflows/_deploy-game-lambda.yml'
+  workflow_dispatch:
+    inputs:
+      skip_schedule:
+        description: 'Skip reconciling the EventBridge schedule'
+        type: boolean
+        default: false
+
+concurrency:
+  group: deploy-lambda-sudoku
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    uses: ./.github/workflows/_deploy-game-lambda.yml
+    with:
+      game: sudoku
+      needs_ai: false
+      timeout: 300
+      memory: 1024
+      schedule: ${{ vars.SUDOKU_SCHEDULE || 'cron(0 3 * * ? *)' }}
+      skip_schedule: ${{ inputs.skip_schedule || false }}
+    secrets: inherit

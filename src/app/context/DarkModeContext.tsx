@@ -1,3 +1,4 @@
+import { StoreKeys, readRaw, writeRaw } from '../lib/localStore';
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 
 interface DarkModeContextType {
@@ -10,7 +11,7 @@ const DarkModeContext = createContext<DarkModeContextType>({ isDark: false, togg
 export function DarkModeProvider({ children }: { children: ReactNode }) {
   const [isDark, setIsDark] = useState(() => {
     try {
-      const stored = localStorage.getItem('tco-dark');
+      const stored = readRaw(StoreKeys.darkMode);
       if (stored !== null) return stored === 'true';
       // First-time visitor — honour the OS colour-scheme preference.
       if (typeof window !== 'undefined' && typeof window.matchMedia === 'function') {
@@ -24,7 +25,7 @@ export function DarkModeProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     try {
-      localStorage.setItem('tco-dark', String(isDark));
+      writeRaw(StoreKeys.darkMode, String(isDark));
     } catch {
       /* localStorage unavailable (e.g. private browsing) */
     }

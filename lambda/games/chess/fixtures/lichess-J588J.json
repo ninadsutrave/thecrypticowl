@@ -1,0 +1,23 @@
+{
+  "game": {
+    "id": "aexMUvin",
+    "perf": { "key": "rapid", "name": "Rapid" },
+    "rated": true,
+    "players": [
+      { "name": "nios1515", "id": "nios1515", "color": "white", "rating": 1705 },
+      { "name": "chessandbowling", "id": "chessandbowling", "color": "black", "rating": 1683 }
+    ],
+    "pgn": "d3 e5 e4 d5 exd5 Qxd5 Nc3 Qd4 Nf3 Qg4 Qe2 Nc6 Nb5 Bd6 d4 a6 dxe5 Qb4+ Nc3 Nxe5 Nxe5 Ne7 Nd3 Qb6 Nd5 Qc6 N3b4 Bxb4+ Nxb4 Qd6 Bd2 O-O O-O-O Nd5 Nxd5 Qxd5 Bb4 Qxa2 Bxf8 Qa1+ Kd2 Qa5+ Kc1 Be6 Ba3 Re8 Qf3 Ba2 Qxb7",
+    "clock": "10+0"
+  },
+  "puzzle": {
+    "id": "J588J",
+    "rating": 1380,
+    "plays": 4804,
+    "solution": ["a5g5", "f2f4", "g5f4", "d1d2", "e8e1"],
+    "themes": ["middlegame", "long", "mateIn3"],
+    "fen": "4r1k1/1Qp2ppp/p7/q7/8/B7/bPP2PPP/2KR1B1R b - - 0 1",
+    "lastMove": "f3b7",
+    "initialPly": 48
+  }
+}

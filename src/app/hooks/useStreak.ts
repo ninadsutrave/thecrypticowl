@@ -1,6 +1,7 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useCallback, useEffect, useSyncExternalStore } from 'react';
 import { callRecordSolve, fetchUserStats } from '../../lib/supabase';
 import { useAuth } from '../context/AuthContext';
+import { StoreKeys, readJSON, writeJSON } from '../lib/localStore';
 
 export interface SolveRecord {
   date: string;
@@ -19,37 +20,69 @@ export interface StreakData {
   history: SolveRecord[];
 }
 
-const STORAGE_KEY = 'tco-streak';
+const STORAGE_KEY = StoreKeys.streak;
+
+const EMPTY: StreakData = {
+  count: 0,
+  lastSolved: null,
+  totalSolved: 0,
+  xp: 0,
+  level: 1,
+  bestStreak: 0,
+  history: [],
+};
+
+// ─── SHARED STORE ─────────────────────────────────────────────────────────────
+//
+// Every component calling useStreak used to hold its own useState copy seeded
+// from localStorage, so recording a solve on the success screen left the
+// navbar's 🔥 counter showing the old value until something happened to
+// remount it. One module-level snapshot with subscribers means every consumer
+// re-renders together, and `useSyncExternalStore` gives React a stable
+// snapshot identity so it does not loop.
+
+let snapshot: StreakData = readJSON<StreakData>(STORAGE_KEY, EMPTY);
+const listeners = new Set<() => void>();
+
+function emit() {
+  listeners.forEach(l => l());
+}
+
+function subscribe(listener: () => void): () => void {
+  listeners.add(listener);
+  return () => listeners.delete(listener);
+}
+
+function getSnapshot(): StreakData {
+  return snapshot;
+}
+
+/** Replace the shared snapshot, persist it, and notify every consumer. */
+function commit(next: StreakData) {
+  snapshot = next;
+  writeJSON(STORAGE_KEY, next);
+  emit();
+}
 
 /** Exported so AuthContext can read local data on sign-in for the sync. */
 export function getStoredStreakData(): StreakData {
-  try {
-    const stored = localStorage.getItem(STORAGE_KEY);
-    if (stored) {
-      const parsed = JSON.parse(stored);
-      return { history: [], ...parsed };
-    }
-  } catch {
-    /* localStorage unavailable */
-  }
-  return {
-    count: 0,
-    lastSolved: null,
-    totalSolved: 0,
-    xp: 0,
-    level: 1,
-    bestStreak: 0,
-    history: [],
-  };
+  return snapshot;
 }
 
-function saveData(data: StreakData) {
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-  } catch {
-    /* localStorage unavailable */
-  }
+/** Re-read from storage — used after a cross-tab change or a sign-out wipe. */
+export function reloadStreakData(): void {
+  snapshot = readJSON<StreakData>(STORAGE_KEY, EMPTY);
+  emit();
 }
+
+// Another tab solving a puzzle should update this one's navbar too.
+if (typeof window !== 'undefined') {
+  window.addEventListener('storage', e => {
+    if (e.key === STORAGE_KEY) reloadStreakData();
+  });
+}
+
+// ─── SCORING ──────────────────────────────────────────────────────────────────
 
 export function getXPForSolve(hintsUsed: number): number {
   if (hintsUsed === 0) return 100;
@@ -63,8 +96,8 @@ export function getLevelFromXP(xp: number, history: SolveRecord[] = []): number 
   const baseLevel = Math.floor(Math.sqrt(xp / 50)) + 1;
   if (history.length < 2) return baseLevel;
 
-  // Professional penalty: drop levels for significant gaps in solving
-  // A gap of > 3 days between any two solves in the last 5 solves results in a penalty
+  // Consistency penalty: a long gap between recent solves costs levels, so the
+  // title reflects current habit rather than lifetime total.
   const recentHistory = history.slice(0, 5);
   let maxGapDays = 0;
   for (let i = 0; i < recentHistory.length - 1; i++) {
@@ -101,91 +134,99 @@ export function getLevelTitle(level: number): string {
   return 'Newbie Cryptician 🦉';
 }
 
-export function hasSolvedToday(): boolean {
-  const data = getStoredStreakData();
-  const today = new Date().toDateString();
-  return data.lastSolved === today;
+/** Local-time day key. Deliberately not UTC — see recordSolve. */
+export function todayKey(now = new Date()): string {
+  return now.toDateString();
 }
 
+export function hasSolvedToday(): boolean {
+  return snapshot.lastSolved === todayKey();
+}
+
+// ─── HOOK ─────────────────────────────────────────────────────────────────────
+
 export function useStreak() {
-  const [data, setData] = useState<StreakData>(getStoredStreakData);
+  const data = useSyncExternalStore(subscribe, getSnapshot, getSnapshot);
   const { user, isSignedIn, loading: authLoading } = useAuth();
 
-  // ── Hydrate local cache from Supabase when the user is signed in ───────────
-  // Without this, a fresh-device sign-in would show streak=0 / xp=0 in the
-  // navbar until the user's next local solve, even when Supabase holds their
-  // real progress. We pull the authoritative remote row once per session and
-  // lift every field that's higher than the local cached value.
+  // Hydrate from Supabase once per sign-in. Without this, signing in on a
+  // fresh device shows streak 0 / xp 0 until the next local solve, even when
+  // the server holds the real progress.
   useEffect(() => {
     if (authLoading || !isSignedIn || !user) return;
     let cancelled = false;
+
     fetchUserStats(user.id)
       .then(remote => {
         if (cancelled || !remote) return;
-        const local = getStoredStreakData();
+        const local = snapshot;
         const merged: StreakData = {
+          // NOTE: this merge takes the higher of local and remote on every
+          // field, so a legitimately broken streak is restored from whichever
+          // side is stale. Making the server authoritative is the correct fix
+          // but changes what existing users see, so it is left as a product
+          // decision rather than folded into a refactor.
           count: Math.max(local.count, remote.streak_count),
-          lastSolved: local.lastSolved, // local-time day key; remote uses UTC date
+          lastSolved: local.lastSolved, // local-time day key; remote uses a UTC date
           totalSolved: Math.max(local.totalSolved, remote.total_solved),
           xp: Math.max(local.xp, remote.xp),
           level: Math.max(local.level, remote.level),
           bestStreak: Math.max(local.bestStreak, remote.best_streak),
           history: local.history,
         };
-        // Only persist if the merge actually changed something, to avoid
-        // firing an unnecessary render on every mount.
-        if (
+
+        const changed =
           merged.count !== local.count ||
           merged.totalSolved !== local.totalSolved ||
           merged.xp !== local.xp ||
           merged.level !== local.level ||
-          merged.bestStreak !== local.bestStreak
-        ) {
-          saveData(merged);
-          setData(merged);
-        }
+          merged.bestStreak !== local.bestStreak;
+
+        if (changed) commit(merged);
       })
       .catch(() => {
-        /* best-effort hydration; local cache is authoritative on failure */
+        /* best-effort hydration; the local cache stands on failure */
       });
+
     return () => {
       cancelled = true;
     };
   }, [authLoading, isSignedIn, user]);
 
   /**
-   * Record a puzzle solve.
-   * - ALWAYS writes to localStorage immediately (signed-out + offline friendly).
-   * - If userId + puzzleId are present, fire-and-forget syncs to Supabase.
+   * Record a solve.
+   * - Always writes locally first, so signed-out and offline solves count.
+   * - Syncs to Supabase in the background when we have both a user and a
+   *   clue UUID. `record_solve` writes solve_history and user_stats in one
+   *   transaction, so no separate stats upsert is needed.
+   *
+   * Returns the new snapshot, or the existing one if today is already solved.
    */
   const recordSolve = useCallback(
     (
       hintsUsed: number,
-      puzzleNumber: number = 0,
+      puzzleNumber = 0,
       userId?: string,
-      puzzleId?: string, // UUID from DB — required for Supabase write; omit for local-only
-      wrongAttempts: number = 0,
+      puzzleId?: string,
+      wrongAttempts = 0,
       solveTimeSeconds?: number
-    ) => {
-      const today = new Date().toDateString();
-      const current = getStoredStreakData();
+    ): StreakData => {
+      const today = todayKey();
+      const current = snapshot;
 
       if (current.lastSolved === today) return current;
 
-      const yesterday = new Date(Date.now() - 86400000).toDateString();
+      const yesterday = todayKey(new Date(Date.now() - 86_400_000));
       const newCount = current.lastSolved === yesterday ? current.count + 1 : 1;
       const xpGained = getXPForSolve(hintsUsed);
       const newXP = current.xp + xpGained;
 
-      const solveRecord: SolveRecord = {
-        date: today,
-        puzzleNumber,
-        hintsUsed,
-        xpEarned: xpGained,
-      };
+      const newHistory: SolveRecord[] = [
+        { date: today, puzzleNumber, hintsUsed, xpEarned: xpGained },
+        ...(current.history ?? []),
+      ];
 
-      const newHistory = [solveRecord, ...(current.history ?? [])];
-      const newData: StreakData = {
+      const next: StreakData = {
         count: newCount,
         lastSolved: today,
         totalSolved: current.totalSolved + 1,
@@ -195,19 +236,17 @@ export function useStreak() {
         history: newHistory,
       };
 
-      saveData(newData);
-      setData(newData);
+      commit(next);
 
-      // Sync to Supabase in the background — never blocks the UI.
-      // record_solve() atomically writes solve_history + updates user_stats in one
-      // transaction, so no separate upsertUserStats call is needed here.
-      // puzzleId (UUID) is required by the DB schema; skip if we only have a local
-      // puzzle number (e.g. the hardcoded fallback puzzle used in local dev).
       if (userId && puzzleId) {
-        // Build YYYY-MM-DD from local time, not UTC — avoids streak-breaking for
-        // users in UTC+ timezones who play before midnight local but after midnight UTC.
-        const _d = new Date();
-        const localDate = `${_d.getFullYear()}-${String(_d.getMonth() + 1).padStart(2, '0')}-${String(_d.getDate()).padStart(2, '0')}`;
+        // Build YYYY-MM-DD from local time, not UTC, so a player in UTC+ who
+        // solves at 11pm local isn't recorded against the following day and
+        // does not break their own streak.
+        const d = new Date();
+        const localDate = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(
+          d.getDate()
+        ).padStart(2, '0')}`;
+
         callRecordSolve(userId, {
           clueId: puzzleId,
           puzzleNumber,
@@ -216,17 +255,13 @@ export function useStreak() {
           xpEarned: xpGained,
           solveTimeSeconds,
           clientDate: localDate,
-        }).catch(console.error);
+        }).catch(err => console.warn('[streak] solve sync failed:', err));
       }
 
-      return newData;
+      return next;
     },
     []
   );
 
-  const refresh = useCallback(() => {
-    setData(getStoredStreakData());
-  }, []);
-
-  return { ...data, recordSolve, refresh };
+  return { ...data, recordSolve, refresh: reloadStreakData };
 }

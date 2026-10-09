@@ -35,7 +35,7 @@ function inlineCss(): Plugin {
   };
 }
 
-export default defineConfig({
+export default defineConfig(({ command }) => ({
   plugins: [
     // The React and Tailwind plugins are both required for Make, even if
     // Tailwind is not being actively used – do not remove them
@@ -44,10 +44,24 @@ export default defineConfig({
     inlineCss(),
   ],
   resolve: {
-    alias: {
+    alias: [
       // Alias @ to the src directory
-      '@': path.resolve(__dirname, './src'),
-    },
+      { find: '@', replacement: path.resolve(__dirname, './src') },
+      // React Router 7's package exports only point at its development build
+      // (dev warnings, invariant messages). It ships a production build too;
+      // use it for production bundles.
+      ...(command === 'build'
+        ? [
+            {
+              find: /^react-router$/,
+              replacement: path.resolve(
+                __dirname,
+                'node_modules/react-router/dist/production/index.mjs'
+              ),
+            },
+          ]
+        : []),
+    ],
   },
 
   // File types to support raw imports. Never add .css, .tsx, or .ts files to this.
@@ -63,15 +77,36 @@ export default defineConfig({
     // initial JS payload stays lean and upgrades don't bust the whole cache.
     rollupOptions: {
       output: {
-        manualChunks: {
-          'react-vendor': ['react', 'react-dom', 'react-router'],
-          'supabase': ['@supabase/supabase-js'],
-          'motion': ['motion', 'motion/react'],
-          'icons': ['lucide-react'],
+        // Path-based, not name-based. The previous object form listed
+        // react-dom under react-vendor, but Recharts' own dependency on it
+        // pulled react-dom into the charts chunk — so every page preloaded
+        // 148 KB (gzipped) of chart code to get React. Matching on the
+        // resolved path pins each module to exactly one chunk.
+        manualChunks(id: string) {
+          if (!id.includes('node_modules')) return undefined;
+          const pkg = /node_modules\/((?:@[^/]+\/)?[^/]+)\//.exec(id)?.[1] ?? '';
+          if (['react', 'react-dom', 'scheduler', 'react-router'].includes(pkg)) {
+            return 'react-vendor';
+          }
+          if (pkg.startsWith('@supabase/')) return 'supabase';
+          // Motion and lucide-react are left to Rollup on purpose: grouped into
+          // one chunk they put every animation feature and every icon used
+          // anywhere onto the critical path. Split naturally, the first paint
+          // gets only what the home page uses; the rest ships with its page.
+          if (pkg === 'chess.js') return 'chess';
+          // Recharts and everything only it uses: lazy, Progress page only.
+          if (
+            /^(recharts|recharts-scale|react-smooth|victory-vendor|d3-.*|internmap|decimal\.js-light|eventemitter3|lodash|fast-equals|tiny-invariant|react-is|prop-types|clsx|dom-helpers|react-transition-group)$/.test(
+              pkg
+            )
+          ) {
+            return 'charts';
+          }
+          return undefined;
         },
       },
     },
     // Slightly lower chunk warning threshold so we notice future bloat.
     chunkSizeWarningLimit: 600,
   },
-});
+}));

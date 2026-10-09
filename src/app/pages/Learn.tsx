@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { m, AnimatePresence } from 'motion/react';
 import { Mascot } from '../components/Mascot';
 import { Search, ChevronRight, Eye } from 'lucide-react';
@@ -72,12 +72,43 @@ interface LearningData {
 
 const data = learningData as LearningData;
 
-const PART_COLORS: Record<string, { bg: string; bgDark: string; text: string; border: string }> = {
-  definition: { bg: '#EFF6FF', bgDark: '#0D1F35', text: '#1D4ED8', border: '#3B82F6' },
-  indicator: { bg: '#F5F3FF', bgDark: '#1A0F35', text: '#5B21B6', border: '#7C3AED' },
-  fodder: { bg: '#FFF7ED', bgDark: '#2A1505', text: '#C2410C', border: '#F97316' },
-  wordplay: { bg: '#ECFDF5', bgDark: '#062010', text: '#065F46', border: '#10B981' },
+const PART_COLORS: Record<
+  string,
+  { bg: string; bgDark: string; text: string; textDark: string; border: string }
+> = {
+  definition: {
+    bg: '#EFF6FF',
+    bgDark: '#0D1F35',
+    text: '#1D4ED8',
+    textDark: '#93C5FD',
+    border: '#3B82F6',
+  },
+  indicator: {
+    bg: '#F5F3FF',
+    bgDark: '#1A0F35',
+    text: '#5B21B6',
+    textDark: '#C4B5FD',
+    border: '#7C3AED',
+  },
+  fodder: {
+    bg: '#FFF7ED',
+    bgDark: '#2A1505',
+    text: '#C2410C',
+    textDark: '#FDBA74',
+    border: '#F97316',
+  },
+  wordplay: {
+    bg: '#ECFDF5',
+    bgDark: '#062010',
+    text: '#065F46',
+    textDark: '#6EE7B7',
+    border: '#10B981',
+  },
 };
+
+/** Part ink for the current theme: the light inks fail contrast on the dark tints. */
+const partText = (key: string, isDark: boolean) =>
+  isDark ? PART_COLORS[key].textDark : PART_COLORS[key].text;
 
 const CLUE_SEGMENTS = [
   { key: 'fodder', text: 'Stone' },
@@ -148,7 +179,7 @@ function PartsOfClue({ isDark }: { isDark: boolean }) {
                 seg.key && seg.key === activePart
                   ? {
                       background: isDark ? PART_COLORS[seg.key].bgDark : PART_COLORS[seg.key].bg,
-                      color: PART_COLORS[seg.key].text,
+                      color: partText(seg.key as string, isDark),
                       border: `2px solid ${PART_COLORS[seg.key].border}`,
                       borderRadius: 8,
                       padding: '2px 6px',
@@ -208,7 +239,7 @@ function PartsOfClue({ isDark }: { isDark: boolean }) {
               style={{
                 fontFamily: "'Fredoka One', cursive",
                 fontSize: '1rem',
-                color: activePart === part.key ? PART_COLORS[part.key].text : T.text,
+                color: activePart === part.key ? partText(part.key as string, isDark) : T.text,
                 marginBottom: 4,
               }}
             >
@@ -217,7 +248,7 @@ function PartsOfClue({ isDark }: { isDark: boolean }) {
             <p
               style={{
                 fontSize: '0.8rem',
-                color: activePart === part.key ? PART_COLORS[part.key].text : T.textMuted,
+                color: activePart === part.key ? partText(part.key as string, isDark) : T.textMuted,
                 lineHeight: 1.5,
               }}
             >
@@ -245,7 +276,7 @@ function WordplayTab({ type, isDark }: { type: WordplayType; isDark: boolean }) 
         <p
           style={{
             fontSize: '0.9rem',
-            color: isDark ? '#C4B5FD' : '#374151',
+            color: T.bodyText,
             fontWeight: 600,
             lineHeight: 1.7,
             fontFamily: "'Nunito', sans-serif",
@@ -298,7 +329,7 @@ function WordplayTab({ type, isDark }: { type: WordplayType; isDark: boolean }) 
                   style={{
                     fontSize: '0.72rem',
                     fontWeight: 700,
-                    color: colors.text,
+                    color: isDark ? colors.textDark : colors.text,
                     fontFamily: "'Nunito', sans-serif",
                   }}
                 >
@@ -307,7 +338,7 @@ function WordplayTab({ type, isDark }: { type: WordplayType; isDark: boolean }) 
                 <span
                   style={{
                     fontSize: '0.72rem',
-                    color: colors.text,
+                    color: isDark ? colors.textDark : colors.text,
                     fontFamily: "'Nunito', sans-serif",
                     fontWeight: 600,
                   }}
@@ -354,7 +385,7 @@ function WordplayTab({ type, isDark }: { type: WordplayType; isDark: boolean }) 
             </div>
             <div
               className="rounded-full px-3 py-1"
-              style={{ background: isDark ? '#062010' : '#ECFDF5', border: '1.5px solid #34D399' }}
+              style={{ background: T.successBg, border: '1.5px solid #34D399' }}
             >
               <span
                 style={{
@@ -426,7 +457,7 @@ function WordplayPreview({
           style={{
             fontFamily: "'Fredoka One', cursive",
             fontSize: '1.8rem',
-            color: isDark ? '#C4B5FD' : '#1E1B4B',
+            color: T.heading,
           }}
         >
           Types of Wordplay
@@ -507,7 +538,7 @@ function CompoundExampleCard({
       <div
         className="rounded-2xl p-4 mb-4"
         style={{
-          background: isDark ? '#1A0F35' : '#F5F3FF',
+          background: T.indicatorBg,
           border: '1.5px solid #7C3AED',
         }}
       >
@@ -539,7 +570,7 @@ function CompoundExampleCard({
               style={{
                 background: isDark ? '#2D1B69' : '#F5F3FF',
                 border: `2px solid ${isDark ? '#7C3AED' : '#C4B5FD'}`,
-                color: isDark ? '#C4B5FD' : '#7C3AED',
+                color: T.brandText,
                 fontFamily: "'Nunito', sans-serif",
                 fontWeight: 800,
               }}
@@ -608,6 +639,10 @@ export function Learn() {
 
   const currentWordplay = learningData.wordplayTypes.find(t => t.id === activeWordplayTab);
 
+  useEffect(() => {
+    document.title = 'Cryptic Tutorial · The Cryptic Owl';
+  }, []);
+
   return (
     <div className="max-w-4xl mx-auto px-4 pb-20">
       {/* Header */}
@@ -625,7 +660,7 @@ export function Learn() {
           style={{
             fontFamily: "'Fredoka One', cursive",
             fontSize: '2.2rem',
-            color: isDark ? '#C4B5FD' : '#1E1B4B',
+            color: T.heading,
             marginBottom: 8,
           }}
         >
@@ -653,7 +688,7 @@ export function Learn() {
                 fontFamily: "'Nunito', sans-serif",
                 fontWeight: 700,
                 background: activeSection === i ? '#7C3AED' : T.cardBg,
-                color: activeSection === i ? 'white' : isDark ? '#C4B5FD' : '#6D28D9',
+                color: activeSection === i ? 'white' : T.brandText,
                 border: `2px solid ${activeSection === i ? '#7C3AED' : isDark ? '#3D2A6B' : '#EDE9FE'}`,
                 boxShadow: activeSection === i ? '0 4px 12px rgba(124,58,237,0.3)' : undefined,
               }}
@@ -683,7 +718,7 @@ export function Learn() {
                   style={{
                     fontFamily: "'Fredoka One', cursive",
                     fontSize: '1.6rem',
-                    color: isDark ? '#F0EAFF' : '#1E1B4B',
+                    color: T.heading,
                     marginBottom: 16,
                   }}
                 >
@@ -699,14 +734,14 @@ export function Learn() {
                     <div
                       className="flex-1 rounded-2xl p-4"
                       style={{
-                        background: isDark ? '#0D1F35' : '#EFF6FF',
+                        background: T.definitionBg,
                         border: '2px solid #3B82F6',
                       }}
                     >
                       <p
                         style={{
                           fontFamily: "'Fredoka One', cursive",
-                          color: '#1D4ED8',
+                          color: T.definitionText,
                           fontSize: '1rem',
                           marginBottom: 4,
                         }}
@@ -727,14 +762,14 @@ export function Learn() {
                     <div
                       className="flex-1 rounded-2xl p-4"
                       style={{
-                        background: isDark ? '#2A1505' : '#FFF7ED',
+                        background: T.fodderBg,
                         border: '2px solid #F97316',
                       }}
                     >
                       <p
                         style={{
                           fontFamily: "'Fredoka One', cursive",
-                          color: '#C2410C',
+                          color: T.fodderText,
                           fontSize: '1rem',
                           marginBottom: 4,
                         }}
@@ -764,7 +799,7 @@ export function Learn() {
                   style={{
                     fontFamily: "'Fredoka One', cursive",
                     fontSize: '1.2rem',
-                    color: isDark ? '#C4B5FD' : '#1E1B4B',
+                    color: T.heading,
                     marginBottom: 4,
                   }}
                 >
@@ -774,7 +809,7 @@ export function Learn() {
                   className="rounded-2xl p-4 mb-4"
                   style={{
                     background: isDark ? '#261845' : '#F9F7FF',
-                    border: `2px dashed ${isDark ? '#4C3580' : '#C4B5FD'}`,
+                    border: `2px dashed ${T.brandBorder}`,
                   }}
                 >
                   <p
@@ -788,8 +823,8 @@ export function Learn() {
                   >
                     <span
                       style={{
-                        background: isDark ? '#2A1505' : '#FFF7ED',
-                        color: '#C2410C',
+                        background: T.fodderBg,
+                        color: T.fodderText,
                         border: '1.5px solid #F97316',
                         borderRadius: 6,
                         padding: '1px 5px',
@@ -799,8 +834,8 @@ export function Learn() {
                     </span>{' '}
                     <span
                       style={{
-                        background: isDark ? '#1A0F35' : '#F5F3FF',
-                        color: '#5B21B6',
+                        background: T.indicatorBg,
+                        color: T.indicatorText,
                         border: '1.5px solid #7C3AED',
                         borderRadius: 6,
                         padding: '1px 5px',
@@ -811,8 +846,8 @@ export function Learn() {
                     {', becomes '}
                     <span
                       style={{
-                        background: isDark ? '#0D1F35' : '#EFF6FF',
-                        color: '#1D4ED8',
+                        background: T.definitionBg,
+                        color: T.definitionText,
                         border: '1.5px solid #3B82F6',
                         borderRadius: 6,
                         padding: '1px 5px',
@@ -840,7 +875,7 @@ export function Learn() {
                       <p
                         style={{
                           fontSize: '0.88rem',
-                          color: isDark ? '#C4B5FD' : '#374151',
+                          color: T.bodyText,
                           lineHeight: 1.6,
                         }}
                       >
@@ -874,7 +909,7 @@ export function Learn() {
                   style={{
                     fontFamily: "'Fredoka One', cursive",
                     fontSize: '1.5rem',
-                    color: isDark ? '#C4B5FD' : '#1E1B4B',
+                    color: T.heading,
                     marginBottom: 4,
                   }}
                 >
@@ -959,7 +994,7 @@ export function Learn() {
                   style={{
                     fontFamily: "'Fredoka One', cursive",
                     fontSize: '1.5rem',
-                    color: isDark ? '#C4B5FD' : '#1E1B4B',
+                    color: T.heading,
                     marginBottom: 4,
                   }}
                 >
@@ -999,7 +1034,7 @@ export function Learn() {
                   style={{
                     fontFamily: "'Fredoka One', cursive",
                     fontSize: '1.5rem',
-                    color: isDark ? '#C4B5FD' : '#1E1B4B',
+                    color: T.heading,
                     marginBottom: 4,
                   }}
                 >
@@ -1054,7 +1089,7 @@ export function Learn() {
                           style={{
                             fontSize: '1.25rem',
                             fontFamily: "'Fredoka One', cursive",
-                            color: isDark ? '#C4B5FD' : '#5B21B6',
+                            color: T.brandStrong,
                             lineHeight: 1.2,
                           }}
                         >

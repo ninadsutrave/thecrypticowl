@@ -1,0 +1,299 @@
+name: Deploy game Lambda (reusable)
+
+# One Lambda per daily game. Each game's workflow (deploy-lambda-<game>.yml)
+# calls this with its own settings, so every Lambda is built, deployed,
+# scheduled and smoke-tested the same way — and a change to one game ships
+# only that game.
+
+on:
+  workflow_call:
+    inputs:
+      game:
+        description: 'Directory under lambda/games/'
+        type: string
+        required: true
+      needs_ai:
+        description: 'Whether the Lambda calls an AI model (adds the model keys to its environment)'
+        type: boolean
+        default: false
+      timeout:
+        description: 'Lambda timeout in seconds'
+        type: number
+        default: 600
+      memory:
+        description: 'Lambda memory in MB'
+        type: number
+        default: 256
+      schedule:
+        description: 'EventBridge schedule expression'
+        type: string
+        required: true
+      skip_schedule:
+        type: boolean
+        default: false
+
+env:
+  NODE_VERSION: '24'
+  LOG_RETENTION_DAYS: '14'
+
+jobs:
+  # ── Gate: lint, format and test the code this Lambda ships ─────────────────
+  verify:
+    name: Verify (${{ inputs.game }})
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+
+      - run: npm ci
+
+      - name: Lint
+        run: npx eslint lambda --max-warnings 0
+
+      - name: Format check
+        run: npx prettier --check lambda
+
+      # Shared code plus this game: a change to shared/ re-tests every game
+      # (each game's workflow fires on shared/ paths).
+      - name: Test
+        run: npx vitest run --project lambda lambda/shared lambda/games/${{ inputs.game }}
+
+  deploy:
+    name: Package & Deploy (${{ inputs.game }})
+    needs: verify
+    runs-on: ubuntu-latest
+    environment: production
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: lambda/package-lock.json
+
+      # Stages shared/ + games/<game>/ + production deps, imports the handler
+      # to prove the package is complete, then zips it.
+      - name: Package
+        run: bash lambda/scripts/package.sh "${{ inputs.game }}" function.zip
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      # The cryptic Lambda predates the per-game naming; its existing function
+      # name (LAMBDA_FUNCTION_NAME) is kept so this deploy updates it in place
+      # instead of creating a twin that would publish a second daily clue.
+      - name: Resolve function name
+        id: name
+        env:
+          GAME: ${{ inputs.game }}
+          PREFIX: ${{ vars.LAMBDA_NAME_PREFIX || 'crypticowl' }}
+          LEGACY_CRYPTIC_NAME: ${{ secrets.LAMBDA_FUNCTION_NAME }}
+        run: |
+          if [ "$GAME" = "cryptic" ] && [ -n "$LEGACY_CRYPTIC_NAME" ]; then
+            NAME="$LEGACY_CRYPTIC_NAME"
+          else
+            NAME="${PREFIX}-${GAME}"
+          fi
+          echo "name=$NAME" >> "$GITHUB_OUTPUT"
+          echo "Function: $NAME"
+
+      - name: Deploy function
+        id: deploy
+        env:
+          LAMBDA_NAME: ${{ steps.name.outputs.name }}
+          LAMBDA_ROLE: ${{ secrets.LAMBDA_ROLE_ARN }}
+          HANDLER: games/${{ inputs.game }}/index.handler
+          TIMEOUT: ${{ inputs.timeout }}
+          MEMORY: ${{ inputs.memory }}
+          NEEDS_AI: ${{ inputs.needs_ai }}
+          # Every Lambda
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          SNS_TOPIC_ARN: ${{ secrets.SNS_TOPIC_ARN }}
+          CONTACT_EMAIL: ${{ vars.CONTACT_EMAIL }}
+          PUZZLE_DAYS_AHEAD: ${{ vars.PUZZLE_DAYS_AHEAD }}
+          # AI Lambdas only
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
+          XAI_API_KEY: ${{ secrets.XAI_API_KEY }}
+          MISTRAL_API_KEY: ${{ secrets.MISTRAL_API_KEY }}
+          AI_PROVIDER: ${{ vars.AI_PROVIDER }}
+          JUDGE_PROVIDER: ${{ vars.JUDGE_PROVIDER }}
+        run: |
+          set -euo pipefail
+          export AWS_PAGER=""
+
+          EXISTS=$(aws lambda get-function --function-name "$LAMBDA_NAME" >/dev/null 2>&1 && echo yes || echo no)
+
+          # ── Environment: merge, never replace ────────────────────────────────
+          # `update-function-configuration --environment` REPLACES the whole
+          # map, so start from what is deployed and overlay only the values
+          # this run has. An empty secret leaves the deployed value alone.
+          if [ "$EXISTS" = "yes" ]; then
+            aws lambda get-function-configuration --function-name "$LAMBDA_NAME" \
+              --query 'Environment.Variables' --output json > current-env.json
+            [ "$(cat current-env.json)" = "null" ] && echo '{}' > current-env.json
+          else
+            echo '{}' > current-env.json
+          fi
+
+          MANAGED=(
+            SUPABASE_URL SUPABASE_SERVICE_ROLE_KEY
+            TELEGRAM_BOT_TOKEN TELEGRAM_CHAT_ID SNS_TOPIC_ARN
+            CONTACT_EMAIL PUZZLE_DAYS_AHEAD
+          )
+          # Model keys go only where a model is called: a non-AI Lambda never
+          # holds an API key it doesn't use.
+          if [ "$NEEDS_AI" = "true" ]; then
+            MANAGED+=(
+              GEMINI_API_KEY OPENAI_API_KEY ANTHROPIC_API_KEY
+              DEEPSEEK_API_KEY XAI_API_KEY MISTRAL_API_KEY
+              AI_PROVIDER JUDGE_PROVIDER
+            )
+          fi
+
+          echo '{}' > overlay.json
+          for key in "${MANAGED[@]}"; do
+            value="${!key:-}"
+            if [ -n "$value" ]; then
+              jq --arg k "$key" --arg v "$value" '. + {($k): $v}' overlay.json > overlay.tmp
+              mv overlay.tmp overlay.json
+            fi
+          done
+
+          jq -s '.[0] * .[1] | {Variables: .}' current-env.json overlay.json > env.json
+          echo "Environment keys after merge: $(jq -r '.Variables | keys | join(", ")' env.json)"
+
+          DESC="${{ inputs.game }} puzzles · ${GITHUB_SHA::7} · $(date -u +'%Y-%m-%dT%H:%M:%SZ')"
+
+          if [ "$EXISTS" = "yes" ]; then
+            aws lambda update-function-code \
+              --function-name "$LAMBDA_NAME" --zip-file fileb://function.zip >/dev/null
+            aws lambda wait function-updated --function-name "$LAMBDA_NAME"
+
+            aws lambda update-function-configuration \
+              --function-name "$LAMBDA_NAME" \
+              --runtime nodejs24.x --handler "$HANDLER" \
+              --timeout "$TIMEOUT" --memory-size "$MEMORY" \
+              --description "$DESC" \
+              --environment file://env.json >/dev/null
+            aws lambda wait function-updated --function-name "$LAMBDA_NAME"
+          else
+            aws lambda create-function \
+              --function-name "$LAMBDA_NAME" \
+              --runtime nodejs24.x --role "$LAMBDA_ROLE" --handler "$HANDLER" \
+              --zip-file fileb://function.zip \
+              --timeout "$TIMEOUT" --memory-size "$MEMORY" \
+              --description "$DESC" \
+              --environment file://env.json \
+              --architectures arm64 >/dev/null
+            aws lambda wait function-active --function-name "$LAMBDA_NAME"
+          fi
+
+          LOG_GROUP="/aws/lambda/$LAMBDA_NAME"
+          aws logs create-log-group --log-group-name "$LOG_GROUP" 2>/dev/null || true
+          aws logs put-retention-policy \
+            --log-group-name "$LOG_GROUP" \
+            --retention-in-days ${{ env.LOG_RETENTION_DAYS }}
+
+          VERSION=$(aws lambda publish-version --function-name "$LAMBDA_NAME" --query 'Version' --output text)
+          echo "Published version $VERSION"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
+          rm -f env.json overlay.json current-env.json
+
+      # ── The daily trigger, in version control ──────────────────────────────
+      - name: Reconcile EventBridge schedule
+        if: ${{ !inputs.skip_schedule }}
+        env:
+          LAMBDA_NAME: ${{ steps.name.outputs.name }}
+          SCHEDULE: ${{ inputs.schedule }}
+        run: |
+          set -euo pipefail
+          export AWS_PAGER=""
+          RULE="${LAMBDA_NAME}-daily"
+
+          aws events put-rule \
+            --name "$RULE" \
+            --schedule-expression "$SCHEDULE" \
+            --state ENABLED \
+            --description "Daily ${{ inputs.game }} puzzle generation for $LAMBDA_NAME" >/dev/null
+
+          FN_ARN=$(aws lambda get-function --function-name "$LAMBDA_NAME" \
+            --query 'Configuration.FunctionArn' --output text)
+
+          aws events put-targets --rule "$RULE" --targets "Id=1,Arn=$FN_ARN" >/dev/null
+
+          aws lambda add-permission \
+            --function-name "$LAMBDA_NAME" \
+            --statement-id "${RULE}-invoke" \
+            --action lambda:InvokeFunction \
+            --principal events.amazonaws.com \
+            --source-arn "$(aws events describe-rule --name "$RULE" --query 'Arn' --output text)" \
+            >/dev/null 2>&1 || echo "Invoke permission already present."
+
+          echo "Schedule reconciled: $RULE → $SCHEDULE"
+
+      # ── Prove the deployed artifact runs ───────────────────────────────────
+      # A dry run exercises the real handler against the real environment and
+      # returns before any generation, AI call or database write.
+      - name: Smoke test — preflight only
+        env:
+          LAMBDA_NAME: ${{ steps.name.outputs.name }}
+        run: |
+          set -euo pipefail
+          export AWS_PAGER=""
+          aws lambda invoke \
+            --function-name "$LAMBDA_NAME" \
+            --payload "$(echo -n '{"dryRun":true}' | base64)" \
+            --cli-read-timeout 0 \
+            response.json >/dev/null || true
+
+          echo "Handler response:"
+          cat response.json
+
+          if grep -q '"error":"Missing required environment variables"' response.json; then
+            echo "::error::Preflight failed — the deployed function is missing secrets."
+            jq -r '.body | fromjson | .missing | join(", ")' response.json || true
+            exit 1
+          fi
+          if ! jq -e '.body | fromjson | .success == true' response.json >/dev/null; then
+            echo "::error::Dry run did not succeed."
+            exit 1
+          fi
+          echo "Preflight passed."
+
+      # ── Fill the puzzle window now, rather than at the next schedule ───────
+      # Asynchronous and idempotent: days already stored are skipped, so this
+      # only does work after a fresh deploy or a missed run. Failures surface
+      # in the function's own logs and alerts, not here.
+      - name: Fill puzzle window
+        env:
+          LAMBDA_NAME: ${{ steps.name.outputs.name }}
+        run: |
+          set -euo pipefail
+          export AWS_PAGER=""
+          aws lambda invoke \
+            --function-name "$LAMBDA_NAME" \
+            --invocation-type Event \
+            --payload "$(echo -n '{}' | base64)" \
+            /dev/null
+          echo "Generation queued for $LAMBDA_NAME."
+
+      - name: Cleanup
+        if: always()
+        run: rm -f function.zip response.json env.json overlay.json current-env.json

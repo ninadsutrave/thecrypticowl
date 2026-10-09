@@ -1,15 +1,16 @@
 {
   "name": "cryptic-owl-lambda",
   "version": "1.0.0",
-  "description": "Cryptic crossword generator Lambda",
-  "main": "lambda/index.js",
+  "description": "Daily puzzle generators — one Lambda per game (see docs/lambdas.md)",
   "type": "module",
   "scripts": {
-    "zip": "zip -r function.zip lambda node_modules package.json"
+    "package": "bash scripts/package.sh",
+    "preview": "node scripts/preview.mjs"
   },
   "dependencies": {
     "@aws-sdk/client-sns": "^3.0.0",
-    "@supabase/supabase-js": "^2.49.1"
+    "@supabase/supabase-js": "^2.49.1",
+    "chess.js": "^1.4.0"
   },
   "engines": {
     "node": ">=24.x"

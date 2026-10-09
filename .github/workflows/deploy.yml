@@ -3,6 +3,11 @@ name: Deploy
 on:
   push:
     branches: [master]
+    paths-ignore:
+      - 'lambda/**'
+      - 'docs/**'
+      - '**.md'
+  workflow_dispatch:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -12,32 +17,35 @@ env:
   NODE_VERSION: '24'
 
 jobs:
-  # ── Build ────────────────────────────────────────────────────────────────
-  build:
-    name: Lint, Format, Type-check & Build
+  # ── Same gate as CI ─────────────────────────────────────────────────────────
+  # A push straight to master skips the PR checks entirely, so the deploy
+  # pipeline has to re-run them rather than trusting that a PR happened.
+  verify:
+    name: Lint, Types & Tests
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup Node
-        uses: actions/setup-node@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: npm
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run format:check
+      - run: npm run typecheck
+      - run: npm test
 
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Lint
-        run: npm run lint
-
-      - name: Format check
-        run: npm run format:check
-
-      - name: Type-check
-        run: npm run typecheck
+  build:
+    name: Build
+    needs: verify
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+      - run: npm ci
 
       - name: Build
         run: npm run build
@@ -46,14 +54,27 @@ jobs:
           VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
           VITE_GA_ID: ${{ secrets.VITE_GA_ID }}
 
-      - name: Upload dist artifact
-        uses: actions/upload-artifact@v4
+      # The build warns rather than fails when a %VITE_*% placeholder is not
+      # substituted, so a missing secret shipped a broken preconnect and silently
+      # disabled analytics. Fail the deploy instead.
+      - name: Verify env substitution
+        run: |
+          set -euo pipefail
+          if grep -q '%VITE_SUPABASE_URL%' dist/index.html; then
+            echo "::error::VITE_SUPABASE_URL was not substituted — the secret is missing."
+            exit 1
+          fi
+          echo "Environment substitution OK."
+
+      - name: Check bundle budget
+        run: node scripts/check-bundle-budget.mjs
+
+      - uses: actions/upload-artifact@v4
         with:
           name: dist
           path: dist/
-          retention-days: 1
+          retention-days: 7
 
-  # ── Deploy ───────────────────────────────────────────────────────────────
   deploy:
     name: Deploy → S3 / CloudFront
     needs: build
@@ -61,8 +82,7 @@ jobs:
     environment: production
 
     steps:
-      - name: Download dist artifact
-        uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v4
         with:
           name: dist
           path: dist/
@@ -74,24 +94,63 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ secrets.AWS_REGION }}
 
-      - name: Sync assets → S3 (immutable cache)
+      # Hashed filenames, so assets are immutable and cached for a year.
+      # Uploaded BEFORE the HTML that references them: the reverse order leaves
+      # a window where a visitor gets new HTML pointing at assets that are not
+      # there yet.
+      - name: Sync assets → S3 (immutable)
         run: |
           aws s3 sync dist/assets "s3://${{ secrets.S3_BUCKET_NAME }}/assets" \
-            --cache-control "public,max-age=31536000,immutable" \
-            --delete
+            --cache-control "public,max-age=31536000,immutable"
+
+      # Self-hosted fonts: not content-hashed, but they change only when a
+      # font is swapped (give the new file a new name). Cached for a year so
+      # repeat visits don't revalidate them.
+      - name: Sync fonts → S3 (long cache)
+        run: |
+          aws s3 sync dist/fonts "s3://${{ secrets.S3_BUCKET_NAME }}/fonts" \
+            --cache-control "public,max-age=31536000" \
+            --content-type "font/woff2"
 
       - name: Sync root → S3 (no cache)
         run: |
           aws s3 sync dist "s3://${{ secrets.S3_BUCKET_NAME }}" \
             --exclude "assets/*" \
+            --exclude "fonts/*" \
             --cache-control "no-cache,no-store,must-revalidate" \
             --delete
 
-      - name: Invalidate CloudFront (index only)
+      # Only now remove assets no release references any more.
+      - name: Prune superseded assets
         run: |
-          aws cloudfront create-invalidation \
-            --distribution-id "${{ secrets.CLOUDFRONT_DISTRIBUTION_ID }}" \
-            --paths "/index.html" "/"
+          aws s3 sync dist/assets "s3://${{ secrets.S3_BUCKET_NAME }}/assets" \
+            --cache-control "public,max-age=31536000,immutable" \
+            --delete
 
-      - name: Deployment success
-        run: echo "🚀 Deployment completed successfully"
+      - name: Invalidate CloudFront
+        run: |
+          set -euo pipefail
+          export AWS_PAGER=""
+          ID=$(aws cloudfront create-invalidation \
+            --distribution-id "${{ secrets.CLOUDFRONT_DISTRIBUTION_ID }}" \
+            --paths "/index.html" "/" "/sitemap.xml" "/robots.txt" "/llms.txt" \
+            --query 'Invalidation.Id' --output text)
+          echo "Invalidation $ID created; waiting for it to complete…"
+          aws cloudfront wait invalidation-completed \
+            --distribution-id "${{ secrets.CLOUDFRONT_DISTRIBUTION_ID }}" \
+            --id "$ID"
+
+      # A green deploy should mean the site actually serves, not just that the
+      # upload succeeded.
+      - name: Smoke test
+        run: |
+          set -euo pipefail
+          URL="${{ vars.SITE_URL || 'https://thecrypticowl.com' }}"
+          for path in "/" "/learn" "/puzzle/1" "/sudoku" "/fonts/fredoka-one-latin.woff2"; do
+            code=$(curl -sS -o /dev/null -w '%{http_code}' --max-time 20 "$URL$path")
+            echo "$path → $code"
+            [ "$code" = "200" ] || { echo "::error::$URL$path returned $code"; exit 1; }
+          done
+          curl -sS --max-time 20 "$URL/" | grep -q 'TheCrypticOwl' \
+            || { echo "::error::Homepage did not contain the expected markup."; exit 1; }
+          echo "Smoke test passed."

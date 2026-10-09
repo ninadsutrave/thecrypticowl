@@ -1,0 +1,18 @@
+# The Cryptic Owl
+
+> Seven free daily puzzles, each about five minutes at medium difficulty: a variant sudoku, a British cryptic crossword clue, "What Am I Talking About?" (five clues to a hidden subject), a ten-question trivia quiz, Chronology (order six events from today's date), a chess mate-in-three-to-five, and a cryptogram of a famous saying. New puzzles every day at midnight local time.
+
+## Puzzles
+
+- [All of today's puzzles](https://thecrypticowl.com/): the home page grid
+- [Variant Sudoku](https://thecrypticowl.com/sudoku): 6×6 sudoku with a different rule each weekday (Diagonal, Kropki, Thermo, Arrow, Sandwich, Jigsaw, Killer)
+- [Cryptic Clue](https://thecrypticowl.com/cryptic): one British cryptic crossword clue with step-by-step hints
+- [What Am I Talking About?](https://thecrypticowl.com/what-am-i): guess a country, person, band, brand or festival from five clues
+- [Trivia](https://thecrypticowl.com/trivia): ten multiple-choice questions, each with its source
+- [Chronology](https://thecrypticowl.com/chronology): put six "on this day" events in order
+- [Checkmate](https://thecrypticowl.com/chess): a forced mate in three to five moves, from the Lichess puzzle database
+- [Cryptogram](https://thecrypticowl.com/cryptogram): decode a public-domain quote or proverb
+
+## Learn
+
+- [Cryptic crossword tutorial](https://thecrypticowl.com/learn): how cryptic clues work — definitions, indicators, fodder and every wordplay type

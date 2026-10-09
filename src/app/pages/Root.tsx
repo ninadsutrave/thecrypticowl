@@ -3,8 +3,8 @@ import {
   Menu,
   X,
   BookOpen,
-  Puzzle as PuzzleNavIcon,
-  Home,
+  LayoutGrid,
+  BarChart3,
   Sun,
   Moon,
   Trophy,
@@ -12,33 +12,45 @@ import {
   LogOut,
   Heart,
 } from 'lucide-react';
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useLayoutEffect, useRef } from 'react';
 import { m, AnimatePresence } from 'motion/react';
 import { useDarkMode } from '../context/DarkModeContext';
 import { getTheme } from '../theme';
 import { useStreak } from '../hooks/useStreak';
 import { useAuth } from '../context/AuthContext';
 import { fetchAppLikesCount, addAppLike, isSupabaseConfigured } from '../../lib/supabase';
+import { useOnlineStatus } from '../hooks/useOnlineStatus';
+import { NoInternet } from './NoInternet';
+import { StoreKeys, readRaw, writeRaw } from '../lib/localStore';
 
 function LikeButton({ isDark }: { isDark: boolean }) {
   const [liked, setLiked] = useState(() => {
-    const val = localStorage.getItem('tco-app-liked');
-    return val === 'true';
+    return readRaw(StoreKeys.appLiked) === 'true';
   });
   const [totalLikes, setTotalLikes] = useState(0);
   const T = getTheme(isDark);
+  const ref = useRef<HTMLButtonElement>(null);
 
+  // The count lives in the footer, and fetching it loads the Supabase SDK
+  // (~58 KB). Waiting until the footer is on screen keeps that download
+  // from competing with first paint on a slow phone connection.
   useEffect(() => {
-    if (isSupabaseConfigured) {
-      fetchAppLikesCount().then(setTotalLikes);
-    }
+    if (!isSupabaseConfigured || !ref.current) return;
+    const io = new IntersectionObserver(entries => {
+      if (entries.some(e => e.isIntersecting)) {
+        io.disconnect();
+        fetchAppLikesCount().then(setTotalLikes);
+      }
+    });
+    io.observe(ref.current);
+    return () => io.disconnect();
   }, []);
 
   const toggleLike = async () => {
     if (liked) return; // Disable unlike
 
     setLiked(true);
-    localStorage.setItem('tco-app-liked', 'true');
+    writeRaw(StoreKeys.appLiked, 'true');
 
     if (isSupabaseConfigured) {
       setTotalLikes(prev => prev + 1);
@@ -46,10 +58,11 @@ function LikeButton({ isDark }: { isDark: boolean }) {
     }
   };
 
-  const activePurple = isDark ? '#A78BFA' : '#7C3AED';
+  const activePurple = T.brand;
 
   return (
     <m.button
+      ref={ref}
       onClick={toggleLike}
       whileHover={!liked ? { scale: 1.05 } : {}}
       whileTap={!liked ? { scale: 0.95 } : {}}
@@ -112,6 +125,10 @@ export function Root() {
   const { count: streak, refresh: refreshStreak } = useStreak();
   const { user, isSignedIn, signOut } = useAuth();
   const location = useLocation();
+  const isOnline = useOnlineStatus();
+  // The dedicated offline screen owns /offline; everywhere else it takes over
+  // the content area only while the browser reports no connection.
+  const isOffline = !isOnline && location.pathname !== '/offline';
 
   // Close avatar dropdown on outside click
   useEffect(() => {
@@ -124,6 +141,13 @@ export function Root() {
     return () => document.removeEventListener('mousedown', handler);
   }, []);
 
+  // Default tab title for every route. A layout effect runs before the
+  // pages' own (passive) title effects, so pages that set one still win and
+  // pages that don't no longer inherit the previous page's title.
+  useLayoutEffect(() => {
+    document.title = 'The Cryptic Owl · Daily Puzzles';
+  }, [location.pathname]);
+
   // Close mobile menu, avatar dropdown, and refresh streak on route change
   useEffect(() => {
     setMenuOpen(false);
@@ -134,10 +158,11 @@ export function Root() {
   }, [location.pathname]);
 
   const navLinks = [
-    { to: '/', label: "Today's Puzzle", icon: PuzzleNavIcon, requiresAuth: false },
-    { to: '/about', label: 'About', icon: Home, requiresAuth: false },
-    { to: '/learn', label: 'Learn', icon: BookOpen, requiresAuth: false },
-    { to: '/history', label: 'Progress', icon: Trophy, requiresAuth: true },
+    { to: '/', label: 'Puzzles', icon: LayoutGrid, requiresAuth: false },
+    { to: '/learn', label: 'Tutorial', icon: BookOpen, requiresAuth: false },
+    // One stats destination: the cryptic XP/archive page is linked from it,
+    // not a second, confusingly similar tab.
+    { to: '/stats', label: 'Stats', icon: BarChart3, requiresAuth: false },
   ];
 
   return (
@@ -159,7 +184,7 @@ export function Root() {
               style={{
                 fontFamily: "'Fredoka One', cursive",
                 fontSize: 'clamp(1.1rem, 4vw, 1.25rem)',
-                color: isDark ? '#C4B5FD' : '#5B21B6',
+                color: T.brandStrong,
                 letterSpacing: '-0.01em',
               }}
             >
@@ -181,7 +206,7 @@ export function Root() {
                 }
                 style={({ isActive }) => ({
                   background: isActive ? '#7C3AED' : 'transparent',
-                  color: isActive ? 'white' : isDark ? '#C4B5FD' : '#6D28D9',
+                  color: isActive ? 'white' : T.brandText,
                   fontFamily: "'Nunito', sans-serif",
                 })}
               >
@@ -208,7 +233,7 @@ export function Root() {
                   style={{
                     fontFamily: "'Fredoka One', cursive",
                     fontSize: '0.9rem',
-                    color: isDark ? '#FB923C' : '#EA580C',
+                    color: T.streakText,
                   }}
                   className="sm:text-[1rem]"
                 >
@@ -242,7 +267,7 @@ export function Root() {
                       src={user.picture}
                       alt={user.name}
                       className="w-8 h-8 rounded-full block"
-                      style={{ border: `2px solid ${isDark ? '#4C3580' : '#C4B5FD'}` }}
+                      style={{ border: `2px solid ${T.brandBorder}` }}
                     />
                   </m.button>
 
@@ -288,7 +313,7 @@ export function Root() {
                           onClick={() => setAvatarDropdown(false)}
                           className="flex items-center gap-2.5 px-4 py-2.5 text-sm no-underline font-semibold transition-colors hover:opacity-80"
                           style={{
-                            color: isDark ? '#C4B5FD' : '#5B21B6',
+                            color: T.brandStrong,
                             fontFamily: "'Nunito', sans-serif",
                           }}
                         >
@@ -319,9 +344,9 @@ export function Root() {
                   <m.div
                     className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-bold border"
                     style={{
-                      background: isDark ? '#261845' : '#F5F0FF',
-                      borderColor: isDark ? '#4C3580' : '#C4B5FD',
-                      color: isDark ? '#C4B5FD' : '#7C3AED',
+                      background: T.brandSurface,
+                      borderColor: T.brandBorder,
+                      color: T.brandText,
                       fontFamily: "'Nunito', sans-serif",
                     }}
                     whileHover={{ scale: 1.05 }}
@@ -340,9 +365,9 @@ export function Root() {
               whileTap={{ scale: 0.9 }}
               className="p-2 rounded-full border transition-colors duration-200"
               style={{
-                background: isDark ? '#261845' : '#F5F0FF',
-                borderColor: isDark ? '#4C3580' : '#C4B5FD',
-                color: isDark ? '#C4B5FD' : '#7C3AED',
+                background: T.brandSurface,
+                borderColor: T.brandBorder,
+                color: T.brandText,
               }}
               title={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
               aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
@@ -370,8 +395,8 @@ export function Root() {
               aria-expanded={menuOpen}
               className="md:hidden p-2 rounded-full transition-colors"
               style={{
-                background: menuOpen ? (isDark ? '#261845' : '#F5F0FF') : 'transparent',
-                color: isDark ? '#C4B5FD' : '#6D28D9',
+                background: menuOpen ? T.brandSurface : 'transparent',
+                color: T.brandText,
               }}
             >
               <AnimatePresence mode="wait" initial={false}>
@@ -416,8 +441,8 @@ export function Root() {
                       onClick={() => setMenuOpen(false)}
                       className="flex items-center gap-3 px-4 py-3 rounded-2xl text-sm no-underline font-semibold transition-all"
                       style={({ isActive }) => ({
-                        background: isActive ? '#7C3AED' : isDark ? '#261845' : '#F5F0FF',
-                        color: isActive ? 'white' : isDark ? '#C4B5FD' : '#6D28D9',
+                        background: isActive ? '#7C3AED' : T.brandSurface,
+                        color: isActive ? 'white' : T.brandText,
                         fontFamily: "'Nunito', sans-serif",
                         fontWeight: 700,
                       })}
@@ -440,12 +465,12 @@ export function Root() {
                   {isSignedIn && user ? (
                     <div
                       className="flex items-center gap-3 px-4 py-3 rounded-2xl"
-                      style={{ background: isDark ? '#261845' : '#F5F0FF' }}
+                      style={{ background: T.brandSurface }}
                     >
                       <img src={user.picture} alt={user.name} className="w-7 h-7 rounded-full" />
                       <span
                         style={{
-                          color: isDark ? '#C4B5FD' : '#6D28D9',
+                          color: T.brandText,
                           fontWeight: 700,
                           fontSize: '0.9rem',
                           flex: 1,
@@ -459,7 +484,7 @@ export function Root() {
                           setMenuOpen(false);
                         }}
                         style={{
-                          color: isDark ? '#9381CC' : '#9CA3AF',
+                          color: T.faintText,
                           fontSize: '0.8rem',
                           fontWeight: 600,
                         }}
@@ -473,8 +498,8 @@ export function Root() {
                       onClick={() => setMenuOpen(false)}
                       className="flex items-center gap-3 px-4 py-3 rounded-2xl text-sm no-underline font-bold transition-all"
                       style={{
-                        background: isDark ? '#261845' : '#F5F0FF',
-                        color: isDark ? '#C4B5FD' : '#6D28D9',
+                        background: T.brandSurface,
+                        color: T.brandText,
                         fontFamily: "'Nunito', sans-serif",
                       }}
                     >
@@ -489,9 +514,9 @@ export function Root() {
         </AnimatePresence>
       </nav>
 
-      <main className="flex-grow">
-        <Outlet />
-      </main>
+      {/* The nav and footer stay put so the solver is never stranded on a
+          dead screen — only the content area is replaced. */}
+      <main className="flex-grow">{isOffline ? <NoInternet /> : <Outlet />}</main>
 
       {/* Footer */}
       <footer
@@ -512,7 +537,7 @@ export function Root() {
               target="_blank"
               rel="noopener noreferrer"
               className="font-bold hover:underline"
-              style={{ color: isDark ? '#A78BFA' : '#7C3AED' }}
+              style={{ color: T.brand }}
             >
               Ninad Sutrave
             </a>
@@ -522,7 +547,7 @@ export function Root() {
             <NavLink
               to="/privacy"
               className="text-sm font-semibold hover:underline no-underline"
-              style={{ color: isDark ? '#A78BFA' : '#7C3AED' }}
+              style={{ color: T.brand }}
             >
               Privacy Policy
             </NavLink>

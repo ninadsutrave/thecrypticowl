@@ -1,8 +1,6 @@
 @import 'tailwindcss' source(none);
 @source '../**/*.{js,ts,jsx,tsx}';
 
-@import 'tw-animate-css';
-
 /* The Cryptic Owl custom styles */
 .hide-scrollbar::-webkit-scrollbar {
   display: none;
@@ -10,22 +8,6 @@
 .hide-scrollbar {
   -ms-overflow-style: none;
   scrollbar-width: none;
-}
-
-/* Radix Tabs active state */
-[role='tab'][data-state='active'] {
-  background: #7c3aed !important;
-  color: white !important;
-}
-
-[role='tab'][data-state='inactive'] {
-  color: #6d28d9;
-}
-
-/* Dark mode Radix Tabs */
-.dark [role='tab'][data-state='inactive'] {
-  color: #c4b5fd;
-  background: transparent;
 }
 
 /* Smooth scroll */
@@ -63,4 +45,21 @@ main {
 .dark ::selection {
   background: #a78bfa44;
   color: #ede9fe;
+}
+
+/* Chess: the last-moved piece slides in from its origin square
+   (--dx/--dy are set per move by games/chess/Board.tsx). */
+@keyframes chessSlide {
+  from {
+    transform: translate(var(--dx), var(--dy));
+  }
+  to {
+    transform: translate(0, 0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  img[style*='chessSlide'] {
+    animation: none !important;
+  }
 }

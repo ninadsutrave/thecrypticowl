@@ -1,0 +1,37 @@
+name: Deploy Lambda · Cryptic Clue
+
+# Keeps the original LAMBDA_SCHEDULE variable and 03:15 UTC slot.
+
+on:
+  push:
+    branches: [master]
+    paths:
+      - 'lambda/games/cryptic/**'
+      - 'lambda/shared/**'
+      - 'lambda/package.json'
+      - 'lambda/package-lock.json'
+      - 'lambda/scripts/package.sh'
+      - '.github/workflows/deploy-lambda-cryptic.yml'
+      - '.github/workflows/_deploy-game-lambda.yml'
+  workflow_dispatch:
+    inputs:
+      skip_schedule:
+        description: 'Skip reconciling the EventBridge schedule'
+        type: boolean
+        default: false
+
+concurrency:
+  group: deploy-lambda-cryptic
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    uses: ./.github/workflows/_deploy-game-lambda.yml
+    with:
+      game: cryptic
+      needs_ai: true
+      timeout: 600
+      memory: 256
+      schedule: ${{ vars.LAMBDA_SCHEDULE || 'cron(15 3 * * ? *)' }}
+      skip_schedule: ${{ inputs.skip_schedule || false }}
+    secrets: inherit

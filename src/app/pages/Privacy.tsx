@@ -15,17 +15,27 @@ export function Privacy() {
     {
       title: 'Data Collection',
       content:
-        'We collect minimal personal data necessary to provide a personalized experience. When you sign in using Google OAuth, we receive your email address, name, and profile picture. This information is used exclusively to identify your account, sync your puzzle progress, maintain your daily streaks, and store your solve history across different devices.',
+        'We collect minimal personal data necessary to provide a personalized experience. When you sign in using Google OAuth, we receive your email address, name, and profile picture. This information is used exclusively to identify your account, sync your puzzle progress, maintain your daily streaks, and store your play history across different devices.',
+    },
+    {
+      title: 'Play History',
+      content:
+        'For each daily puzzle you finish we record the date, the game, whether you solved it, how long it took, and how many hints and mistakes you used. This powers your Stats page, streaks and personal bests. It is kept on your device, and when you are signed in it is also saved to your account so it follows you between devices. We never sell it or use it for advertising.',
     },
     {
       title: 'Local Storage & Persistence',
       content:
-        'For users who are not signed in, all progress data (including current puzzle state, XP, and streaks) is stored locally on your device using browser localStorage. This data remains on your device and is not accessible by us until you choose to sign in and sync your account. Once authenticated, this local data is merged with your cloud profile hosted on Supabase.',
+        'For users who are not signed in, all progress data (including the state of a puzzle in progress, timers, XP, streaks and play history) is stored locally on your device using browser localStorage. This data remains on your device and is not accessible by us until you choose to sign in. Once authenticated, this local data is merged with your account hosted on Supabase.',
+    },
+    {
+      title: 'How Puzzles Are Made',
+      content:
+        'The daily puzzles are generated on our servers ahead of time, using public sources such as Wikipedia, Wikidata, the Lichess puzzle database and Open Trivia DB, with help from an AI model for some games. Your browser only talks to our own site and database while you play: none of these sources receive any information about you. Our fonts are also served from our own site rather than a third-party font service.',
     },
     {
       title: 'Cookies & Authentication',
       content:
-        'We use essential cookies and browser storage tokens to maintain your authentication session via Supabase and Google. These are strictly necessary for the site to function and do not track your activity across other websites. We do not use any third-party advertising or tracking cookies.',
+        'We use essential cookies and browser storage tokens to maintain your authentication session via Supabase and Google, and to remember your theme preference. These are strictly necessary for the site to function. We do not use any advertising cookies, and we do not sell or share your data with advertisers. We do use Google Analytics, which sets its own cookies — see the Analytics section below.',
     },
     {
       title: 'Third-Party Services',
@@ -35,7 +45,12 @@ export function Privacy() {
     {
       title: 'Analytics',
       content:
-        'We use Google Analytics to collect anonymous usage statistics (such as page views and solve rates) to help us improve the learning experience. No personally identifiable information is sent to Google Analytics.',
+        'We use Google Analytics to collect aggregate usage statistics — page views, which puzzles are solved, and how many hints are typically needed — to help us improve the learning experience. Google Analytics sets its own cookies (such as _ga) to distinguish visitors between sessions. We do not send your name, email address or solve history to Google Analytics. Analytics only loads after your first interaction with the page, so simply opening the site and leaving loads nothing. You can block it with any standard browser privacy setting or extension without affecting the puzzle.',
+    },
+    {
+      title: 'Your Choices',
+      content:
+        'You can play without an account: your streak, XP and play history stay on your device and are never sent to us. Signing out clears that local data from the device. If you have signed in and would like your account and its history deleted, email us and we will remove it.',
     },
     {
       title: 'Contact',
@@ -47,7 +62,7 @@ export function Privacy() {
             href="https://ninadsutrave.in"
             target="_blank"
             rel="noopener noreferrer"
-            style={{ color: isDark ? '#A78BFA' : '#7C3AED', textDecoration: 'underline' }}
+            style={{ color: T.brand, textDecoration: 'underline' }}
           >
             ninadsutrave.in
           </a>
@@ -68,7 +83,7 @@ export function Privacy() {
           style={{
             fontFamily: "'Fredoka One', cursive",
             fontSize: '2.5rem',
-            color: isDark ? '#C4B5FD' : '#5B21B6',
+            color: T.brandStrong,
             marginBottom: '1rem',
           }}
         >
@@ -82,7 +97,7 @@ export function Privacy() {
             lineHeight: 1.6,
           }}
         >
-          Last updated: April 11, 2026. We value your privacy and aim to be as transparent as
+          Last updated: October 10, 2026. We value your privacy and aim to be as transparent as
           possible about how we handle your data.
         </p>
 
@@ -98,7 +113,7 @@ export function Privacy() {
                 style={{
                   fontFamily: "'Fredoka One', cursive",
                   fontSize: '1.5rem',
-                  color: isDark ? '#A78BFA' : '#7C3AED',
+                  color: T.brand,
                   marginBottom: '0.75rem',
                 }}
               >

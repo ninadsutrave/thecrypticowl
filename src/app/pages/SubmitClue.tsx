@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { m, AnimatePresence } from 'motion/react';
 import { useNavigate } from 'react-router';
 import { Send, ArrowLeft, Info, CheckCircle2, AlertCircle } from 'lucide-react';
@@ -30,6 +30,10 @@ export function SubmitClue() {
   const { user, isSignedIn, loading: authLoading } = useAuth();
   const navigate = useNavigate();
 
+  // Empty-string defaults for the contributor fields: `user` is null at mount
+  // because session restore is deferred to requestIdleCallback, and a
+  // useState initialiser runs once. Reading user?.name here meant the name and
+  // email were ALWAYS blank. They are filled in by the effect below instead.
   const [formData, setFormData] = useState({
     clue_text: '',
     answer: '',
@@ -40,14 +44,31 @@ export function SubmitClue() {
     fodder: '',
     indicator: '',
     explanation: '',
-    author_name: user?.name || '',
-    author_email: user?.email || '',
+    author_name: '',
+    author_email: '',
     author_social: '',
   });
 
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Prefill from the session once it resolves, without clobbering anything the
+  // contributor has already typed.
+  useEffect(() => {
+    if (!user) return;
+    setFormData(prev => ({
+      ...prev,
+      author_name: prev.author_name || user.name,
+      author_email: prev.author_email || user.email,
+    }));
+  }, [user]);
+
+  // Redirect as an effect, not during render: calling navigate() in the render
+  // body mutates router state while React is rendering.
+  useEffect(() => {
+    if (!authLoading && !isSignedIn) navigate('/history', { replace: true });
+  }, [authLoading, isSignedIn, navigate]);
 
   // Wait for auth to finish restoring before deciding — otherwise a previously
   // signed-in user gets redirected away during the idle-deferred session hydration.
@@ -65,10 +86,7 @@ export function SubmitClue() {
       </div>
     );
   }
-  if (!isSignedIn) {
-    navigate('/history');
-    return null;
-  }
+  if (!isSignedIn) return null;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -112,7 +130,7 @@ export function SubmitClue() {
         <button
           onClick={() => navigate('/history')}
           className="flex items-center gap-2 text-sm font-bold mb-6 hover:opacity-70 transition-opacity"
-          style={{ color: isDark ? '#A78BFA' : '#7C3AED' }}
+          style={{ color: T.brand }}
         >
           <ArrowLeft size={16} />
           Back to History
@@ -136,7 +154,7 @@ export function SubmitClue() {
                 style={{
                   fontFamily: "'Fredoka One', cursive",
                   fontSize: '1.5rem',
-                  color: isDark ? '#F0EAFF' : '#1E1B4B',
+                  color: T.heading,
                   margin: 0,
                 }}
               >
@@ -366,7 +384,7 @@ export function SubmitClue() {
                     style={{
                       fontFamily: "'Fredoka One', cursive",
                       fontSize: '1.1rem',
-                      color: isDark ? '#F0EAFF' : '#1E1B4B',
+                      color: T.heading,
                     }}
                   >
                     Contributor Details
@@ -435,8 +453,8 @@ export function SubmitClue() {
                 <div
                   className="p-4 rounded-2xl flex items-start gap-3"
                   style={{
-                    background: isDark ? '#1A1035' : '#F5F3FF',
-                    border: `1px dashed ${isDark ? '#4C3580' : '#C4B5FD'}`,
+                    background: T.indicatorBg,
+                    border: `1px dashed ${T.brandBorder}`,
                   }}
                 >
                   <Info size={18} style={{ color: '#7C3AED', marginTop: 2 }} />

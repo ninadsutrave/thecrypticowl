@@ -1,16 +1,13 @@
 import { useState, useEffect } from 'react';
+import { StoreKeys, readJSON, writeJSON } from '../lib/localStore';
 import { upsertClueReaction, deleteClueReaction } from '../../lib/supabase';
 
 export type Reaction = 'like' | 'dislike' | null;
 
-const STORAGE_KEY = 'tco-reactions';
+const STORAGE_KEY = StoreKeys.reactions;
 
 function getStoredReactions(): Record<number, Reaction> {
-  try {
-    return JSON.parse(localStorage.getItem(STORAGE_KEY) ?? '{}');
-  } catch {
-    return {};
-  }
+  return readJSON<Record<number, Reaction>>(STORAGE_KEY, {});
 }
 
 function persistReaction(puzzleNumber: number, reaction: Reaction) {
@@ -20,11 +17,7 @@ function persistReaction(puzzleNumber: number, reaction: Reaction) {
   } else {
     all[puzzleNumber] = reaction;
   }
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(all));
-  } catch {
-    /* localStorage unavailable */
-  }
+  writeJSON(STORAGE_KEY, all);
 }
 
 /**

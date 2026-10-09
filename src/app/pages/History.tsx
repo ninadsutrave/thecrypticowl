@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, lazy, Suspense } from 'react';
 import { m, AnimatePresence } from 'motion/react';
 import {
   Trophy,
@@ -18,15 +18,18 @@ import { useAuth } from '../context/AuthContext';
 import { useStreak, getLevelTitle } from '../hooks/useStreak';
 import { Mascot } from '../components/Mascot';
 import { useNavigate } from 'react-router';
-import {
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  Tooltip,
-  ResponsiveContainer,
-  CartesianGrid,
-} from 'recharts';
+const TrendChart = lazy(() => import('./history/TrendChart'));
+
+/** Placeholder that reserves the chart's exact height, so nothing shifts. */
+function ChartSkeleton({ height, isDark }: { height: number; isDark: boolean }) {
+  return (
+    <div
+      className="rounded-2xl animate-pulse"
+      style={{ height, background: isDark ? '#1A1035' : '#F5F3FF' }}
+      aria-label="Loading chart"
+    />
+  );
+}
 import {
   fetchSolveHistory,
   fetchUserStats,
@@ -132,18 +135,18 @@ function SignInGate({ isDark }: { isDark: boolean }) {
           <div
             className="inline-flex items-center justify-center w-14 h-14 rounded-full mb-4"
             style={{
-              background: isDark ? '#261845' : '#F5F0FF',
-              border: `2px solid ${isDark ? '#4C3580' : '#C4B5FD'}`,
+              background: T.brandSurface,
+              border: `2px solid ${T.brandBorder}`,
             }}
           >
-            <Lock size={24} style={{ color: isDark ? '#C4B5FD' : '#7C3AED' }} />
+            <Lock size={24} style={{ color: T.brandText }} />
           </div>
 
           <h1
             style={{
               fontFamily: "'Fredoka One', cursive",
               fontSize: '1.8rem',
-              color: isDark ? '#F0EAFF' : '#1E1B4B',
+              color: T.heading,
               marginBottom: '0.5rem',
             }}
           >
@@ -182,7 +185,7 @@ function SignInGate({ isDark }: { isDark: boolean }) {
             <div
               className="rounded-xl p-3 text-sm text-left"
               style={{
-                background: isDark ? '#2A1505' : '#FFF7ED',
+                background: T.fodderBg,
                 color: isDark ? '#FB923C' : '#C2410C',
                 border: `1px solid ${isDark ? '#7C2D12' : '#FED7AA'}`,
               }}
@@ -247,7 +250,7 @@ function StatCard({
         style={{
           fontFamily: "'Fredoka One', cursive",
           fontSize: '1.5rem',
-          color: isDark ? '#C4B5FD' : '#5B21B6',
+          color: T.brandStrong,
         }}
       >
         {value}
@@ -302,9 +305,9 @@ function SolveRow({
         <div className="flex items-center gap-2.5">
           <div
             className="flex items-center justify-center w-8 h-8 rounded-xl flex-shrink-0"
-            style={{ background: isDark ? '#261845' : '#F5F0FF' }}
+            style={{ background: T.brandSurface }}
           >
-            <PuzzleIcon size={14} style={{ color: isDark ? '#C4B5FD' : '#7C3AED' }} />
+            <PuzzleIcon size={14} style={{ color: T.brandText }} />
           </div>
           <div>
             <div style={{ fontWeight: 700, color: T.text, fontSize: '0.9rem', lineHeight: 1.2 }}>
@@ -356,7 +359,7 @@ function SolveRow({
           <span
             className="px-2 py-0.5 rounded-full text-xs font-bold"
             style={{
-              background: isDark ? '#2A0F15' : '#FFF1F2',
+              background: T.wrongBg,
               color: '#EF4444',
               border: '1px solid #EF444440',
             }}
@@ -368,7 +371,7 @@ function SolveRow({
           <span
             className="px-2 py-0.5 rounded-full text-xs font-bold"
             style={{
-              background: isDark ? '#062010' : '#ECFDF5',
+              background: T.successBg,
               color: '#10B981',
               border: '1px solid #10B98140',
             }}
@@ -415,9 +418,9 @@ function ArchiveRow({
       <div className="flex items-center gap-3">
         <div
           className="flex items-center justify-center w-9 h-9 rounded-xl"
-          style={{ background: isDark ? '#261845' : '#F5F0FF' }}
+          style={{ background: T.brandSurface }}
         >
-          <Calendar size={16} style={{ color: isDark ? '#C4B5FD' : '#7C3AED' }} />
+          <Calendar size={16} style={{ color: T.brandText }} />
         </div>
         <div>
           <div style={{ fontWeight: 700, color: T.text, fontSize: '0.9rem' }}>
@@ -427,7 +430,7 @@ function ArchiveRow({
                 className="ml-2 px-2 py-0.5 rounded-full text-xs"
                 style={{
                   background: isDark ? '#1A1035' : '#F5F0FF',
-                  color: isDark ? '#C4B5FD' : '#7C3AED',
+                  color: T.brandText,
                 }}
               >
                 {puzzle.primary_type}
@@ -584,7 +587,7 @@ function SolveInsights({
         style={{
           fontFamily: "'Fredoka One', cursive",
           fontSize: '1.1rem',
-          color: isDark ? '#C4B5FD' : '#5B21B6',
+          color: T.brandStrong,
           marginBottom: '0.75rem',
         }}
       >
@@ -631,80 +634,15 @@ function SolveInsights({
           ))}
         </div>
         {trendData.length > 0 ? (
-          <ResponsiveContainer width="100%" height={210}>
-            <LineChart
-              data={trendData}
-              margin={{ top: 4, right: hasTimeData ? 36 : 4, left: -20, bottom: 0 }}
-            >
-              <CartesianGrid strokeDasharray="3 3" stroke={gridColor} />
-              <XAxis
-                dataKey="name"
-                tick={{ fontSize: 9, fill: axisColor }}
-                interval="preserveStartEnd"
-              />
-              <YAxis yAxisId="left" allowDecimals={false} tick={{ fontSize: 9, fill: axisColor }} />
-              {hasTimeData && (
-                <YAxis
-                  yAxisId="right"
-                  orientation="right"
-                  tick={{ fontSize: 9, fill: '#0EA5E9' }}
-                />
-              )}
-              <Tooltip
-                contentStyle={{
-                  background: T.cardBg,
-                  border: `1px solid ${T.cardBorder}`,
-                  borderRadius: 8,
-                  fontSize: 12,
-                }}
-                labelStyle={{ color: T.text, fontWeight: 700 }}
-                formatter={(value: number, name: string) => {
-                  if (name === 'time') {
-                    return [
-                      value < 60 ? `${value}s` : `${Math.floor(value / 60)}m ${value % 60}s`,
-                      'Time',
-                    ];
-                  }
-                  if (name === 'hints') return [value, 'Hints'];
-                  if (name === 'wrong') return [value, 'Wrong guesses'];
-                  return [value, name];
-                }}
-              />
-              <Line
-                yAxisId="left"
-                type="monotone"
-                dataKey="hints"
-                stroke="#7C3AED"
-                strokeWidth={2}
-                dot={{ r: 3, fill: '#7C3AED' }}
-                activeDot={{ r: 5 }}
-                name="hints"
-              />
-              <Line
-                yAxisId="left"
-                type="monotone"
-                dataKey="wrong"
-                stroke="#EF4444"
-                strokeWidth={2}
-                dot={{ r: 3, fill: '#EF4444' }}
-                activeDot={{ r: 5 }}
-                name="wrong"
-              />
-              {hasTimeData && (
-                <Line
-                  yAxisId="right"
-                  type="monotone"
-                  dataKey="time"
-                  stroke="#0EA5E9"
-                  strokeWidth={2}
-                  dot={{ r: 3, fill: '#0EA5E9' }}
-                  activeDot={{ r: 5 }}
-                  name="time"
-                  connectNulls
-                />
-              )}
-            </LineChart>
-          </ResponsiveContainer>
+          <Suspense fallback={<ChartSkeleton height={210} isDark={isDark} />}>
+            <TrendChart
+              trendData={trendData}
+              hasTimeData={hasTimeData}
+              gridColor={gridColor}
+              axisColor={axisColor}
+              T={T}
+            />
+          </Suspense>
         ) : (
           <div
             style={{
@@ -938,21 +876,21 @@ export function Progress() {
                   src={user.picture}
                   alt={user.name}
                   className="w-16 h-16 rounded-full"
-                  style={{ border: `3px solid ${isDark ? '#4C3580' : '#C4B5FD'}` }}
+                  style={{ border: `3px solid ${T.brandBorder}` }}
                 />
               ) : (
                 <div
                   className="w-16 h-16 rounded-full flex items-center justify-center"
                   style={{
-                    background: isDark ? '#261845' : '#F5F0FF',
-                    border: `3px solid ${isDark ? '#4C3580' : '#C4B5FD'}`,
+                    background: T.brandSurface,
+                    border: `3px solid ${T.brandBorder}`,
                   }}
                 >
                   <span
                     style={{
                       fontFamily: "'Fredoka One', cursive",
                       fontSize: '1.5rem',
-                      color: isDark ? '#C4B5FD' : '#7C3AED',
+                      color: T.brandText,
                     }}
                   >
                     {user?.name?.[0] ?? '?'}
@@ -964,7 +902,7 @@ export function Progress() {
                   style={{
                     fontFamily: "'Fredoka One', cursive",
                     fontSize: '1.3rem',
-                    color: isDark ? '#F0EAFF' : '#1E1B4B',
+                    color: T.heading,
                     margin: 0,
                   }}
                 >
@@ -976,9 +914,9 @@ export function Progress() {
                 <span
                   className="px-3 py-0.5 rounded-full text-sm font-bold"
                   style={{
-                    background: isDark ? '#261845' : '#F5F0FF',
-                    color: isDark ? '#C4B5FD' : '#7C3AED',
-                    border: `1px solid ${isDark ? '#4C3580' : '#C4B5FD'}`,
+                    background: T.brandSurface,
+                    color: T.brandText,
+                    border: `1px solid ${T.brandBorder}`,
                   }}
                 >
                   {levelTitle}
@@ -989,7 +927,7 @@ export function Progress() {
               onClick={signOut}
               className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-semibold border"
               style={{
-                color: isDark ? '#9381CC' : '#6B7280',
+                color: T.textMuted,
                 borderColor: T.cardBorder,
                 background: 'transparent',
               }}
@@ -1008,7 +946,7 @@ export function Progress() {
             <m.div
               className="rounded-2xl border px-4 py-3 mb-4 flex items-center gap-3"
               style={{
-                background: isDark ? '#2A0F15' : '#FFF1F2',
+                background: T.wrongBg,
                 borderColor: isDark ? '#7F1D1D' : '#FCA5A5',
               }}
               initial={{ opacity: 0, height: 0 }}
@@ -1049,7 +987,7 @@ export function Progress() {
             style={{
               fontFamily: "'Fredoka One', cursive",
               fontSize: '1.1rem',
-              color: isDark ? '#C4B5FD' : '#5B21B6',
+              color: T.brandStrong,
               marginBottom: '0.75rem',
             }}
           >
@@ -1095,7 +1033,7 @@ export function Progress() {
               background: isDark
                 ? 'linear-gradient(135deg, #1A1035 0%, #261845 100%)'
                 : 'linear-gradient(135deg, #F5F3FF 0%, #EDE9FE 100%)',
-              borderColor: isDark ? '#4C3580' : '#C4B5FD',
+              borderColor: T.brandBorder,
             }}
             onClick={() => navigate('/submit')}
           >
@@ -1112,7 +1050,7 @@ export function Progress() {
                     style={{
                       fontFamily: "'Fredoka One', cursive",
                       fontSize: '1.1rem',
-                      color: isDark ? '#F0EAFF' : '#1E1B4B',
+                      color: T.heading,
                       margin: 0,
                     }}
                   >
@@ -1147,7 +1085,7 @@ export function Progress() {
             style={{
               fontFamily: "'Fredoka One', cursive",
               fontSize: '1.1rem',
-              color: isDark ? '#C4B5FD' : '#5B21B6',
+              color: T.brandStrong,
               marginBottom: '0.75rem',
             }}
           >
@@ -1172,7 +1110,7 @@ export function Progress() {
               <div style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>🧩</div>
               <p style={{ color: T.textMuted, fontSize: '0.9rem', margin: 0 }}>
                 No solves yet — go crack{' '}
-                <a href="/" style={{ color: isDark ? '#C4B5FD' : '#7C3AED', fontWeight: 700 }}>
+                <a href="/cryptic" style={{ color: T.brandText, fontWeight: 700 }}>
                   today's puzzle
                 </a>
                 !
@@ -1198,7 +1136,7 @@ export function Progress() {
               style={{
                 fontFamily: "'Fredoka One', cursive",
                 fontSize: '1.1rem',
-                color: isDark ? '#C4B5FD' : '#5B21B6',
+                color: T.brandStrong,
               }}
             >
               Puzzle Archive
@@ -1206,7 +1144,7 @@ export function Progress() {
             <span
               className="px-2 py-0.5 rounded-full text-xs font-bold"
               style={{
-                background: isDark ? '#261845' : '#F5F0FF',
+                background: T.brandSurface,
                 color: isDark ? '#9381CC' : '#6D28D9',
               }}
             >
@@ -1223,14 +1161,11 @@ export function Progress() {
             <div
               className="rounded-2xl border border-dashed p-5 text-center"
               style={{
-                borderColor: isDark ? '#3D2A6B' : '#C4B5FD',
+                borderColor: T.brandBorder,
                 background: isDark ? '#100820' : '#FAFAFF',
               }}
             >
-              <Trophy
-                size={20}
-                style={{ color: isDark ? '#4C3580' : '#C4B5FD', margin: '0 auto 0.5rem' }}
-              />
+              <Trophy size={20} style={{ color: T.brandBorder, margin: '0 auto 0.5rem' }} />
               <p style={{ color: T.textFaint, fontSize: '0.83rem', margin: 0 }}>
                 Archive is empty — puzzles will appear here after they're published.
               </p>
@@ -1246,17 +1181,14 @@ export function Progress() {
           <m.div
             className="rounded-2xl border border-dashed p-5 text-center mt-3"
             style={{
-              borderColor: isDark ? '#3D2A6B' : '#C4B5FD',
+              borderColor: T.brandBorder,
               background: isDark ? '#100820' : '#FAFAFF',
             }}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.5 }}
           >
-            <BookOpen
-              size={20}
-              style={{ color: isDark ? '#4C3580' : '#C4B5FD', margin: '0 auto 0.5rem' }}
-            />
+            <BookOpen size={20} style={{ color: T.brandBorder, margin: '0 auto 0.5rem' }} />
             <p style={{ color: T.textFaint, fontSize: '0.83rem', margin: 0 }}>
               More puzzles added daily — check back tomorrow!
             </p>

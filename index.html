@@ -5,24 +5,24 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta
       name="description"
-      content="The Cryptic Owl — a daily British-style cryptic crossword clue. Solve one a day, learn the mechanics with progressive hints, and keep your streak alive."
+      content="The Cryptic Owl — seven daily puzzles, about five minutes each: variant sudoku, a British cryptic clue, trivia, chronology, chess mates, cryptograms and a guess-who riddle."
     />
     <meta name="theme-color" content="#7C3AED" />
     <meta name="author" content="Ninad Sutrave" />
-    <meta property="og:title" content="The Cryptic Owl — Daily Cryptic Crossword" />
+    <meta property="og:title" content="The Cryptic Owl — Daily Puzzles" />
     <meta
       property="og:description"
-      content="A daily British cryptic clue, with progressive hints and a learning mode for beginners."
+      content="Seven fresh puzzles every day: sudoku variants, cryptic clues, trivia, chess and more."
     />
     <meta property="og:type" content="website" />
     <meta property="og:image" content="/favicon.svg" />
     <meta name="twitter:card" content="summary" />
-    <meta name="twitter:title" content="The Cryptic Owl — Daily Cryptic Crossword" />
+    <meta name="twitter:title" content="The Cryptic Owl — Daily Puzzles" />
     <meta
       name="twitter:description"
-      content="A daily British cryptic clue, with progressive hints and a learning mode for beginners."
+      content="Seven fresh puzzles every day: sudoku variants, cryptic clues, trivia, chess and more."
     />
-    <title>The Cryptic Owl — Daily British Cryptic Crossword</title>
+    <title>The Cryptic Owl · Daily Puzzles</title>
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
 
     <!-- Preconnect Supabase: the Puzzle page fetches today's clue from here
@@ -32,23 +32,11 @@
          the preconnect as "unused" because the hint didn't match the request. -->
     <link rel="preconnect" href="%VITE_SUPABASE_URL%" />
 
-    <!-- Font preconnect + non-blocking stylesheet (preload-swap pattern).
-         With `media=print`, the browser treats the link as non-render-blocking,
-         then onload flips it to `all` so the styles apply. -->
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      rel="stylesheet"
-      href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;600;700;800&display=swap"
-      media="print"
-      onload="this.media='all'"
-    />
-    <noscript>
-      <link
-        rel="stylesheet"
-        href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;600;700;800&display=swap"
-      />
-    </noscript>
+    <!-- Fonts are self-hosted (src/styles/fonts.css). Only the heading face
+         is preloaded: it paints the LCP heading. Preloading Nunito too made it
+         compete with the critical scripts for bandwidth on slow phones; it's
+         discovered from the inlined CSS almost as early anyway. -->
+    <link rel="preload" href="/fonts/fredoka-one-latin.woff2" as="font" type="font/woff2" crossorigin />
   </head>
 
   <body>

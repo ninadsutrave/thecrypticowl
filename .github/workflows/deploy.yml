@@ -153,6 +153,9 @@ jobs:
             echo "$path → $code"
             [ "$code" = "200" ] || { echo "::error::$URL$path returned $code"; exit 1; }
           done
-          curl -sS --max-time 20 "$URL/" | grep -q 'The Cryptic Owl' \
+          # Fetch first: piping into `grep -q` lets grep exit early, and the
+          # SIGPIPE it sends curl fails the step under pipefail.
+          home=$(curl -sS --max-time 20 "$URL/")
+          grep -q 'The Cryptic Owl' <<<"$home" \
             || { echo "::error::Homepage did not contain the expected markup."; exit 1; }
           echo "Smoke test passed."

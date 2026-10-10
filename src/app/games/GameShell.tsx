@@ -75,8 +75,9 @@ interface GameShellProps {
   /** The walkthrough shown on the first visit and from the header. */
   tutorial: TutorialStep[];
   /**
-   * Today's generated puzzle was unavailable, so a built-in one is shown.
-   * Playable, but never recorded as the day's solve.
+   * Today's generated puzzle was unavailable, so a built-in one stands in.
+   * Finishing it counts as the day's play (streaks and achievements keep
+   * working through an outage).
    */
   practice?: boolean;
   /** Identifies the puzzle, so saved progress never lands on a different one. */
@@ -118,7 +119,7 @@ export function GameShell({
   // Read once: a puzzle finished on an earlier visit opens on its summary,
   // while one finished just now stays on its board with the result below.
   const [record] = useState<SolveRecord | null>(() =>
-    practice || archiveDate ? null : getSolveRecord(gameId)
+    archiveDate ? null : getSolveRecord(gameId)
   );
   const [replaying, setReplaying] = useState(false);
   const [round, setRound] = useState(0);
@@ -179,7 +180,7 @@ export function GameShell({
           subtitle={subtitle}
           rules={rules}
           rulesOpenByDefault={rulesOpenByDefault}
-          replaying={replaying || practice || archiveDate !== null}
+          replaying={replaying || archiveDate !== null}
           archiveDate={archiveDate}
           puzzleId={puzzleId}
           practicePuzzle={practice}
@@ -286,7 +287,7 @@ function GameSession({
         >
           {archiveDate
             ? "This day's puzzle couldn't be loaded, so here's a practice one instead."
-            : "Today's puzzle isn't available right now, so here's a practice one. It won't count towards your history."}
+            : "Today's puzzle isn't available right now, so here's a stand-in. It counts as today's play."}
         </p>
       )}
       <RulesPanel T={T} isDark={isDark} defaultOpen={rulesOpenByDefault}>

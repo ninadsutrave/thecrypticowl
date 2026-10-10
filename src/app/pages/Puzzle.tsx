@@ -209,7 +209,9 @@ export function Puzzle() {
   // Today's solve feeds the home grid's "done" badge and time. Archive and
   // fallback puzzles aren't today's, and a replay never overwrites the first.
   useEffect(() => {
-    if (!isCorrect || !activePuzzle || activePuzzle.isFallback) return;
+    // The fallback clue stands in for a missing day: it counts as the day's
+    // play (home badge, achievements), though not for XP (SuccessState).
+    if (!isCorrect || !activePuzzle) return;
     if (isArchive) {
       // A past clue: marked done in the archive, never today's solve.
       if (activePuzzle.date) {

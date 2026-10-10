@@ -176,6 +176,9 @@ export function Hub() {
   );
 }
 
+/** The home card's badge: a finish isn't always a solve. */
+const OUTCOME_LABEL = { solved: 'Solved', failed: 'Played', revealed: 'Revealed' } as const;
+
 function GameCard({
   game,
   done,
@@ -217,7 +220,7 @@ function GameCard({
             style={{ background: T.successBg, color: isDark ? '#6EE7B7' : '#047857' }}
           >
             <CheckCircle2 size={13} aria-hidden />
-            {record ? `Solved · ${formatClock(record.seconds)}` : 'Done'}
+            {record ? `${OUTCOME_LABEL[record.outcome]} · ${formatClock(record.seconds)}` : 'Done'}
           </span>
         )}
       </div>

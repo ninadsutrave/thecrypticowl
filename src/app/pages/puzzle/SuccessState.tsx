@@ -452,7 +452,7 @@ export function SuccessState({
                 ? 'XP is only earned when you solve without peeking — come back tomorrow!'
                 : archive
                   ? 'Nicely cracked! Archive clues are for fun: they don’t count toward your streak or XP.'
-                  : "We couldn't reach today's puzzle, so this one was a warm-up. It doesn't count toward your streak — check back in a moment for the real clue."}
+                  : "We couldn't reach today's puzzle, so this one stood in. It counts as today's play, but earns no XP."}
             </p>
           </>
         ) : (

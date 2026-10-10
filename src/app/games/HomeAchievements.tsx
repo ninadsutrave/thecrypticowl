@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { Flame, Trophy } from 'lucide-react';
+import { Check, Flame, Trophy } from 'lucide-react';
 import { useDarkMode } from '../context/DarkModeContext';
 import { getTheme } from '../theme';
 import { computeHistoryStats } from './historyStats';
@@ -67,13 +67,25 @@ export function HomeAchievements() {
         {milestones.map(ms => (
           <li
             key={ms.label}
-            className="text-center rounded-2xl px-2 py-3 border-2"
+            className="relative text-center rounded-2xl px-2 py-3 border-2"
             style={{
-              background: ms.done ? (isDark ? '#1D1B26' : '#F5F0FF') : T.inputBg,
+              // Unlocked tiles glow in the brand colour; locked ones recede.
+              background: ms.done ? (isDark ? 'rgba(124,58,237,0.22)' : '#F5F0FF') : T.inputBg,
               borderColor: ms.done ? '#7C3AED' : T.cardBorder,
+              boxShadow: ms.done ? '0 0 0 3px rgba(124,58,237,0.18)' : undefined,
+              opacity: ms.done ? 1 : 0.6,
             }}
             aria-label={`${ms.label}${ms.done ? ', unlocked' : ', locked'}`}
           >
+            {ms.done && (
+              <span
+                className="absolute -top-2 -right-2 w-5 h-5 rounded-full flex items-center justify-center"
+                style={{ background: '#7C3AED', color: 'white' }}
+                aria-hidden
+              >
+                <Check size={12} strokeWidth={3.5} />
+              </span>
+            )}
             <div
               className="text-2xl mb-1"
               style={{ filter: ms.done ? 'none' : 'grayscale(1)' }}

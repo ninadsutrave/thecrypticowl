@@ -13,7 +13,7 @@ import { parseSlitherlink } from './slitherlink/parse';
 import { parseHigherLower } from './higher-lower/parse';
 import { generateHigherLower } from '../../../lambda/games/higher-lower/generator.js';
 import { THEMES as HL_THEMES } from '../../../lambda/games/higher-lower/themes.js';
-import hlFilms from '../../../lambda/games/higher-lower/fixtures/film-year.json';
+import hlPool from '../../../lambda/games/higher-lower/fixtures/stadium-capacity.json';
 import { isSolved as slitherSolved, makeGrid as slitherGrid, LINE } from './slitherlink/logic';
 import lichessFixture from '../../../lambda/games/chess/fixtures/lichess-J588J.json';
 import { parseSudoku } from './sudoku/parse';
@@ -111,14 +111,10 @@ describe('Lambda payloads parse on the frontend', () => {
       const date = new Date(Date.UTC(2026, 0, 1 + k)).toISOString().slice(0, 10);
       const c = await generateHigherLower(
         { date, attempt: 1, rng: createRng(k), used: new Set() },
-        // Real films for year themes; for the rest, spread-out values in
-        // the same shape. What's tested is the payload, not the data.
-        {
-          fetchPool: async theme =>
-            theme.format === 'year'
-              ? hlFilms
-              : hlFilms.map((x, i) => ({ ...x, value: 1000 * 1.07 ** i })),
-        }
+        // Stadium values stand in for every theme, spread out so each
+        // theme's fair-pair band has plenty of steps. The payload is what's
+        // tested, not the data.
+        { fetchPool: async () => hlPool.map((x, i) => ({ ...x, value: 1000 * 1.07 ** i })) }
       );
       expect(parseHigherLower(c.payload)).not.toBeNull();
     }

@@ -2,8 +2,8 @@ import { cellCounts, isSingleLoop, makeGrid, toBits } from './model.js';
 import { solve } from './solver.js';
 
 /**
- * Slitherlink, 8×8: big enough for a medium puzzle (about 5–6 minutes),
- * small enough that every line is easy to tap on a phone. Built in code:
+ * Slitherlink, 6×6: big cells, so a drawn line follows the finger easily on
+ * the smallest phone, with clues thinned until it's a medium puzzle. Built in code:
  *
  *   1. Loop: grow a random blob of cells with no holes and no corner-only
  *      touches; its outline is one simple closed loop.
@@ -13,13 +13,13 @@ import { solve } from './solver.js';
  *   3. Keep it if logic plus at most a few guesses solves it (medium), and
  *      enough clues are left to start from.
  */
-export const SIZE = 8;
+export const SIZE = 6;
 export const MEDIUM = {
   /** Share of cells inside the loop: enough for a long, winding outline. */
   fill: [0.42, 0.6],
   maxNodes: 12,
   /** Clued cells: fewer is harder. */
-  minClues: 22,
+  minClues: 11,
 };
 
 /** Cell (r, c) inside the blob? Outside the grid counts as outside. */

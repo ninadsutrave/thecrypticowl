@@ -14,7 +14,6 @@ function count(v: number): string {
 }
 
 export function formatValue(v: number, format: ValueFormat): string {
-  if (format === 'year') return String(Math.round(v));
   if (format === 'count') return count(v);
   const rounded = v >= 100 ? Math.round(v) : Number(v.toPrecision(3));
   return `${rounded.toLocaleString('en-GB')}${UNIT[format]}`;
@@ -27,12 +26,11 @@ export const isHigher = (puzzle: HigherLowerPuzzle, round: number) =>
 export const rounds = (puzzle: HigherLowerPuzzle) => puzzle.items.length - 1;
 
 /**
- * The hint: a ballpark for the hidden value. One significant figure
- * ("about 10 million", "about 3,000 m"), or the decade for years. Close
- * pairs mean it narrows the answer without always settling it.
+ * The hint: a ballpark for the hidden value, to one significant figure
+ * ("about 10 million", "about 3,000 m"). Close pairs mean it narrows the
+ * answer without always settling it.
  */
 export function ballpark(v: number, format: ValueFormat): string {
-  if (format === 'year') return `the ${Math.floor(v / 10) * 10}s`;
   const magnitude = 10 ** Math.floor(Math.log10(v));
   return `about ${formatValue(Math.round(v / magnitude) * magnitude, format)}`;
 }

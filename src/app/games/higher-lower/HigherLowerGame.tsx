@@ -40,7 +40,10 @@ export function HigherLowerGame() {
             {n} rounds, and the new one becomes the next round's known one. Every pair is close
             enough to make you think, but never a tie.
           </p>
-          <p>One hint per game: a ballpark for the hidden {puzzle.noun}.</p>
+          <p>
+            Get a majority right to solve it. One hint per game: a ballpark for the hidden{' '}
+            {puzzle.noun}.
+          </p>
           <p className="text-xs">Numbers from Wikidata; each card links to its entry.</p>
         </>
       }
@@ -71,7 +74,8 @@ function HigherLowerBoard({ puzzle, api }: { puzzle: HigherLowerPuzzle; api: Pla
     if (next.length === n) {
       const right = next.filter(Boolean).length;
       api.complete({
-        outcome: 'solved',
+        // A majority right counts as a solve (and keeps the streak going).
+        outcome: right * 2 > n ? 'solved' : 'failed',
         score: `${right}/${n} right${hintRound !== null ? ' · hint' : ''}`,
         hints: hintRound !== null ? 1 : 0,
         mistakes: n - right,

@@ -83,8 +83,8 @@ flowchart LR
 | Chronology | "On this day" feed: the most-read events and (deceased) people for the date, keyword-filtered for light topics, then screened by the judge model for suitability when a key is set | 6 events, distinct years, no year in the text, at least one close pair, none starts in place | Suitability screen (optional: falls back to keyword filters) |
 | Checkmate | Lichess puzzle API, mate in 3–5 | chess.js replay: legal, ends in mate, length matches, no shorter mate | Rating 1300–1800 and ≥500 plays |
 | Cryptogram | Unused quote from `quotes.js`, fresh derangement key, two mid-frequency givens | Length/variety band, valid key, givens present and not the commonest letter | — |
-| Slitherlink | 8×8 loop drawn as the outline of a random hole-free blob; every cell's count, then clues removed (zeros first) while the solver still finds one loop within 12 guesses | One closed loop; every clue equals its cell's sides on it; ≥25% of cells clued | Re-solves from the clues: unique, the stored loop, ≤12 guesses |
-| Higher or Lower | Theme by date (7 rotating, see `themes.js`); Wikidata SPARQL for the best-known entries; a chain of 11 with a balanced up/down pattern, each step a fair pair | 11 distinct named items, values > 0, every step fair (no ties, ratio or gap in range), 3–7 ups, descriptions with no numbers or rankings | — (data, not judgement) |
+| Slitherlink | 6×6 loop drawn as the outline of a random hole-free blob; every cell's count, then clues removed (zeros first) while the solver still finds one loop within 12 guesses | One closed loop; every clue equals its cell's sides on it; ≥25% of cells clued | Re-solves from the clues: unique, the stored loop, ≤12 guesses |
+| Higher or Lower | Theme by date (8 rotating, see `themes.js`; sizes and counts, never dates); Wikidata SPARQL for the best-known entries; a chain of 6 (five rounds) with a balanced up/down pattern, each step a fair pair | 6 distinct named items, values > 0, every step fair (no ties, ratio in range), 2–3 ups, descriptions with no numbers or rankings | — (data, not judgement) |
 
 **Events** a handler accepts:
 

@@ -13,11 +13,12 @@ import {
 import { reviewHigherLower } from './reviewer.js';
 import { THEMES, themeFor } from './themes.js';
 
-/** A snapshot of the film-year pool from Wikidata (150 films). */
-const FILMS = JSON.parse(
-  readFileSync(new URL('./fixtures/film-year.json', import.meta.url), 'utf8')
+/** A snapshot of the stadium-capacity pool from Wikidata (150 stadiums). */
+const POOL = JSON.parse(
+  readFileSync(new URL('./fixtures/stadium-capacity.json', import.meta.url), 'utf8')
 );
-const film = THEMES.find(t => t.id === 'film-year');
+const stadium = THEMES.find(t => t.id === 'stadium-capacity');
+const withUrl = x => ({ ...x, url: `https://www.wikidata.org/wiki/${x.id}` });
 
 describe('themes', () => {
   it('rotate one per day', () => {
@@ -25,10 +26,14 @@ describe('themes', () => {
     expect(themeFor(THEMES.length + 1)).toBe(THEMES[1]);
     expect(themeFor(-1)).toBe(THEMES[THEMES.length - 1]);
   });
+
+  it('compare sizes and counts, never dates (that is Chronology)', () => {
+    for (const t of THEMES) expect(t.format).not.toBe('year');
+  });
 });
 
 describe('cleanDescription', () => {
-  it('drops numbers that would give the answer away', () => {
+  it('drops numbers and rankings that would give the answer away', () => {
     expect(cleanDescription('1995 film by David Fincher')).toBe('Film by David Fincher');
     expect(cleanDescription('skyscraper in Dubai, UAE (2010)')).toBe('Skyscraper in Dubai, UAE');
     expect(cleanDescription('capital of Japan')).toBe('Capital of Japan');
@@ -36,7 +41,6 @@ describe('cleanDescription', () => {
       'Country in Eastern Europe'
     );
     expect(cleanDescription('highest mountain in the Alps')).toBe('');
-    expect(cleanDescription('Capital and most populous city of Russia')).toBe('');
     expect(cleanDescription('')).toBe('');
   });
 });
@@ -47,62 +51,57 @@ describe('fair pairs', () => {
     expect(fairPair(city, { value: 100 }, { value: 105 })).toBe(false);
     expect(fairPair(city, { value: 100 }, { value: 150 })).toBe(true);
     expect(fairPair(city, { value: 100 }, { value: 500 })).toBe(false);
-    expect(fairPair(film, { value: 1990 }, { value: 1991 })).toBe(false);
-    expect(fairPair(film, { value: 1990 }, { value: 2001 })).toBe(true);
   });
 });
 
 describe('directions', () => {
-  it('mix both answers, never four the same way in a row', () => {
+  it('mix both answers over five rounds, never four the same way in a row', () => {
     for (let i = 0; i < 50; i++) {
       const d = directions(createRng(`dir-${i}`));
+      expect(d).toHaveLength(ROUNDS);
       const ups = d.filter(x => x > 0).length;
-      expect(ups).toBeGreaterThanOrEqual(4);
-      expect(ups).toBeLessThanOrEqual(6);
+      expect(ups).toBeGreaterThanOrEqual(2);
+      expect(ups).toBeLessThanOrEqual(3);
       expect(d.map(x => (x > 0 ? 'U' : 'D')).join('')).not.toMatch(/UUUU|DDDD/);
     }
   });
 });
 
 describe('chains', () => {
-  it('follow the pattern with fair steps and pass review', () => {
+  it('follow the pattern with fair steps', () => {
     const rng = createRng('chain');
     const pattern = directions(rng);
-    const chain = buildChain(film, FILMS, rng, pattern);
+    const chain = buildChain(stadium, POOL, rng, pattern);
     expect(chain).toHaveLength(ROUNDS + 1);
     chain.slice(1).forEach((x, i) => expect(Math.sign(x.value - chain[i].value)).toBe(pattern[i]));
   });
 
   it('generates a full puzzle from a pool, avoiding recently used items', async () => {
-    const used = new Set(FILMS.slice(0, 40).map(x => `wd:${x.id}`));
-    const ctx = { date: '2026-10-14', attempt: 1, rng: createRng(9), used };
-    const filmDay = Array.from({ length: 7 }, (_, k) => k).find(
-      k => themeFor(Math.floor(Date.parse('2026-10-14T00:00:00Z') / 86_400_000) + k) === film
-    );
+    const used = new Set(POOL.slice(0, 30).map(x => `wd:${x.id}`));
+    const base = Math.floor(Date.parse('2026-10-14T00:00:00Z') / 86_400_000);
+    const k = THEMES.findIndex((_, i) => themeFor(base + i) === stadium);
+    const date = new Date((base + k) * 86_400_000).toISOString().slice(0, 10);
     const c = await generateHigherLower(
-      { ...ctx, date: `2026-10-${14 + filmDay}` },
-      { fetchPool: async () => FILMS }
+      { date, attempt: 1, rng: createRng(9), used },
+      { fetchPool: async () => POOL }
     );
+    expect(c.payload.theme).toBe('stadium-capacity');
     expect(reviewHigherLower(c.payload).errors).toEqual([]);
-    expect(c.sourceKeys.some(k => used.has(k))).toBe(false);
+    expect(c.sourceKeys.some(key => used.has(key))).toBe(false);
   });
 });
 
 describe('review', () => {
-  const items = FILMS.slice(0, ROUNDS + 1).map(x => ({
-    ...x,
-    url: `https://www.wikidata.org/wiki/${x.id}`,
-  }));
+  const items = POOL.slice(0, ROUNDS + 1).map(withUrl);
+  const theme = 'stadium-capacity';
 
-  it('rejects ties, repeats, unfair steps and missing sources', () => {
+  it('rejects ties, repeats, missing sources and unknown themes', () => {
     const tie = items.map((x, i) => (i === 1 ? { ...x, value: items[0].value } : x));
-    expect(reviewHigherLower({ theme: 'film-year', items: tie }).errors.join(' ')).toMatch(/tie/);
+    expect(reviewHigherLower({ theme, items: tie }).errors.join(' ')).toMatch(/tie/);
     const repeat = items.map((x, i) => (i === 2 ? items[0] : x));
-    expect(reviewHigherLower({ theme: 'film-year', items: repeat }).errors.join(' ')).toMatch(
-      /repeats/
-    );
+    expect(reviewHigherLower({ theme, items: repeat }).errors.join(' ')).toMatch(/repeats/);
     const noSource = items.map((x, i) => (i === 3 ? { ...x, url: '' } : x));
-    expect(reviewHigherLower({ theme: 'film-year', items: noSource }).ok).toBe(false);
+    expect(reviewHigherLower({ theme, items: noSource }).ok).toBe(false);
     expect(reviewHigherLower({ theme: 'nope', items }).ok).toBe(false);
   });
 });

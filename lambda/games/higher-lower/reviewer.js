@@ -1,4 +1,4 @@
-import { cleanDescription, fairPair, ROUNDS } from './generator.js';
+import { cleanDescription, fairPair, ROUNDS, UPS } from './generator.js';
 import { THEMES } from './themes.js';
 
 /**
@@ -29,6 +29,6 @@ export function reviewHigherLower(p) {
     else if (!fairPair(theme, items[i - 1], items[i])) errors.push(`round ${i} is not a fair pair`);
     if (items[i].value > items[i - 1].value) ups++;
   }
-  if (ups < 3 || ups > ROUNDS - 3) errors.push(`${ups} of ${ROUNDS} answers go up: too lopsided`);
+  if (ups < UPS[0] || ups > UPS[1]) errors.push(`${ups} of ${ROUNDS} answers go up: too lopsided`);
   return { ok: errors.length === 0, errors, checks: { items: items.length, ups } };
 }

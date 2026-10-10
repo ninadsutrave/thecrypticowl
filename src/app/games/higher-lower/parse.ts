@@ -1,7 +1,7 @@
 import { isObj, isStr } from '../parsers';
 import type { HigherLowerPuzzle } from './sample';
 
-const FORMATS = ['count', 'area', 'metres', 'kilometres', 'year'];
+const FORMATS = ['count', 'area', 'metres', 'kilometres'];
 
 /** A theme's wording and format, plus eleven items with positive values. */
 export function parseHigherLower(raw: unknown): HigherLowerPuzzle | null {

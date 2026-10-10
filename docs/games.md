@@ -68,7 +68,7 @@ puzzle and falls back to a labelled practice one only if it's missing. See
 | Checkmate | Show the next move | One per move, counted |
 | Cryptogram | Reveal one letter (the selected one, or the commonest unsolved) | Unlimited, counted |
 | Slitherlink | Fix a wrong line, else draw a missing piece of the loop | Unlimited, counted |
-| Higher or Lower | A ballpark for the hidden number (one figure, or the decade) | **One** |
+| Higher or Lower | A ballpark for the hidden number (one significant figure) | **One** |
 
 Hints used appear in the result line, e.g. "Guess 2 of 3 · hint".
 
@@ -423,9 +423,9 @@ Proverbs with no author are always fine.
 
 ### 8. Slitherlink
 
-Draw **one closed loop** along the lines of an 8×8 grid of dots. Each number
-says how many of its cell's four sides the loop uses. 8×8 keeps every line
-comfortably tappable on a small phone; replaced Shikaku in the lineup.
+Draw **one closed loop** along the lines of a 6×6 grid of dots. Each number
+says how many of its cell's four sides the loop uses. 6×6 gives big cells,
+so a stroke follows the finger easily on a small phone; replaced Shikaku in the lineup.
 
 **Gameplay**
 
@@ -444,7 +444,7 @@ comfortably tappable on a small phone; replaced Shikaku in the lineup.
    blob's outline is then one simple loop.
 2. **Clues:** every cell's count, then remove clues, **zeros first** (the most
    generous), keeping a removal only if the solver still finds exactly one
-   loop within 12 guesses. Stops at 22 clues.
+   loop within 12 guesses. Stops at 11 clues.
 3. **Judge:** re-solve from the clues and confirm the stored loop.
 
 The solver uses the deductions people do: a met clue closes its other sides;
@@ -455,31 +455,30 @@ exist. In testing, every seed produced a puzzle in about 10 ms.
 
 ### 9. Higher or Lower
 
-**Ten close calls on a daily theme.** Each round shows one thing with its
+**Five close calls on a daily theme.** Each round shows one thing with its
 number and a new one with it hidden: higher or lower? The new one becomes the
 next round's known one.
 
 **Themes** (rotating by date, `lambda/games/higher-lower/themes.js`): city
 populations (city proper), country areas, mountain heights, river lengths,
-film release years, building heights, country populations. Company founding
-years were tried and dropped: Wikidata's dates are too often a merger or a
-re-registration.
+building heights, country populations, stadium capacities, lake areas. No
+dates: ordering by date is Chronology's job (film years were dropped for
+that reason, company founding years because Wikidata's are unreliable).
 
 **Generation (no AI)**
 
 1. **Pool:** one Wikidata SPARQL query per theme, keeping the best-known
-   entries (most Wikipedia language editions; 100–150 per theme).
+   entries (most Wikipedia language editions; 80–150 per theme).
 2. **Descriptions:** Wikidata's one-liners, minus numbers ("1995 film by…")
    and any clause with a ranking ("…, the largest in the world by area").
-3. **Chain:** an up/down pattern with 4–6 ups and never four the same way in
-   a row; then a random walk where each step is a **fair pair**: no ties,
-   values within a ratio band (e.g. 1.12–1.9× for cities) or year gap
-   (3–25 years for films).
+3. **Chain:** six items, five rounds. An up/down pattern with 2–3 ups; then
+   a random walk where each step is a **fair pair** (no ties, values within
+   a ratio band, e.g. 1.12–1.9× for cities), picks leaning towards the
+   best-known entries.
 4. Items rest 60 days before returning. A later attempt moves to the next
    theme, in case one query is failing.
 
-**Hint:** once per game, the hidden number to one significant figure (or
-its decade).
+**Hint:** once per game, the hidden number to one significant figure.
 
 ---
 

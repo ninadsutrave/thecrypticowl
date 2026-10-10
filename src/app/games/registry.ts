@@ -126,7 +126,7 @@ export const GAMES: readonly GameMeta[] = [
     name: 'Higher or Lower',
     path: '/higher-lower',
     emoji: '↕️',
-    blurb: 'Bigger city? Taller tower? Later film? Ten close calls, one theme a day.',
+    blurb: 'Bigger city? Taller tower? Fuller stadium? Five close calls, one theme a day.',
     accent: '#14B8A6',
     accentStrong: '#0F766E',
     accentOnDark: '#5EEAD4',

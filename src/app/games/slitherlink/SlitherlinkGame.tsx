@@ -78,9 +78,13 @@ function SlitherBoard({ puzzle, api }: { puzzle: SlitherlinkPuzzle; api: PlayApi
   const gesture = useRef<{
     id: number;
     start: { x: number; y: number };
+    /** The dot the pen is on. */
     last: [number, number];
     dragging: boolean;
-    drawn: number[];
+    /** Set by the stroke's first link: drawing over a line erases instead. */
+    mode: 'draw' | 'erase' | null;
+    /** Links this stroke changed, with what they were, for backtracking. */
+    path: { edge: number; prev: Mark }[];
     before: Mark[];
     marks: Mark[];
   } | null>(null);
@@ -129,7 +133,8 @@ function SlitherBoard({ puzzle, api }: { puzzle: SlitherlinkPuzzle; api: PlayApi
       start: p,
       last: [Math.round(p.y), Math.round(p.x)],
       dragging: false,
-      drawn: [],
+      mode: null,
+      path: [],
       before: marks,
       marks: [...marks],
     };
@@ -140,29 +145,48 @@ function SlitherBoard({ puzzle, api }: { puzzle: SlitherlinkPuzzle; api: PlayApi
     const g = gesture.current;
     if (!g || e.pointerId !== g.id) return;
     const p = toCells(e);
-    if (!g.dragging && Math.hypot(p.x - g.start.x, p.y - g.start.y) > 0.3) g.dragging = true;
+    if (!g.dragging && Math.hypot(p.x - g.start.x, p.y - g.start.y) > 0.25) g.dragging = true;
     if (!g.dragging) return;
-    const dot: [number, number] = [Math.round(p.y), Math.round(p.x)];
-    if (Math.hypot(p.y - dot[0], p.x - dot[1]) > 0.32) return; // between dots
-    if (dot[0] === g.last[0] && dot[1] === g.last[1]) return;
-    const edge = edgeBetween(grid, g.last, dot);
-    g.last = dot;
-    if (edge === null) return;
-    if (g.drawn[g.drawn.length - 1] === edge) {
-      // Dragging back over the stretch just drawn erases it.
-      g.drawn.pop();
-      g.marks[edge] = EMPTY;
-    } else {
-      g.drawn.push(edge);
-      g.marks[edge] = LINE;
+    // The pen moves to the nearest dot as soon as the finger crosses half
+    // way. A fast swipe can jump several dots at once: walk there link by
+    // link, along the axis the finger has travelled further, so the line
+    // never has gaps.
+    const target: [number, number] = [
+      Math.max(0, Math.min(puzzle.rows, Math.round(p.y))),
+      Math.max(0, Math.min(puzzle.cols, Math.round(p.x))),
+    ];
+    let [r, c] = g.last;
+    let changed = false;
+    while (r !== target[0] || c !== target[1]) {
+      const dr = target[0] - r;
+      const dc = target[1] - c;
+      const alongRow = dc === 0 || (dr !== 0 && Math.abs(p.y - r) > Math.abs(p.x - c));
+      const next: [number, number] = alongRow ? [r + Math.sign(dr), c] : [r, c + Math.sign(dc)];
+      const edge = edgeBetween(grid, [r, c], next);
+      if (edge !== null) {
+        g.mode ??= g.before[edge] === LINE ? 'erase' : 'draw';
+        const top = g.path[g.path.length - 1];
+        if (top && top.edge === edge) {
+          // Back over the link just changed: undo it.
+          g.marks[edge] = top.prev;
+          g.path.pop();
+        } else {
+          g.path.push({ edge, prev: g.marks[edge] });
+          g.marks[edge] = g.mode === 'draw' ? LINE : EMPTY;
+        }
+        changed = true;
+      }
+      [r, c] = next;
     }
-    redraw(n => n + 1);
+    g.last = [r, c];
+    if (changed) redraw(n => n + 1);
   };
 
   const onUp = (e: PointerEvent) => {
     const g = gesture.current;
     if (!g || e.pointerId !== g.id) return;
     gesture.current = null;
+    redraw(n => n + 1); // clear the pen ring, even if nothing changed
     if (!g.dragging) {
       const edge = nearestEdge(grid, g.start.x, g.start.y);
       if (edge === null) return;
@@ -243,7 +267,10 @@ function SlitherBoard({ puzzle, api }: { puzzle: SlitherlinkPuzzle; api: PlayApi
         onPointerDown={onDown}
         onPointerMove={onMove}
         onPointerUp={onUp}
-        onPointerCancel={() => (gesture.current = null)}
+        onPointerCancel={() => {
+          gesture.current = null;
+          redraw(n => n + 1);
+        }}
         tabIndex={0}
         role="img"
         aria-label={`${puzzle.rows} by ${puzzle.cols} slitherlink. ${shown.filter(m => m === LINE).length} lines drawn. Arrows move, Shift and an arrow draws.`}
@@ -264,7 +291,7 @@ function SlitherBoard({ puzzle, api }: { puzzle: SlitherlinkPuzzle; api: PlayApi
               dominantBaseline="central"
               style={{
                 fontFamily: "'Outfit', sans-serif",
-                fontSize: 20,
+                fontSize: 19,
                 fill: n > k ? '#EF4444' : T.heading,
                 opacity: n === k ? 0.4 : 1,
               }}
@@ -307,7 +334,8 @@ function SlitherBoard({ puzzle, api }: { puzzle: SlitherlinkPuzzle; api: PlayApi
           const r = Math.floor(k / (puzzle.cols + 1));
           const c = k % (puzzle.cols + 1);
           const over = (degrees.get(`${r},${c}`) ?? 0) > 2;
-          const isCursor = cursor && cursor[0] === r && cursor[1] === c;
+          const pen = gesture.current?.dragging ? gesture.current.last : cursor;
+          const isCursor = pen && pen[0] === r && pen[1] === c;
           return (
             <g key={k}>
               {isCursor && (

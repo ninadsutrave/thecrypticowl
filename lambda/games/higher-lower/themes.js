@@ -4,7 +4,7 @@
  * compare, plus how the game words and formats it.
  *
  * `?value` must come out as a plain number: quantities use the normalised
- * value (psn:, always SI units), dates the year. Every query returns
+ * value (psn:, always SI units). Every query returns
  * ?item ?itemLabel ?itemDescription ?value ?links.
  *
  * `poolSize` (default 150) keeps only the best-known entries; smaller for
@@ -83,20 +83,6 @@ export const THEMES = [
     } GROUP BY ?item ?itemLabel ?itemDescription`,
   },
   {
-    id: 'film-year',
-    title: 'Which film came out later?',
-    noun: 'release year',
-    higher: 'Later',
-    lower: 'Earlier',
-    format: 'year',
-    close: { minGap: 3, maxGap: 25 },
-    query: `SELECT ?item ?itemLabel ?itemDescription (MIN(YEAR(?d)) AS ?value) (MAX(?sl) AS ?links) WHERE {
-      ?item wdt:P31 wd:Q11424 ; wdt:P577 ?d ; wikibase:sitelinks ?sl .
-      FILTER(?sl >= 70)
-      ${LABELS}
-    } GROUP BY ?item ?itemLabel ?itemDescription`,
-  },
-  {
     id: 'building-height',
     poolSize: 100,
     title: 'Which building is taller?',
@@ -123,6 +109,37 @@ export const THEMES = [
     query: `SELECT ?item ?itemLabel ?itemDescription (MAX(?pop) AS ?value) (MAX(?sl) AS ?links) WHERE {
       ?item wdt:P31 wd:Q3624078 ; wdt:P1082 ?pop ; wikibase:sitelinks ?sl .
       FILTER(?sl >= 150)
+      ${LABELS}
+    } GROUP BY ?item ?itemLabel ?itemDescription`,
+  },
+  {
+    id: 'stadium-capacity',
+    poolSize: 80,
+    title: 'Which stadium holds more people?',
+    noun: 'capacity',
+    higher: 'More',
+    lower: 'Fewer',
+    format: 'count',
+    close: { minRatio: 1.1, maxRatio: 1.8 },
+    query: `SELECT ?item ?itemLabel ?itemDescription (MAX(?cap) AS ?value) (MAX(?sl) AS ?links) WHERE {
+      ?item wdt:P31/wdt:P279? wd:Q483110 ; wdt:P1083 ?cap ; wikibase:sitelinks ?sl .
+      FILTER(?sl >= 25)
+      ${LABELS}
+    } GROUP BY ?item ?itemLabel ?itemDescription`,
+  },
+  {
+    id: 'lake-area',
+    title: 'Which lake is bigger?',
+    noun: 'area',
+    higher: 'Bigger',
+    lower: 'Smaller',
+    format: 'area',
+    poolSize: 100,
+    close: { minRatio: 1.15, maxRatio: 2.2 },
+    query: `SELECT ?item ?itemLabel ?itemDescription (MAX(?v) AS ?value) (MAX(?sl) AS ?links) WHERE {
+      ?item wdt:P31 wd:Q23397 ; wikibase:sitelinks ?sl .
+      ${quantity('P2046').replace('?value', '?v')}
+      FILTER(?sl >= 40)
       ${LABELS}
     } GROUP BY ?item ?itemLabel ?itemDescription`,
   },

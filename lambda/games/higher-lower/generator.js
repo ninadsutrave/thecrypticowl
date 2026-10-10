@@ -2,12 +2,12 @@ import { fetchJson } from '../../shared/runtime/http.js';
 import { themeFor } from './themes.js';
 
 const SPARQL = 'https://query.wikidata.org/sparql';
-export const ROUNDS = 10;
+export const ROUNDS = 5;
 /** The best-known entries of a theme: the ones most players will have heard of. */
 const DEFAULT_POOL_SIZE = 150;
 
 /** Display units: SI values from Wikidata to what the game shows. */
-const SCALE = { count: 1, area: 1e-6, metres: 1, kilometres: 1e-3, year: 1 };
+const SCALE = { count: 1, area: 1e-6, metres: 1, kilometres: 1e-3 };
 
 export async function fetchPool(theme, { fetcher = fetchJson } = {}) {
   const url = `${SPARQL}?format=json&query=${encodeURIComponent(theme.query)}`;
@@ -26,7 +26,6 @@ export async function fetchPool(theme, { fetcher = fetchJson } = {}) {
       links: Number(b.links?.value ?? 0),
     }))
     .filter(x => x.name && !/^Q\d+$/.test(x.name) && Number.isFinite(x.value) && x.value > 0)
-    .map(x => ({ ...x, value: theme.format === 'year' ? Math.round(x.value) : x.value }))
     .sort((a, b) => b.links - a.links)
     .filter(x => !seen.has(x.name) && seen.add(x.name))
     .slice(0, theme.poolSize ?? DEFAULT_POOL_SIZE);
@@ -58,40 +57,45 @@ export function cleanDescription(text) {
 
 /** Whether b is a fair next step from a: clearly different, not wildly so. */
 export function fairPair(theme, a, b) {
-  const { minRatio, maxRatio, minGap, maxGap } = theme.close;
-  if (theme.format === 'year') {
-    const gap = Math.abs(a.value - b.value);
-    return gap >= minGap && gap <= maxGap;
-  }
+  const { minRatio, maxRatio } = theme.close;
   const ratio = Math.max(a.value, b.value) / Math.min(a.value, b.value);
   return ratio >= minRatio && ratio <= maxRatio;
 }
 
+/** How many answers may go up: 2–3 of five, so neither call dominates. */
+export const UPS = [Math.floor(ROUNDS * 0.4), Math.ceil(ROUNDS * 0.6)];
+
 /**
- * Up/down pattern for the day: a fair mix (4–6 of each over ten rounds) and
- * never more than three the same way in a row, so guessing one direction
- * all game doesn't pay.
+ * Up/down pattern for the day: a fair mix, never more than three the same
+ * way in a row, so guessing one direction all game doesn't pay.
  */
 export function directions(rng) {
   for (;;) {
     const d = Array.from({ length: ROUNDS }, () => (rng.chance(0.5) ? 1 : -1));
     const ups = d.filter(x => x > 0).length;
     const longRun = d.some((x, i) => i >= 3 && d[i - 1] === x && d[i - 2] === x && d[i - 3] === x);
-    if (ups >= 4 && ups <= 6 && !longRun) return d;
+    if (ups >= UPS[0] && ups <= UPS[1] && !longRun) return d;
   }
 }
+
+/**
+ * Pick from a list sorted best-known first, leaning towards the front: half
+ * the picks come from the top quarter, so most rounds feature things people
+ * have heard of, with the occasional deeper cut.
+ */
+const pickFamous = (rng, list) => list[Math.floor(rng.next() ** 2 * list.length)];
 
 /** A chain of ROUNDS + 1 items following the pattern, each step a fair pair. */
 export function buildChain(theme, pool, rng, pattern) {
   for (let attempt = 0; attempt < 300; attempt++) {
-    const chain = [rng.pick(pool)];
+    const chain = [pickFamous(rng, pool)];
     for (const dir of pattern) {
       const cur = chain[chain.length - 1];
       const options = pool.filter(
         x => !chain.includes(x) && Math.sign(x.value - cur.value) === dir && fairPair(theme, cur, x)
       );
       if (!options.length) break;
-      chain.push(rng.pick(options));
+      chain.push(pickFamous(rng, options));
     }
     if (chain.length === ROUNDS + 1) return chain;
   }
@@ -108,7 +112,9 @@ export async function generateHigherLower(ctx, deps = {}) {
   const key = x => `wd:${x.id}`;
   const fresh = all.filter(x => !ctx.used.has(key(x)));
   // Prefer items not seen lately; if that leaves too few, use them all.
-  const pool = fresh.length >= 60 ? fresh : all;
+  // (A theme comes round every eight days and uses six items, so a 60-day
+  // rest takes about 45 out of a pool of 80–150.)
+  const pool = fresh.length >= 30 ? fresh : all;
   const chain = buildChain(theme, pool, ctx.rng, directions(ctx.rng));
   return {
     payload: {
@@ -122,7 +128,7 @@ export async function generateHigherLower(ctx, deps = {}) {
         id,
         name,
         description,
-        value: theme.format === 'year' ? value : Number(value.toPrecision(6)),
+        value: Number(value.toPrecision(6)),
         url: `https://www.wikidata.org/wiki/${id}`,
       })),
     },

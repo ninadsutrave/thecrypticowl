@@ -1,0 +1,556 @@
+[
+  {
+    "id": "Q10285",
+    "name": "Colosseum",
+    "description": "Ancient Roman amphitheatre, a landmark of Rome, Italy",
+    "value": 65000,
+    "links": 148
+  },
+  {
+    "id": "Q155174",
+    "name": "Maracanã Stadium",
+    "description": "Stadium in Rio de Janeiro, Brazil",
+    "value": 78838,
+    "links": 89
+  },
+  {
+    "id": "Q159848",
+    "name": "Camp Nou",
+    "description": "Football stadium in Barcelona, Catalonia, Spain",
+    "value": 105000,
+    "links": 89
+  },
+  {
+    "id": "Q83457",
+    "name": "Old Trafford",
+    "description": "Football stadium in Manchester, England",
+    "value": 75731,
+    "links": 85
+  },
+  {
+    "id": "Q164027",
+    "name": "Bernabéu",
+    "description": "Real Madrid's home ground, stadium in Madrid",
+    "value": 83186,
+    "links": 81
+  },
+  {
+    "id": "Q127429",
+    "name": "Allianz Arena",
+    "description": "Stadium in Munich, Germany",
+    "value": 75024,
+    "links": 80
+  },
+  {
+    "id": "Q128468",
+    "name": "Wembley Stadium",
+    "description": "Stadium in London, England",
+    "value": 90000,
+    "links": 78
+  },
+  {
+    "id": "Q45671",
+    "name": "Anfield",
+    "description": "Football stadium in Anfield, Liverpool, England",
+    "value": 61276,
+    "links": 78
+  },
+  {
+    "id": "Q163995",
+    "name": "Emirates Stadium",
+    "description": "Association football stadium located in Islington, North London",
+    "value": 60338,
+    "links": 76
+  },
+  {
+    "id": "Q171458",
+    "name": "Stamford Bridge",
+    "description": "Association football stadium in London, England",
+    "value": 41875,
+    "links": 76
+  },
+  {
+    "id": "Q159884",
+    "name": "Stadio Olimpico",
+    "description": "Sports venue in Rome, Italy",
+    "value": 70634,
+    "links": 73
+  },
+  {
+    "id": "Q13205",
+    "name": "Stade de France",
+    "description": "National stadium of France",
+    "value": 81338,
+    "links": 72
+  },
+  {
+    "id": "Q81492",
+    "name": "Rams Park",
+    "description": "Football stadium of Galatasaray SK",
+    "value": 52652,
+    "links": 71
+  },
+  {
+    "id": "Q172190",
+    "name": "London Stadium",
+    "description": "Multi-purpose stadium at the London Olympic Park, England, United Kingdom",
+    "value": 62500,
+    "links": 70
+  },
+  {
+    "id": "Q202163",
+    "name": "Luzhniki Stadium",
+    "description": "Football stadium in Moscow, Russia",
+    "value": 78360,
+    "links": 67
+  },
+  {
+    "id": "Q133525",
+    "name": "Beijing National Stadium",
+    "description": "Stadium at Beijing, China",
+    "value": 80000,
+    "links": 64
+  },
+  {
+    "id": "Q175339",
+    "name": "Villa Park",
+    "description": "Association football venue in Birmingham, England",
+    "value": 42640,
+    "links": 62
+  },
+  {
+    "id": "Q722970",
+    "name": "Gazprom Arena",
+    "description": "Association football stadium in Saint Petersburg, Russia",
+    "value": 80000,
+    "links": 62
+  },
+  {
+    "id": "Q163521",
+    "name": "FNB Stadium",
+    "description": "Stadium in Johannesburg, South Africa",
+    "value": 94736,
+    "links": 61
+  },
+  {
+    "id": "Q150928",
+    "name": "Westfalenstadion",
+    "description": "Football stadium in the city of Dortmund, Germany",
+    "value": 81359,
+    "links": 61
+  },
+  {
+    "id": "Q1190634",
+    "name": "Lukoil Arena",
+    "description": "Football stadium in Russia",
+    "value": 45360,
+    "links": 61
+  },
+  {
+    "id": "Q968420",
+    "name": "Goodison Park",
+    "description": "Football stadium in Walton, Liverpool, England",
+    "value": 40157,
+    "links": 60
+  },
+  {
+    "id": "Q191774",
+    "name": "St James’ Park",
+    "description": "Football stadium in Newcastle upon Tyne, England, UK",
+    "value": 52305,
+    "links": 60
+  },
+  {
+    "id": "Q33993",
+    "name": "Ak Bars Arena",
+    "description": "Football stadium in Kazan, Russia",
+    "value": 45105,
+    "links": 59
+  },
+  {
+    "id": "Q320454",
+    "name": "Estadio Azteca",
+    "description": "Football stadium in Mexico City, Mexico",
+    "value": 115000,
+    "links": 59
+  },
+  {
+    "id": "Q150961",
+    "name": "Arena AufSchalke",
+    "description": "Football stadium in Gelsenkirchen, North Rhine-Westphalia, Germany",
+    "value": 62271,
+    "links": 58
+  },
+  {
+    "id": "Q193651",
+    "name": "Hampden Park",
+    "description": "Association football stadium in Glasgow, Scotland, UK",
+    "value": 51866,
+    "links": 57
+  },
+  {
+    "id": "Q910370",
+    "name": "Mineirão",
+    "description": "Football stadium in the state of Minas Gerais, Brazil",
+    "value": 66658,
+    "links": 57
+  },
+  {
+    "id": "Q186425",
+    "name": "White Hart Lane",
+    "description": "Former football stadium of Tottenham Hotspur",
+    "value": 36284,
+    "links": 57
+  },
+  {
+    "id": "Q131610",
+    "name": "Munich Olympic Stadium",
+    "description": "Stadium located in Munich, Germany",
+    "value": 63118,
+    "links": 56
+  },
+  {
+    "id": "Q202150",
+    "name": "Stade Vélodrome",
+    "description": "Football stadium in Marseille, France",
+    "value": 67394,
+    "links": 56
+  },
+  {
+    "id": "Q1186333",
+    "name": "Lusail Stadium",
+    "description": "Football stadium in Lusail, Qatar",
+    "value": 88966,
+    "links": 56
+  },
+  {
+    "id": "Q4439101",
+    "name": "Rostov Arena",
+    "description": "Association football stadium in Rostov-on-Don, Russia",
+    "value": 45000,
+    "links": 56
+  },
+  {
+    "id": "Q620031",
+    "name": "Leicester City Stadium",
+    "description": "Association football venue in Leicester, England",
+    "value": 32261,
+    "links": 56
+  },
+  {
+    "id": "Q4533552",
+    "name": "Mordovia Arena",
+    "description": "Russian stadium",
+    "value": 45015,
+    "links": 55
+  },
+  {
+    "id": "Q150933",
+    "name": "Volksparkstadion",
+    "description": "Football stadium in Hamburg, Germany",
+    "value": 57000,
+    "links": 54
+  },
+  {
+    "id": "Q152349",
+    "name": "MHPArena",
+    "description": "Football stadium in Stuttgart, Germany",
+    "value": 60058,
+    "links": 54
+  },
+  {
+    "id": "Q173559",
+    "name": "Cape Town Stadium",
+    "description": "Sports stadium in Cape Town, South Africa",
+    "value": 58309,
+    "links": 54
+  },
+  {
+    "id": "Q207109",
+    "name": "Johan Cruyff Arena",
+    "description": "Sports venue in Amsterdam, Netherlands",
+    "value": 54990,
+    "links": 54
+  },
+  {
+    "id": "Q4439098",
+    "name": "Rostec Arena",
+    "description": "Football stadium in Kaliningrad, Russia",
+    "value": 45015,
+    "links": 54
+  },
+  {
+    "id": "Q4439099",
+    "name": "Samara Arena",
+    "description": "Stadium in Russia",
+    "value": 44918,
+    "links": 54
+  },
+  {
+    "id": "Q62149",
+    "name": "Juventus Stadium",
+    "description": "Football stadium in Italy",
+    "value": 41689,
+    "links": 54
+  },
+  {
+    "id": "Q157273",
+    "name": "Waldstadion",
+    "description": "Stadium in Frankfurt am Main, Germany",
+    "value": 51500,
+    "links": 54
+  },
+  {
+    "id": "Q190779",
+    "name": "Central Stadium Yekaterinburg",
+    "description": "Stadium in Yekaterinburg, Russia",
+    "value": 42500,
+    "links": 54
+  },
+  {
+    "id": "Q1362236",
+    "name": "Neo Química Arena",
+    "description": "Football stadium in São Paulo",
+    "value": 47252,
+    "links": 54
+  },
+  {
+    "id": "Q33003",
+    "name": "Parken Stadium",
+    "description": "Football stadium in Copenhagen, Denmark",
+    "value": 38065,
+    "links": 53
+  },
+  {
+    "id": "Q179693",
+    "name": "Kazimierz Górski National Stadium",
+    "description": "Football stadium located in Warsaw, Poland",
+    "value": 58274,
+    "links": 53
+  },
+  {
+    "id": "Q772988",
+    "name": "Khalifa International Stadium",
+    "description": "Multi-purpose stadium in Al Rayyan, Qatar",
+    "value": 50500,
+    "links": 53
+  },
+  {
+    "id": "Q336088",
+    "name": "Estádio Nacional de Brasília",
+    "description": "Football stadium and multipurpose arena in Brasília, DF, Brazil",
+    "value": 69910,
+    "links": 53
+  },
+  {
+    "id": "Q612227",
+    "name": "BC Place",
+    "description": "Stadium at Vancouver, British Columbia, Canada",
+    "value": 54500,
+    "links": 53
+  },
+  {
+    "id": "Q4366184",
+    "name": "Volgograd Arena",
+    "description": "Stadium in Volgograd, Russia",
+    "value": 45568,
+    "links": 53
+  },
+  {
+    "id": "Q151893",
+    "name": "RheinEnergie Stadion",
+    "description": "Football stadium and home of FC Köln in the city of Cologne, Germany",
+    "value": 46195,
+    "links": 53
+  },
+  {
+    "id": "Q175289",
+    "name": "Moses Mabhida Stadium",
+    "description": "Stadium in Durban, South Africa",
+    "value": 62760,
+    "links": 53
+  },
+  {
+    "id": "Q1066373",
+    "name": "Selhurst Park",
+    "description": "Football stadium in Selhurst, in the London Borough of Croydon, England",
+    "value": 26255,
+    "links": 53
+  },
+  {
+    "id": "Q1327235",
+    "name": "Estádio Couto Pereira",
+    "description": "Football stadium",
+    "value": 34872,
+    "links": 53
+  },
+  {
+    "id": "Q185741",
+    "name": "Ernst-Happel-Stadion",
+    "description": "Stadium in Vienna",
+    "value": 50000,
+    "links": 52
+  },
+  {
+    "id": "Q204496",
+    "name": "Millennium Stadium",
+    "description": "National stadium of Wales",
+    "value": 73931,
+    "links": 52
+  },
+  {
+    "id": "Q19520501",
+    "name": "SoFi Stadium",
+    "description": "Stadium in Inglewood, California",
+    "value": 70240,
+    "links": 52
+  },
+  { "id": "Q10862290", "name": "MetLife Stadium", "description": "", "value": 82500, "links": 52 },
+  {
+    "id": "Q182081",
+    "name": "Ellis Park Stadium",
+    "description": "Stadium in Johannesburg, South Africa",
+    "value": 62567,
+    "links": 52
+  },
+  {
+    "id": "Q958185",
+    "name": "Castelão",
+    "description": "Football stadium in Fortaleza, Ceará, Brazil",
+    "value": 57876,
+    "links": 51
+  },
+  {
+    "id": "Q181439",
+    "name": "Free State Stadium",
+    "description": "Stadium",
+    "value": 45158,
+    "links": 51
+  },
+  {
+    "id": "Q187042",
+    "name": "Peter Mokaba Stadium",
+    "description": "Stadium",
+    "value": 41733,
+    "links": 50
+  },
+  {
+    "id": "Q567339",
+    "name": "St Mary's Stadium",
+    "description": "Association football stadium in Southampton",
+    "value": 32589,
+    "links": 50
+  },
+  {
+    "id": "Q181398",
+    "name": "Loftus Versfeld Stadium",
+    "description": "Stadium",
+    "value": 51762,
+    "links": 50
+  },
+  {
+    "id": "Q182385",
+    "name": "Gdańsk Arena",
+    "description": "Stadium in Gdańsk, Poland",
+    "value": 41620,
+    "links": 50
+  },
+  {
+    "id": "Q275429",
+    "name": "Ramón Sánchez Pizjuán Stadium",
+    "description": "Football stadium in Seville, Spain",
+    "value": 43751,
+    "links": 50
+  },
+  {
+    "id": "Q181445",
+    "name": "Nelson Mandela Bay Stadium",
+    "description": "Stadium in Gqeberha, South Africa",
+    "value": 42486,
+    "links": 49
+  },
+  {
+    "id": "Q202762",
+    "name": "Mestalla Stadium",
+    "description": "Stadium at Valencia, Spain",
+    "value": 49430,
+    "links": 49
+  },
+  {
+    "id": "Q1134439",
+    "name": "Stadium 974",
+    "description": "Football stadium in Doha",
+    "value": 45000,
+    "links": 49
+  },
+  {
+    "id": "Q7875112",
+    "name": "Estádio da Luz",
+    "description": "Football stadium in Lisbon, Portugal",
+    "value": 68100,
+    "links": 49
+  },
+  {
+    "id": "Q4439075",
+    "name": "Nizhny Novgorod Stadium",
+    "description": "Association football stadium in Nizhny Novgorod, Russia",
+    "value": 44899,
+    "links": 49
+  },
+  {
+    "id": "Q8507",
+    "name": "Parc Olympique Lyonnais",
+    "description": "Stadium",
+    "value": 59286,
+    "links": 49
+  },
+  {
+    "id": "Q190010",
+    "name": "St. Jakob-Park",
+    "description": "Sports stadium in Basel",
+    "value": 38512,
+    "links": 49
+  },
+  {
+    "id": "Q210466",
+    "name": "Red Bull Arena",
+    "description": "Association football stadium in Leipzig, Germany",
+    "value": 42000,
+    "links": 49
+  },
+  {
+    "id": "Q838284",
+    "name": "AT&T Stadium",
+    "description": "Stadium in Arlington, Texas, U.S.",
+    "value": 105000,
+    "links": 49
+  },
+  {
+    "id": "Q187087",
+    "name": "Mbombela Stadium",
+    "description": "Stadium",
+    "value": 43500,
+    "links": 48
+  },
+  {
+    "id": "Q189337",
+    "name": "Royal Bafokeng Stadium",
+    "description": "Stadium",
+    "value": 42000,
+    "links": 48
+  },
+  {
+    "id": "Q641527",
+    "name": "Arena Amazônia",
+    "description": "Football stadium in Manaus, Amazonas, Brazil",
+    "value": 42924,
+    "links": 48
+  },
+  {
+    "id": "Q1048774",
+    "name": "Education City Stadium",
+    "description": "Stadium",
+    "value": 90000,
+    "links": 48
+  }
+]

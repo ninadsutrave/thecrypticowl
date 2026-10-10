@@ -8,7 +8,7 @@ const ACCENT = '#0F766E';
 export function getHigherLowerTutorial(puzzle: HigherLowerPuzzle): TutorialStep[] {
   return [
     {
-      title: 'One question, ten rounds',
+      title: 'One question, five rounds',
       visual: (
         <Stack gap={6}>
           <Line>Mont Blanc · 4,806 m</Line>
@@ -45,8 +45,8 @@ export function getHigherLowerTutorial(puzzle: HigherLowerPuzzle): TutorialStep[
       visual: <Line tone="focus">💡 Mount Kilimanjaro: about 6,000 m</Line>,
       body: (
         <p>
-          Unsure? Once per game, the hint gives the hidden number to one figure (or the decade, for
-          years). It's noted in your result.
+          Unsure? Once per game, the hint gives the hidden number to one figure. It's noted in your
+          result.
         </p>
       ),
     },

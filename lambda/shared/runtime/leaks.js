@@ -12,14 +12,20 @@ const COMMON = new Set(
   )
 );
 
-/** Distinctive words of the answer and aliases, e.g. "eiffel" for Eiffel Tower. */
+/**
+ * The answer and its aliases as whole names, plus the distinctive words of
+ * the answer itself, e.g. "eiffel" for Eiffel Tower. Single words of an
+ * alias don't count: "quickly" doesn't give away QR code just because one
+ * alias is "Quick Response code". (`accepted[0]` is always the answer.)
+ */
 export function leakTerms(accepted) {
   const terms = new Set();
-  for (const name of accepted) {
+  accepted.forEach((name, i) => {
     const n = normaliseText(name);
     if (n.length >= 3) terms.add(n);
+    if (i > 0) return;
     for (const w of n.split(' ')) if (w.length >= 5 && !COMMON.has(w)) terms.add(w);
-  }
+  });
   return [...terms];
 }
 

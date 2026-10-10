@@ -39,6 +39,10 @@ on:
         description: 'Checker for this Lambda (blank = the JUDGE_PROVIDER variable)'
         type: string
         default: ''
+      groq_model:
+        description: 'Groq model, when Groq is the writer (blank = the default)'
+        type: string
+        default: ''
 
 env:
   NODE_VERSION: '24'
@@ -140,6 +144,7 @@ jobs:
           XAI_API_KEY: ${{ secrets.XAI_API_KEY }}
           MISTRAL_API_KEY: ${{ secrets.MISTRAL_API_KEY }}
           GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+          GROQ_MODEL: ${{ inputs.groq_model }}
           AI_PROVIDER: ${{ inputs.ai_provider || vars.AI_PROVIDER }}
           JUDGE_PROVIDER: ${{ inputs.judge_provider || vars.JUDGE_PROVIDER }}
         run: |
@@ -170,7 +175,7 @@ jobs:
           if [ "$NEEDS_AI" = "true" ]; then
             MANAGED+=(
               GEMINI_API_KEY OPENAI_API_KEY ANTHROPIC_API_KEY
-              DEEPSEEK_API_KEY XAI_API_KEY MISTRAL_API_KEY GROQ_API_KEY
+              DEEPSEEK_API_KEY XAI_API_KEY MISTRAL_API_KEY GROQ_API_KEY GROQ_MODEL
               AI_PROVIDER JUDGE_PROVIDER
             )
           fi

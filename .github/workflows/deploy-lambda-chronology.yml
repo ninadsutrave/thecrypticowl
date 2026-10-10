@@ -27,7 +27,7 @@ jobs:
     uses: ./.github/workflows/_deploy-game-lambda.yml
     with:
       game: chronology
-      needs_ai: true  # optional AI: screens events when a model key is set
+      needs_ai: true # optional AI: screens events when a model key is set
       timeout: 300
       memory: 256
       schedule: ${{ vars.CHRONOLOGY_SCHEDULE || 'cron(5 3 * * ? *)' }}

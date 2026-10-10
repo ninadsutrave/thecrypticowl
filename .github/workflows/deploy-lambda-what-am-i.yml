@@ -32,4 +32,10 @@ jobs:
       memory: 256
       schedule: ${{ vars.WHAT_AM_I_SCHEDULE || 'cron(25 3 * * ? *)' }}
       skip_schedule: ${{ inputs.skip_schedule || false }}
+      # Qwen3.8 27B on Groq wrote the most oblique clues in the benchmark,
+      # and has its own Groq limits apart from the GPT-OSS writers;
+      # Gemini checks it.
+      ai_provider: groq
+      judge_provider: gemini
+      groq_model: qwen/qwen3.8-27b
     secrets: inherit

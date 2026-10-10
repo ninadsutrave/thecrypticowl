@@ -14,7 +14,8 @@ export function callGroq(
   prompt,
   systemInstruction = '',
   responseSchema = null,
-  model = GROQ_MODEL,
+  // GROQ_MODEL lets each Lambda pick its own writer (What Am I uses Qwen).
+  model = process.env.GROQ_MODEL || GROQ_MODEL,
   baseConfig = GROQ_CONFIG
 ) {
   return callOpenAICompatible(

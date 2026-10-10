@@ -309,3 +309,75 @@ describe('verifyMechanism dispatch', () => {
     expect(verifyMechanism('not_a_mechanism', clue(), 'CANOE').status).toBe(UNVERIFIABLE);
   });
 });
+
+describe('verifyPieces', () => {
+  const at = (clue, letter_pieces) => ({ clue, letter_pieces });
+
+  it('accepts a charade whose pieces build the answer', () => {
+    const r = verifyMechanism(
+      'charade',
+      at('Vehicle and favourite animal on the floor (6)', [
+        { clue_words: 'Vehicle', letters: 'CAR' },
+        { clue_words: 'favourite animal', letters: 'PET' },
+      ]),
+      'CARPET'
+    );
+    expect(r.status).toBe(UNVERIFIABLE);
+    expect(r.detail).toMatch(/builds CARPET/);
+  });
+
+  it('accepts a container with one piece inside another', () => {
+    const r = verifyMechanism(
+      'container',
+      at('Swindle, with man inside cat (5)', [
+        { clue_words: 'cat', letters: 'CAT' },
+        { clue_words: 'man', letters: 'HE' },
+      ]),
+      'CHEAT'
+    );
+    expect(r.status).toBe(UNVERIFIABLE);
+  });
+
+  it('refutes BAMBOO from "Bob, a man holding back"', () => {
+    const r = verifyMechanism(
+      'container',
+      at('Bob, a man holding back tropical grass with hollow stems (6)', [
+        { clue_words: 'Bob', letters: 'BOB' },
+        { clue_words: 'a man', letters: 'AM' },
+      ]),
+      'BAMBOO'
+    );
+    expect(r.status).toBe(REFUTED);
+  });
+
+  it('refutes a container whose pieces only concatenate', () => {
+    const r = verifyMechanism(
+      'container',
+      at('Vehicle holding favourite animal (6)', [
+        { clue_words: 'Vehicle', letters: 'CAR' },
+        { clue_words: 'favourite animal', letters: 'PET' },
+      ]),
+      'CARPET'
+    );
+    expect(r.status).toBe(REFUTED);
+  });
+
+  it('refutes pieces missing, or taken from words not in the clue', () => {
+    expect(verifyMechanism('charade', at('Vehicle pet (6)', []), 'CARPET').status).toBe(REFUTED);
+    expect(
+      verifyMechanism(
+        'charade',
+        at('Vehicle and favourite animal (6)', [
+          { clue_words: 'Automobile', letters: 'CAR' },
+          { clue_words: 'favourite animal', letters: 'PET' },
+        ]),
+        'CARPET'
+      ).status
+    ).toBe(REFUTED);
+  });
+
+  it('still verifies literal fodder without pieces', () => {
+    const r = verifyMechanism('reversal', { clue: 'x', fodder: 'reward' }, 'DRAWER');
+    expect(r.status).toBe(VERIFIED);
+  });
+});

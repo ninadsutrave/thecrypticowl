@@ -73,6 +73,19 @@ export const CLUE_RESPONSE_SCHEMA = {
     // charade / double_definition / cryptic_definition / andlit / no classifiable indicator.
     indicator_type: { type: 'STRING', enum: INDICATOR_TYPES },
     wordplay_summary: { type: 'STRING' },
+    // charade / container / reversal / deletion: each piece of wordplay, with the
+    // clue words it comes from and the letters it gives. Checked in code.
+    letter_pieces: {
+      type: 'ARRAY',
+      items: {
+        type: 'OBJECT',
+        properties: {
+          clue_words: { type: 'STRING' },
+          letters: { type: 'STRING' },
+        },
+        required: ['clue_words', 'letters'],
+      },
+    },
     clue_parts: {
       type: 'ARRAY',
       items: {
@@ -321,6 +334,7 @@ FIELD INSTRUCTIONS:
 - indicator_type: one of: anagram, reversal, container, hidden, deletion, homophone, initial_letters, final_letters, alternating_letters, spoonerism, or "none" (for charade, double_definition, cryptic_definition, andlit, or compound with no single dominant indicator)
 - fodder: the raw material being manipulated; for double_definition/cryptic_definition/andlit use empty string ""
 - wordplay_summary: one concise line explaining the wordplay (e.g. "Anagram of OCEAN = CANOE")
+- letter_pieces: REQUIRED for charade, container, reversal and deletion (empty array [] otherwise). One entry per piece of wordplay: clue_words = the exact words from the clue it comes from; letters = the letters that piece puts into the answer, after its own operation (already reversed, shortened or abbreviated). Code checks that the clue words appear in the clue and that the pieces build the answer exactly (in order for a charade; one piece wrapped around the others for a container), and rejects the clue otherwise. Examples: charade "Vehicle and favourite animal on the floor (6)" for CARPET → [{"clue_words":"Vehicle","letters":"CAR"},{"clue_words":"favourite animal","letters":"PET"}]; container "Swindle, with man inside cat (5)" for CHEAT → [{"clue_words":"cat","letters":"CAT"},{"clue_words":"man","letters":"HE"}]. Each piece must be a standard British cryptic equivalence (doctor → DR, love → O, worker → ANT/BEE, sailor → AB/TAR).
 - clue_parts: array of every segment of the clue with no gaps — segments must join to exactly reproduce the clue string (do NOT include a letter-count segment)
 - For each clue_parts item with type "indicator", ALSO set indicator_subtype to the specific sub-type (anagram/reversal/container/hidden/deletion/homophone/initial_letters/final_letters/alternating_letters/spoonerism). This is MANDATORY for compound clues that contain multiple indicators of different sub-types — each indicator part must carry its own indicator_subtype so the Hints UI can explain each trick separately. Omit indicator_subtype on non-indicator parts.`;
 
@@ -455,6 +469,12 @@ ${JSON_ONLY_RULE}`;
  * @param {{ clue: string, definition: string, indicator: string, fodder: string, wordplay_summary: string }} clue
  * @param {{ status: string, detail: string }} mechanical - verdict from verifyMechanism()
  */
+function piecesLine(clue) {
+  const pieces = Array.isArray(clue.letter_pieces) ? clue.letter_pieces : [];
+  if (pieces.length === 0) return '';
+  return `\nLETTER PIECES: ${pieces.map(p => `"${p.clue_words}" → ${p.letters}`).join('; ')}`;
+}
+
 export function buildJudgePrompt(lexical, clue, mechanical = null) {
   let mechanicalNote = '';
   if (mechanical?.status === 'verified') {
@@ -484,7 +504,7 @@ CLUE: "${clue.clue}"
 DEFINITION USED: "${clue.definition}"
 INDICATOR: "${clue.indicator || '(none)'}"
 FODDER: "${clue.fodder || '(none)'}"
-WORDPLAY EXPLANATION: "${clue.wordplay_summary}"${mechanicalNote}
+WORDPLAY EXPLANATION: "${clue.wordplay_summary}"${piecesLine(clue)}${mechanicalNote}
 
 Check every criterion and return your verdict as JSON.`;
 }

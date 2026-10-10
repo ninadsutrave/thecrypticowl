@@ -312,6 +312,82 @@ export function verifyDoubleDefinition(clueText, definition, second) {
   return ok(`"${definition}" and "${second}" sit at opposite ends of the clue.`);
 }
 
+// ─── LETTER PIECES ────────────────────────────────────────────────────────────
+
+/** Mechanisms whose fodder may be a synonym, checked through `letter_pieces`. */
+export const PIECE_TYPES = new Set(['charade', 'container', 'reversal', 'deletion']);
+
+function permutations(items) {
+  if (items.length <= 1) return [items];
+  return items.flatMap((x, i) =>
+    permutations([...items.slice(0, i), ...items.slice(i + 1)]).map(rest => [x, ...rest])
+  );
+}
+
+/** One piece split around a run of the others, e.g. B(AMBO)O. */
+function insertionBuilds(order, answer) {
+  for (let o = 0; o < order.length; o++) {
+    const outer = order[o];
+    for (let s = 1; s < outer.length; s++) {
+      for (let m = 1; o + m < order.length; m++) {
+        const built =
+          order.slice(0, o).join('') +
+          outer.slice(0, s) +
+          order.slice(o + 1, o + 1 + m).join('') +
+          outer.slice(s) +
+          order.slice(o + 1 + m).join('');
+        if (built === answer) return true;
+      }
+    }
+  }
+  return false;
+}
+
+/**
+ * Checks the letter arithmetic of a synonym-based clue. The writer lists each
+ * piece of wordplay: the words it comes from in the clue, and the letters it
+ * gives the answer after its own operation (reversed, shortened, abbreviated).
+ * Code then confirms the words are really in the clue and the letters really
+ * build the answer. Whether each word fairly gives its letters is left to the
+ * judge, which is told exactly which substitutions to check. ("Bob, a man
+ * holding back" for BAMBOO shipped because nothing checked this.)
+ */
+export function verifyPieces(type, clue, answer) {
+  const a = letters(answer);
+  const pieces = (Array.isArray(clue.letter_pieces) ? clue.letter_pieces : []).map(p => ({
+    words: String(p?.clue_words ?? '').trim(),
+    letters: letters(p?.letters),
+  }));
+  if (pieces.length === 0) {
+    return no(`No letter_pieces given, so there is no way to check the wordplay builds ${a}.`);
+  }
+  if (pieces.length > 5) return no('Too many letter_pieces (more than five).');
+  const surface = letters(clue.clue);
+  for (const p of pieces) {
+    if (!p.letters) return no(`The piece from "${p.words}" gives no letters.`);
+    if (!p.words || !surface.includes(letters(p.words))) {
+      return no(`Piece "${p.words}" is not in the clue as written.`);
+    }
+  }
+  const parts = pieces.map(p => p.letters);
+  const orders = permutations(parts);
+  const builds =
+    type === 'container'
+      ? orders.some(order => insertionBuilds(order, a))
+      : orders.some(order => order.join('') === a);
+  const listed = pieces.map(p => `"${p.words}" → ${p.letters}`).join('; ');
+  if (!builds) {
+    return no(
+      `The letter pieces (${listed}) do not build ${a}` +
+        (type === 'container' ? ' with one piece placed inside another.' : '.')
+    );
+  }
+  return meh(
+    `The letters add up: ${listed} builds ${a}. Check each piece: the clue words must be a ` +
+      `standard, fair way to give exactly those letters in British cryptics.`
+  );
+}
+
 // ─── DISPATCH ─────────────────────────────────────────────────────────────────
 
 /**
@@ -323,6 +399,14 @@ export function verifyDoubleDefinition(clueText, definition, second) {
  * @returns {{ status: 'verified'|'refuted'|'unverifiable', detail: string }}
  */
 export function verifyMechanism(type, clue, answer) {
+  const literal = verifyLiteral(type, clue, answer);
+  if (literal.status === UNVERIFIABLE && PIECE_TYPES.has(type)) {
+    return verifyPieces(type, clue, answer);
+  }
+  return literal;
+}
+
+function verifyLiteral(type, clue, answer) {
   switch (type) {
     case 'anagram':
       return verifyAnagram(clue.fodder, answer, clue.clue);

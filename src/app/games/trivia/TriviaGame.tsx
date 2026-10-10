@@ -26,19 +26,6 @@ export function TriviaGame() {
       puzzleId={`${puzzle.answer}:${puzzle.question.slice(0, 40)}`}
       subtitle={`${puzzle.category} · One question`}
       tutorial={getTriviaTutorial()}
-      rules={
-        <>
-          <p>
-            One question a day, told as a short story. Each sentence is a clue; the answer usually
-            clicks near the end.
-          </p>
-          <p>
-            Type your answer. You have {MAX_GUESSES} guesses, and small typos are forgiven. There
-            are no options to pick from.
-          </p>
-          <p>One hint: the answer's first letter and the length of each word.</p>
-        </>
-      }
     >
       {api => <TriviaBoard puzzle={puzzle} api={api} />}
     </GameShell>

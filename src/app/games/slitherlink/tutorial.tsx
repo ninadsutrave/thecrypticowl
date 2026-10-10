@@ -58,7 +58,8 @@ export function getSlitherlinkTutorial(): TutorialStep[] {
       body: (
         <p>
           Every puzzle has exactly one loop. Stuck? A hint fixes a wrong line or draws a missing
-          piece, and counts towards your result.
+          piece, and counts towards your result. On a keyboard: arrows move, Shift + arrow draws or
+          erases.
         </p>
       ),
     },

@@ -79,7 +79,7 @@ export function getSudokuTutorial(puzzle: SudokuPuzzle): TutorialStep[] {
         <p>
           Tap a cell, then a number (or type it). Turn on Notes to pencil in candidates. Clashes
           turn red straight away. Stuck? A hint fills in the right number, and counts towards your
-          result.
+          result. On a keyboard: digits, arrows, Backspace, and N for notes.
         </p>
       ),
     },

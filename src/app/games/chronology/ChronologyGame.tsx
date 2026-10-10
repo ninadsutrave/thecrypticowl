@@ -28,20 +28,6 @@ export function ChronologyGame() {
       puzzleId={puzzle.events.map(e => e.id).join('|')}
       subtitle={`${puzzle.events.length} events · Medium`}
       tutorial={getChronologyTutorial(puzzle.events.length)}
-      rules={
-        <>
-          <p>
-            Every event below happened on {puzzle.day}, in different years. Use the arrows to put
-            them in order, <strong>earliest at the top</strong>.
-          </p>
-          <p>Drag an event by its handle, or use its arrows.</p>
-          <p>
-            You have {MAX_ATTEMPTS} checks. After each one, events in the right place lock in green
-            and the rest stay movable.
-          </p>
-          <p>One hint per puzzle: it reveals the year of the event at the top of your list.</p>
-        </>
-      }
     >
       {api => <ChronologyBoard puzzle={puzzle} api={api} />}
     </GameShell>

@@ -29,26 +29,6 @@ export function HigherLowerGame() {
       puzzleId={puzzle.items.map(x => x.id).join('|')}
       subtitle={`${n} rounds · Medium`}
       tutorial={getHigherLowerTutorial(puzzle)}
-      rules={
-        <>
-          <p>
-            Today's question: <strong>{puzzle.title}</strong> Each round shows one thing with its{' '}
-            {puzzle.noun} and a new one with it hidden. Is the new one {puzzle.higher.toLowerCase()}{' '}
-            or {puzzle.lower.toLowerCase()}?
-          </p>
-          <p>
-            {n} rounds, and the new one becomes the next round's known one. Every pair is close
-            enough to make you think, but never a tie.
-          </p>
-          <p>
-            Get a majority right to solve it. One hint per game: a ballpark for the hidden{' '}
-            {puzzle.noun}.
-          </p>
-          <p className="text-xs">
-            Numbers from Wikidata and Wikipedia; each card in the final chain links to its source.
-          </p>
-        </>
-      }
     >
       {api => <HigherLowerBoard puzzle={puzzle} api={api} />}
     </GameShell>

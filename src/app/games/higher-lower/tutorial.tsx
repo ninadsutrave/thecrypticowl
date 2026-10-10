@@ -46,7 +46,7 @@ export function getHigherLowerTutorial(puzzle: HigherLowerPuzzle): TutorialStep[
       body: (
         <p>
           Unsure? Once per game, the hint gives the hidden number to one figure. It's noted in your
-          result.
+          result. Get a majority of the rounds right to solve the puzzle.
         </p>
       ),
     },

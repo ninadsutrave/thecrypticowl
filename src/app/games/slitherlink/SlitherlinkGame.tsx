@@ -46,29 +46,6 @@ export function SlitherlinkGame() {
       puzzleId={puzzle.clues}
       subtitle={`${puzzle.rows}×${puzzle.cols} · Medium`}
       tutorial={getSlitherlinkTutorial()}
-      rules={
-        <>
-          <p>
-            Draw <strong>one closed loop</strong> along the dotted lines. It never crosses or
-            touches itself, and every number says how many of its cell's four sides the loop uses.
-            Cells without numbers can have any count. A number turns green once it has exactly the
-            right lines, and red if it has too many.
-          </p>
-          <p>
-            Where to start: every puzzle has a 0 right next to a 3. Cross out the 0's four sides;
-            the one it shares with the 3 is then off, so the 3's other three sides are all on. Work
-            outwards from there.
-          </p>
-          <p>
-            Swipe through the dots to draw; swipe back to undo a stretch. Tap between two dots to
-            cross that side out (a reminder it's empty); tap again to clear it.
-          </p>
-          <p>
-            Keyboard: arrows move, Shift + arrow draws or erases. A hint fixes a wrong line, or
-            draws a missing piece of the loop; hints are counted.
-          </p>
-        </>
-      }
     >
       {api => <SlitherBoard puzzle={puzzle} api={api} />}
     </GameShell>

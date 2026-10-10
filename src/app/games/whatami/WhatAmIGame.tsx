@@ -29,23 +29,6 @@ export function WhatAmIGame() {
       puzzleId={`${puzzle.answer}:${puzzle.clues[0]}`}
       subtitle={`Category: ${puzzle.category}`}
       tutorial={getWhatAmITutorial()}
-      rules={
-        <>
-          <p>
-            Something is hiding behind five clues: a country, a celebrity, a band, a brand, a
-            festival… The category is shown above.
-          </p>
-          <p>
-            You start with the hardest clue. Guess at any time, or reveal the next clue. Getting it
-            on clue 1 scores {MAX_POINTS} points, clue 2 scores {MAX_POINTS - 1}, and so on.
-          </p>
-          <p>A wrong guess reveals the next clue too, so guess boldly but not wildly!</p>
-          <p>
-            You get one hint: the answer's first letter and length. It costs a point (you always
-            keep at least one for a correct answer).
-          </p>
-        </>
-      }
     >
       {api => <WhatAmIBoard puzzle={puzzle} api={api} />}
     </GameShell>

@@ -29,22 +29,6 @@ export function CryptogramGame() {
       puzzleId={`${puzzle.key}:${puzzle.text}`}
       subtitle="A well-known saying · Medium"
       tutorial={getCryptogramTutorial()}
-      rules={
-        <>
-          <p>
-            Every letter of a famous saying has been swapped for a different letter, the same swap
-            all the way through. If <strong>X</strong> stands for <strong>T</strong> once, it stands
-            for T everywhere.
-          </p>
-          <p>
-            Tap a letter, then type (or tap) what you think it really is. Two letters are given to
-            get you started. A hint reveals one more letter.
-          </p>
-          <p>
-            Tip: one-letter words are usually A or I, and THE is the commonest three-letter word.
-          </p>
-        </>
-      }
     >
       {api => <CryptogramBoard puzzle={puzzle} api={api} />}
     </GameShell>

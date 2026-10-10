@@ -26,21 +26,6 @@ export function ChessGame() {
       puzzleId={puzzle.source.id}
       subtitle={`Mate in ${puzzle.mateIn} · Medium`}
       tutorial={getChessTutorial(puzzle.mateIn)}
-      rules={
-        <>
-          <p>
-            Your opponent has just moved. Find the moves that force{' '}
-            <strong>checkmate in {puzzle.mateIn}</strong>, whatever they reply. The computer plays
-            their replies.
-          </p>
-          <p>
-            Play any legal move: the computer defends as well as it can. Any checkmate within{' '}
-            {puzzle.mateIn} moves counts. If you run out of moves without mate, try again or see the
-            solution. Stuck? A hint shows you the next move of the main line.
-          </p>
-          <p className="text-xs">Chess pieces: Chessnut by Alexis Luengas, Apache License 2.0.</p>
-        </>
-      }
     >
       {api => <ChessBoard puzzle={puzzle} api={api} />}
     </GameShell>

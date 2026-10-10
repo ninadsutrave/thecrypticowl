@@ -35,34 +35,9 @@ export function SudokuGame() {
       puzzleId={puzzle.solution}
       subtitle={`${info.name} · ${puzzle.size}×${puzzle.size} · Medium`}
       tutorial={getSudokuTutorial(puzzle)}
-      rules={<SudokuRules puzzle={puzzle} />}
     >
       {api => <SudokuBoard puzzle={puzzle} api={api} />}
     </GameShell>
-  );
-}
-
-function SudokuRules({ puzzle }: { puzzle: SudokuPuzzle }) {
-  const { isDark } = useDarkMode();
-  const T = getTheme(isDark);
-  const info = VARIANTS[puzzle.variant];
-  const boxShape = `${puzzle.boxRows}×${puzzle.boxCols}`;
-  return (
-    <>
-      <p>
-        Fill the grid so every row, column and {boxShape} box contains the digits 1–{puzzle.size}{' '}
-        exactly once.
-      </p>
-      <p>
-        <strong style={{ color: T.heading }}>Today's twist, {info.name}:</strong> {info.rule}
-      </p>
-      <p style={{ fontStyle: 'italic' }}>Example: {info.example}</p>
-      <p className="text-xs" style={{ color: T.textMuted }}>
-        Tap a cell, then a number. Pencil mode adds small notes. Stuck? A hint reveals the number in
-        the selected cell (or the next empty one). Keyboard: digits, arrows, Backspace, and N for
-        notes.
-      </p>
-    </>
   );
 }
 

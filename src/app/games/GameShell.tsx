@@ -6,7 +6,6 @@ import {
   ArrowRight,
   CalendarDays,
   Check,
-  ChevronDown,
   Flame,
   GraduationCap,
   LayoutGrid,
@@ -70,8 +69,6 @@ interface GameShellProps {
   gameId: GameId;
   /** Today's variant or category, shown under the title. */
   subtitle?: string;
-  rules: ReactNode;
-  rulesOpenByDefault?: boolean;
   /** The walkthrough shown on the first visit and from the header. */
   tutorial: TutorialStep[];
   /**
@@ -97,14 +94,12 @@ function todayLabel() {
 }
 
 /**
- * The frame every daily game is played in: header, live clock, rules,
+ * The frame every daily game is played in: header, live clock, How to play,
  * and the result card. Games render only their board and call `complete`.
  */
 export function GameShell({
   gameId,
   subtitle,
-  rules,
-  rulesOpenByDefault,
   tutorial,
   practice = false,
   puzzleId,
@@ -178,8 +173,6 @@ export function GameShell({
           key={`${archiveDate}-${round}`}
           game={game}
           subtitle={subtitle}
-          rules={rules}
-          rulesOpenByDefault={rulesOpenByDefault}
           replaying={replaying || archiveDate !== null}
           archiveDate={archiveDate}
           puzzleId={puzzleId}
@@ -201,8 +194,6 @@ export function GameShell({
 function GameSession({
   game,
   subtitle,
-  rules,
-  rulesOpenByDefault,
   replaying,
   archiveDate,
   puzzleId,
@@ -216,8 +207,6 @@ function GameSession({
 }: {
   game: GameMeta;
   subtitle?: string;
-  rules: ReactNode;
-  rulesOpenByDefault?: boolean;
   replaying: boolean;
   archiveDate: string | null;
   puzzleId: string;
@@ -290,9 +279,6 @@ function GameSession({
             : "Today's puzzle isn't available right now, so here's a stand-in. It counts as today's play."}
         </p>
       )}
-      <RulesPanel T={T} isDark={isDark} defaultOpen={rulesOpenByDefault}>
-        {rules}
-      </RulesPanel>
       <div className="mt-5">{children(api)}</div>
       <AnimatePresence>
         {result && (
@@ -403,60 +389,6 @@ function GameHeader({
         </div>
       </div>
     </header>
-  );
-}
-
-function RulesPanel({
-  T,
-  isDark,
-  defaultOpen = false,
-  children,
-}: {
-  T: Theme;
-  isDark: boolean;
-  defaultOpen?: boolean;
-  children: ReactNode;
-}) {
-  const [open, setOpen] = useState(defaultOpen);
-  return (
-    <section
-      className="rounded-2xl border"
-      style={{ background: T.cardBg, borderColor: T.cardBorder }}
-    >
-      <button
-        onClick={() => setOpen(o => !o)}
-        aria-expanded={open}
-        className="w-full flex items-center justify-between px-4 py-3 text-left"
-        style={{ fontWeight: 800, fontSize: '0.88rem', color: T.brandText }}
-      >
-        Rules
-        <m.span
-          animate={{ rotate: open ? 180 : 0 }}
-          transition={{ duration: 0.2 }}
-          className="flex"
-        >
-          <ChevronDown size={16} />
-        </m.span>
-      </button>
-      <AnimatePresence initial={false}>
-        {open && (
-          <m.div
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: 'auto', opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.2 }}
-            className="overflow-hidden"
-          >
-            <div
-              className="px-4 pb-4 text-sm space-y-2"
-              style={{ color: isDark ? T.bodyText : T.textSub, lineHeight: 1.6 }}
-            >
-              {children}
-            </div>
-          </m.div>
-        )}
-      </AnimatePresence>
-    </section>
   );
 }
 

@@ -6,7 +6,7 @@
 
 - [All of today's puzzles](https://thecrypticowl.com/): the home page grid
 - [Variant Sudoku](https://thecrypticowl.com/sudoku): 6×6 sudoku with a different rule each weekday (Diagonal, Kropki, Thermo, Arrow, Sandwich, Jigsaw, Killer)
-- [Cryptic Clue](https://thecrypticowl.com/cryptic): one British cryptic crossword clue with step-by-step hints
+- [British Style Cryptics](https://thecrypticowl.com/cryptic): one British cryptic crossword clue with step-by-step hints
 - [What Am I Talking About?](https://thecrypticowl.com/what-am-i): guess a country, person, band, brand or festival from five clues
 - [Trivia](https://thecrypticowl.com/trivia): ten multiple-choice questions, each with its source
 - [Chronology](https://thecrypticowl.com/chronology): put six "on this day" events in order

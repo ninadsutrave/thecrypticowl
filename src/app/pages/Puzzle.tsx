@@ -245,7 +245,7 @@ export function Puzzle() {
   ]);
 
   useEffect(() => {
-    document.title = 'Cryptic Clue · The Cryptic Owl';
+    document.title = 'British Style Cryptics · The Cryptic Owl';
   }, []);
 
   // SPA-level "soft 404": we can't return an HTTP 404 status, but we can tell

@@ -172,20 +172,6 @@ export function Hub() {
       <Suspense fallback={<div className="mt-8 h-[190px]" aria-hidden />}>
         <HomeAchievements />
       </Suspense>
-
-      <Link
-        to="/about#suggest"
-        className="mt-8 mx-auto max-w-xl flex items-center justify-between gap-3 rounded-2xl border px-4 py-3.5 no-underline"
-        style={{ background: T.cardBg, borderColor: T.cardBorder, color: T.text }}
-      >
-        <span className="font-bold text-sm">
-          Missing your favourite puzzle?{' '}
-          <span style={{ color: T.brandText }} className="font-extrabold">
-            Suggest one
-          </span>
-        </span>
-        <ArrowRight size={16} aria-hidden style={{ color: T.brandText }} />
-      </Link>
     </div>
   );
 }

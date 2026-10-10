@@ -45,7 +45,7 @@ export const GAMES: readonly GameMeta[] = [
   },
   {
     id: 'cryptic',
-    name: 'Cryptic Clue',
+    name: 'British Style Cryptics',
     path: '/cryptic',
     emoji: '🧩',
     blurb:

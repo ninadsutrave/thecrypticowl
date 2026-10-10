@@ -18,7 +18,7 @@ today.
 | # | Game | Type | AI calls / day | Source of truth |
 |---|---|---|---|---|
 | 1 | **Variant Sudoku** | Pure algorithm | 0 | Generator + solver |
-| 2 | **Cryptic Clue** | AI + mechanical verification | up to 9 + judge | Existing pipeline |
+| 2 | **British Style Cryptics** | AI + mechanical verification | up to 9 + judge | Existing pipeline |
 | 3 | **What Am I Talking About?** | AI, grounded in Wikipedia | ~2–6 | Wikipedia / Wikidata |
 | 4 | **Trivia** | AI, grounded in Wikipedia | ~3–9 | Wikipedia (hand-written bank as fallback) |
 | 5 | **Chronology** | Factual data feed | 0 (1 optional) | Wikipedia "On this day" |
@@ -61,7 +61,7 @@ puzzle and falls back to a labelled practice one only if it's missing. See
 | Game | Hint | How many |
 |---|---|---|
 | Variant Sudoku | Reveal the number in the selected (or next empty) cell | Unlimited, counted |
-| Cryptic Clue | Step-by-step: definition, indicator, fodder, wordplay | Up to 4, then reveal |
+| British Style Cryptics | Step-by-step: definition, indicator, fodder, wordplay | Up to 4, then reveal |
 | What Am I? | The answer's first letter and length (costs 1 point) | **One** |
 | Trivia | The answer's first letter and word lengths | **One** |
 | Chronology | The year of the top unlocked event | **One** |
@@ -130,7 +130,7 @@ puzzle and the archive works.
 
 ---
 
-### 2. Cryptic Clue
+### 2. British Style Cryptics
 
 No change. One British cryptic clue a day, produced by the existing
 generate → mechanical verify → judge pipeline. See
@@ -559,7 +559,7 @@ value before trusting any estimate.
 
 | Game | Generator | Checker | Thinking |
 |---|---|---|---|
-| Cryptic Clue | Pro (as today) | Flash | Default (Pro can't disable it) |
+| British Style Cryptics | Pro (as today) | Flash | Default (Pro can't disable it) |
 | What Am I | **Flash**: rewording facts it is given, so Pro isn't needed | Flash, blind-solve | Generator capped at 1,024; blind-solve **0**, so it guesses like a person would |
 | Trivia | **Flash** | Flash, blind-answer | Generator capped at 1,024; checker 0 |
 | Chronology (optional rewrite) | Flash | Code (no year in the text) | 0 |
@@ -579,7 +579,7 @@ value before trusting any estimate.
 
 | Game | AI calls/day (avg / worst) | **Avg / month** | **Worst / month** |
 |---|---:|---:|---:|
-| Cryptic Clue | 5 / 15 | **$2.33** | **$6.98** |
+| British Style Cryptics | 5 / 15 | **$2.33** | **$6.98** |
 | What Am I | 4.5 / 12 | $0.21 | $0.56 |
 | Trivia | 4.5 / 12 | $0.25 | $0.65 |
 | Chronology | 1 / 1 | $0.03 | $0.03 |

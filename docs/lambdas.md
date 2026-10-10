@@ -170,10 +170,18 @@ Model keys are written only to the AI Lambdas' environments.
 ### First-time setup
 
 1. Apply migrations 003 and 004: `supabase db push`.
-2. Give the deploy user (`github-deploy-user`) the policy in
-   [`iam/github-deploy-lambdas.json`](iam/github-deploy-lambdas.json): it may
-   create and update `crypticowl-*` functions, their daily EventBridge rules
-   and log groups, and pass the execution role to Lambda.
+2. IAM (console, by the account owner):
+   - Replace the deploy user's `github-deploy-policy` with
+     [`iam/github-deploy-policy.json`](iam/github-deploy-policy.json): the site
+     upload and cache invalidation it already had, plus creating and updating
+     the nine game functions (`cryptic-clue-generator` and `crypticowl-*`),
+     their daily EventBridge rules and log groups, and passing the execution
+     role to Lambda. The policy keeps at most five versions: delete the
+     oldest when saving.
+   - Replace the execution role's `AWSLambdaBasicExecutionRole-…` policy
+     (role `cryptic-clue-generator-role-…`, shared by all nine) with
+     [`iam/lambda-execution-logs.json`](iam/lambda-execution-logs.json), so the
+     new functions can write their logs too.
 3. Set the secrets and `CONTACT_EMAIL` above.
 4. Run *Deploy Lambdas · All games*. Each deploy also queues a first run, so
    puzzles appear within a few minutes rather than at 03:00.

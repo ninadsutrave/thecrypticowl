@@ -1,0 +1,18 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": "logs:CreateLogGroup",
+      "Resource": "arn:aws:logs:ap-south-1:161807613175:*"
+    },
+    {
+      "Effect": "Allow",
+      "Action": ["logs:CreateLogStream", "logs:PutLogEvents"],
+      "Resource": [
+        "arn:aws:logs:ap-south-1:161807613175:log-group:/aws/lambda/cryptic-clue-generator:*",
+        "arn:aws:logs:ap-south-1:161807613175:log-group:/aws/lambda/crypticowl-*:*"
+      ]
+    }
+  ]
+}

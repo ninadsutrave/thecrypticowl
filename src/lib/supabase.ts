@@ -738,6 +738,25 @@ export async function addAppLike(): Promise<boolean> {
 
 // removeAppLike removed — anonymous rows are write-only appreciation.
 
+// ─── PUZZLE SUGGESTIONS ──────────────────────────────────────────────────────
+
+/**
+ * Suggest a puzzle type (migration 007). Insert-only: nothing is read back.
+ * Signed-in suggesters are linked by the database's default (auth.uid()).
+ */
+export async function submitPuzzleSuggestion(idea: string, name?: string): Promise<boolean> {
+  if (!isSupabaseConfigured) return false;
+  const supabase = await getSupabaseClient();
+  const { error } = await supabase
+    .from('puzzle_suggestions')
+    .insert({ idea: idea.trim(), name: name?.trim() || null });
+  if (error) {
+    console.warn('[supabase] submitPuzzleSuggestion:', error.message);
+    return false;
+  }
+  return true;
+}
+
 // ─── CLUE SUBMISSIONS ────────────────────────────────────────────────────────
 
 /** Submit a new clue for review. */

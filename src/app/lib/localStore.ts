@@ -35,6 +35,8 @@ export const StoreKeys = {
   progress: `${PREFIX}progress`,
   /** Games whose tutorial has been seen on this device. */
   tutorialsSeen: `${PREFIX}tutorials-seen`,
+  /** When this device last sent a puzzle suggestion (cooldown). */
+  suggestionAt: `${PREFIX}suggestion-at`,
   /** Chess board colours: a device preference. */
   chessBoard: `${PREFIX}chess-board`,
 } as const;

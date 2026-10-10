@@ -70,9 +70,8 @@ export const router = createBrowserRouter([
         loader: () => redirect('/slitherlink'),
       },
       {
-        // The old cryptic-only landing page; the puzzle grid replaced it.
         path: 'about',
-        loader: () => redirect('/'),
+        lazy: async () => ({ Component: (await import('./pages/About')).About }),
       },
       {
         path: 'learn',

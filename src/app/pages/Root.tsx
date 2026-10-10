@@ -1,5 +1,16 @@
 import { Outlet, NavLink, useLocation } from 'react-router';
-import { Menu, X, LayoutGrid, BarChart3, Sun, Moon, Trophy, Lock, LogOut } from 'lucide-react';
+import {
+  Menu,
+  X,
+  LayoutGrid,
+  BarChart3,
+  Info,
+  Sun,
+  Moon,
+  Trophy,
+  Lock,
+  LogOut,
+} from 'lucide-react';
 import { useState, useEffect, useLayoutEffect, useRef, lazy, Suspense } from 'react';
 import { m, AnimatePresence } from 'motion/react';
 import { useDarkMode } from '../context/DarkModeContext';
@@ -99,6 +110,7 @@ export function Root() {
     // here: every other game has its own walkthrough. One stats destination
     // too: the cryptic XP/archive page is linked from it.
     { to: '/stats', label: 'Stats', icon: BarChart3, requiresAuth: false },
+    { to: '/about', label: 'About', icon: Info, requiresAuth: false },
   ];
 
   return (
@@ -487,7 +499,14 @@ export function Root() {
             </a>
           </div>
 
-          <div className="flex items-center gap-6">
+          <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2">
+            <NavLink
+              to="/about#suggest"
+              className="text-sm font-semibold hover:underline no-underline"
+              style={{ color: T.brand }}
+            >
+              Suggest a puzzle
+            </NavLink>
             <NavLink
               to="/privacy"
               className="text-sm font-semibold hover:underline no-underline"

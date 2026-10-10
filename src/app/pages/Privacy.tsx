@@ -23,6 +23,11 @@ export function Privacy() {
         'For each daily puzzle you finish we record the date, the game, whether you solved it, how long it took, and how many hints and mistakes you used. This powers your Stats page, streaks and personal bests. It is kept on your device, and when you are signed in it is also saved to your account so it follows you between devices. We never sell it or use it for advertising.',
     },
     {
+      title: 'Puzzle Suggestions',
+      content:
+        'If you suggest a puzzle on the About page, we store the idea, the name you give (if any) and when it was sent; if you are signed in, it is linked to your account so it is deleted along with it. We never ask for an email address. Suggestions are only read by us, to decide what to build next.',
+    },
+    {
       title: 'Local Storage & Persistence',
       content:
         'For users who are not signed in, all progress data (including the state of a puzzle in progress, timers, XP, streaks and play history) is stored locally on your device using browser localStorage. This data remains on your device and is not accessible by us until you choose to sign in. Once authenticated, this local data is merged with your account hosted on Supabase.',

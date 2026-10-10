@@ -34,4 +34,8 @@ jobs:
       memory: 256
       schedule: ${{ vars.LAMBDA_SCHEDULE || 'cron(15 3 * * ? *)' }}
       skip_schedule: ${{ inputs.skip_schedule || false }}
+      # GPT-OSS 120B on Groq writes the clues (best in the cryptic benchmark);
+      # Gemini checks them, so writer and checker don't share blind spots.
+      ai_provider: groq
+      judge_provider: gemini
     secrets: inherit

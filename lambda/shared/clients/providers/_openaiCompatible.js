@@ -1,7 +1,8 @@
 import { toJsonSchema } from './_schemaUtils.js';
 
 const MAX_RETRY_DELAY_MS = 120_000;
-const MAX_RATE_LIMIT_RETRIES = 2;
+// Groq's free tier allows few tokens a minute: waiting it out is normal.
+const MAX_RATE_LIMIT_RETRIES = 4;
 const MAX_SERVER_ERROR_RETRIES = 2;
 const REQUEST_TIMEOUT_MS = 90_000;
 const TRANSIENT_STATUSES = new Set([500, 502, 503, 504]);

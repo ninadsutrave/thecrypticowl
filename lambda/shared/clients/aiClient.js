@@ -4,6 +4,7 @@ import { callClaude, callClaudeJudge } from './providers/claude.js';
 import { callDeepSeek, callDeepSeekJudge } from './providers/deepseek.js';
 import { callGrok, callGrokJudge } from './providers/grok.js';
 import { callMistral, callMistralJudge } from './providers/mistral.js';
+import { callGroq, callGroqJudge } from './providers/groq.js';
 import { resolveProviderId } from '../constants/providers.js';
 
 /**
@@ -27,6 +28,7 @@ const GENERATORS = {
   deepseek: callDeepSeek,
   grok: callGrok,
   mistral: callMistral,
+  groq: callGroq,
 };
 
 const JUDGES = {
@@ -36,6 +38,7 @@ const JUDGES = {
   deepseek: callDeepSeekJudge,
   grok: callGrokJudge,
   mistral: callMistralJudge,
+  groq: callGroqJudge,
 };
 
 /** @returns {Function} generator client for the provider */

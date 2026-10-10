@@ -42,6 +42,13 @@ export const PROVIDERS = {
     envKeys: ['XAI_API_KEY'],
     authorId: '5c8b2d1a-6e4f-4a3b-8d7c-1f9e0a2b3c4d',
   },
+  groq: {
+    id: 'groq',
+    label: 'Groq',
+    envKeys: ['GROQ_API_KEY'],
+    // Groq hosts OpenAI's open GPT-OSS model, so its clues are OpenAI's.
+    authorId: '0921516e-e61b-410a-b31c-6a1651515151',
+  },
   mistral: {
     id: 'mistral',
     label: 'Mistral',

@@ -63,5 +63,28 @@ export function cellCounts(grid, on) {
 }
 
 /** Edge bits as a compact string, "0101…", for storage. */
+/**
+ * Cells where a 0 sits beside a 3 (sharing a side), as [zero, three] index
+ * pairs. The classic opening: the 0's sides are all off, so the side the 3
+ * shares with it is off and the 3's other three sides are all on.
+ */
+export function zeroThreePairs(clues, rows, cols) {
+  const v = k => String(clues[k] ?? '.');
+  const pairs = [];
+  for (let k = 0; k < rows * cols; k++) {
+    if (v(k) !== '0') continue;
+    const r = Math.floor(k / cols);
+    const c = k % cols;
+    const near = [
+      r > 0 && k - cols,
+      r < rows - 1 && k + cols,
+      c > 0 && k - 1,
+      c < cols - 1 && k + 1,
+    ];
+    for (const n of near) if (n !== false && v(n) === '3') pairs.push([k, n]);
+  }
+  return pairs;
+}
+
 export const toBits = on => Array.from(on, x => (x ? '1' : '0')).join('');
 export const fromBits = s => Array.from(s, ch => (ch === '1' ? 1 : 0));

@@ -302,6 +302,10 @@ function GameSession({
             isDark={isDark}
             practice={replaying}
             archive={archiveDate !== null && !practicePuzzle}
+            // A second run of a finished puzzle isn't worth sharing; a first
+            // finish is, even on a practice or archive puzzle.
+            shareable={!replaying || practicePuzzle || archiveDate !== null}
+            shareDate={archiveDate}
             onReplay={onReplay}
           />
         )}
@@ -469,6 +473,8 @@ function ResultCard({
   alreadyDone,
   practice,
   archive,
+  shareable,
+  shareDate,
   onReplay,
 }: {
   game: GameMeta;
@@ -479,6 +485,10 @@ function ResultCard({
   practice?: boolean;
   /** A past day from the archive: back to the archive, not on to today's games. */
   archive?: boolean;
+  /** Overrides `practice` for the share button. */
+  shareable?: boolean;
+  /** The puzzle's own date for the share text (archive days). */
+  shareDate?: string | null;
   onReplay: () => void;
 }) {
   const copy = OUTCOME_COPY[record.outcome];
@@ -500,7 +510,12 @@ function ResultCard({
 
   const share = async () =>
     setShared(
-      await shareOrCopy(buildGameShare(game, record, { streak: practice ? 0 : mine.streak }))
+      await shareOrCopy(
+        buildGameShare(game, record, {
+          streak: practice ? 0 : mine.streak,
+          date: shareDate ? new Date(`${shareDate}T12:00:00`) : new Date(),
+        })
+      )
     );
 
   return (
@@ -576,7 +591,7 @@ function ResultCard({
         </p>
       )}
 
-      {!practice && (
+      {(shareable ?? !practice) && (
         <button
           onClick={share}
           className="mb-3 inline-flex items-center justify-center gap-2 px-6 py-3 rounded-2xl font-extrabold"

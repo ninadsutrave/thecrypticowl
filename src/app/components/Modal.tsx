@@ -1,4 +1,5 @@
 import { useEffect, useRef, type ReactNode } from 'react';
+import { createPortal } from 'react-dom';
 import { X } from 'lucide-react';
 import { useDarkMode } from '../context/DarkModeContext';
 import { getTheme } from '../theme';
@@ -50,7 +51,10 @@ export function Modal({
 
   if (!open) return null;
 
-  return (
+  // Portalled to <body>: inside an animated (transformed) page, `fixed`
+  // would be relative to that container, pushing the dialog down the page
+  // and leaving the navbar undimmed.
+  return createPortal(
     <div
       className="fixed inset-0 z-[100] flex items-center justify-center p-4"
       style={{ background: 'rgba(13, 8, 32, 0.6)', backdropFilter: 'blur(3px)' }}
@@ -80,6 +84,7 @@ export function Modal({
         </button>
         {children}
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

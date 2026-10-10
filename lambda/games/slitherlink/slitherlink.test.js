@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { createRng } from '../../shared/runtime/random.js';
 import { generateSlitherlink } from './generator.js';
 import { judgeSlitherlink } from './judge.js';
-import { cellCounts, fromBits, isSingleLoop, makeGrid } from './model.js';
+import { cellCounts, fromBits, isSingleLoop, makeGrid, zeroThreePairs } from './model.js';
 import { reviewSlitherlink } from './reviewer.js';
 import { solve } from './solver.js';
 
@@ -47,10 +47,17 @@ describe('a generated slitherlink', () => {
     expect(judgeSlitherlink(p).ok).toBe(true);
   });
 
-  it('generates reliably, always with a 0 to start from', () => {
+  it('generates reliably, always with a 0 beside a 3 to start from', () => {
     for (let i = 0; i < 8; i++) {
-      expect(generateSlitherlink(createRng(`s-${i}`)).clues).toContain('0');
+      const g = generateSlitherlink(createRng(`s-${i}`));
+      expect(g.clues).toContain('0');
+      expect(zeroThreePairs(g.clues, g.rows, g.cols).length).toBeGreaterThan(0);
     }
+  });
+
+  it('rejects a puzzle with no 0 beside a 3', () => {
+    const lone = [...p.clues].map(ch => (ch === '3' ? '.' : ch)).join('');
+    expect(reviewSlitherlink({ ...p, clues: lone }).errors.join(' ')).toMatch(/0 beside a 3/);
   });
 
   it('rejects a puzzle with no 0', () => {

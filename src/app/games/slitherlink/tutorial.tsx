@@ -2,18 +2,18 @@ import type { TutorialStep } from '../TutorialFlow';
 import { makeGrid } from './logic';
 import { MiniLoop } from './MiniLoop';
 
-// A 3×3 example with exactly one loop (checked with the Lambda's solver):
-// the outline of an L of three cells. Never a daily puzzle.
-const CLUES = '320231110';
-const LOOP = '100010110000110010100000';
+// A 3×3 example with exactly one loop (checked with the Lambda's solver),
+// opening the way every daily puzzle can: a 0 directly above a 3. Never a
+// daily puzzle.
+const CLUES = '101333222';
+const LOOP = '000101010111000011111001';
 const g = makeGrid(3, 3);
-const loopEdges = [...LOOP].flatMap((ch, e) => (ch === '1' ? [e] : []));
-// The 3 in the top-left corner: three of its sides drawn, the fourth crossed.
-const corner = [g.h(0, 0), g.v(0, 0)];
-// The 0 in the top-right corner: all four sides crossed out.
-const aroundZero = [g.h(0, 2), g.h(1, 2), g.v(0, 2), g.v(0, 3)];
-// The finished grid: both 0s crossed out, so every number shows green.
-const allCrossed = [...aroundZero, g.h(2, 2), g.h(3, 2), g.v(2, 2), g.v(2, 3)];
+const loop = new Set([...LOOP].flatMap((ch, e) => (ch === '1' ? [e] : [])));
+const loopEdges = [...loop];
+const on = (cell: number) => g.cellEdges[cell].filter(e => loop.has(e));
+const off = (cell: number) => g.cellEdges[cell].filter(e => !loop.has(e));
+const ZERO = 1; // top middle
+const THREE = 4; // centre, right below it
 
 export function getSlitherlinkTutorial(): TutorialStep[] {
   return [
@@ -28,28 +28,33 @@ export function getSlitherlinkTutorial(): TutorialStep[] {
     },
     {
       title: 'Numbers count the sides',
-      visual: <MiniLoop rows={3} cols={3} clues={CLUES} lines={corner} crosses={[g.h(1, 0)]} />,
+      visual: <MiniLoop rows={3} cols={3} clues={CLUES} lines={on(3)} crosses={off(3)} />,
       body: (
         <p>
-          Each number says how many of its four sides the loop uses: a 3 in a corner uses both outer
-          sides. It turns green when it's exactly right, red if it has too many. Drag through the
-          dots to draw; tap a side to cross it out.
+          Each number says how many of its four sides the loop uses: this 3 uses three, so one side
+          is crossed out. A number turns green when it's exactly right, red if it has too many. Drag
+          through the dots to draw; tap a side to cross it out.
         </p>
       ),
     },
     {
-      title: 'Start at the 0',
-      visual: <MiniLoop rows={3} cols={3} clues={CLUES} lines={[]} crosses={aroundZero} />,
+      title: 'Start where a 0 meets a 3',
+      visual: (
+        <MiniLoop rows={3} cols={3} clues={CLUES} lines={on(THREE)} crosses={g.cellEdges[ZERO]} />
+      ),
       body: (
         <p>
-          Every puzzle has at least one 0, and it's the best place to begin: none of its sides can
-          be on the loop, so cross them all out. Then look at the numbers next to it.
+          Every puzzle has a 0 right next to a 3, and that's where to begin. Cross out all four
+          sides of the 0. The side it shares with the 3 is now off, so the 3's other three sides
+          must all be on: draw them, and the loop is under way.
         </p>
       ),
     },
     {
       title: 'Close the loop',
-      visual: <MiniLoop rows={3} cols={3} clues={CLUES} lines={loopEdges} crosses={allCrossed} />,
+      visual: (
+        <MiniLoop rows={3} cols={3} clues={CLUES} lines={loopEdges} crosses={g.cellEdges[ZERO]} />
+      ),
       body: (
         <p>
           Every puzzle has exactly one loop. Stuck? A hint fixes a wrong line or draws a missing

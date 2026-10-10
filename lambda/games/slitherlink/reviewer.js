@@ -1,4 +1,4 @@
-import { cellCounts, fromBits, isSingleLoop, makeGrid } from './model.js';
+import { cellCounts, fromBits, isSingleLoop, makeGrid, zeroThreePairs } from './model.js';
 
 /**
  * Deterministic review: the stored answer is one closed loop, and every
@@ -25,6 +25,9 @@ export function reviewSlitherlink(p) {
       errors.push(`cell ${i} says ${ch}, loop gives ${counts[i]}`);
   });
   if (!clues.includes('0')) errors.push('no 0 clue: every puzzle needs a place to start');
+  else if (!zeroThreePairs(clues, rows, cols).length) {
+    errors.push('no 0 beside a 3: every puzzle opens there');
+  }
   const clued = [...clues].filter(ch => ch !== '.').length;
   if (clued < rows * cols * 0.25) errors.push(`only ${clued} clues`);
   return { ok: errors.length === 0, errors, checks: { clues: clued } };

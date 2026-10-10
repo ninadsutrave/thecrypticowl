@@ -53,8 +53,9 @@ export function SlitherlinkGame() {
             right lines, and red if it has too many.
           </p>
           <p>
-            Where to start: every puzzle has at least one 0. None of its sides is on the loop, so
-            cross them all out and work outwards from there.
+            Where to start: every puzzle has a 0 right next to a 3. Cross out the 0's four sides;
+            the one it shares with the 3 is then off, so the 3's other three sides are all on. Work
+            outwards from there.
           </p>
           <p>
             Drag through the dots to draw; drag back to undo a stretch. Tap a side to cycle line →

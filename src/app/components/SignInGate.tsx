@@ -13,22 +13,15 @@ import { Mascot } from './Mascot';
  * Sign-in runs in a popup, so the page it guards opens itself once it
  * completes and nobody loses the link they followed.
  */
-export function SignInGate({
-  title = 'Unlock your progress',
-  subtitle = 'Sign in with Google to keep your puzzles, streaks and stats, and to open the archive.',
-}: {
-  title?: string;
-  subtitle?: string;
-}) {
+export function SignInGate() {
   const { isDark } = useDarkMode();
   const T = getTheme(isDark);
   const { signIn, loading } = useAuth();
 
   const features = [
-    { icon: '📊', label: 'Your progress: every finish, best times and stats' },
     { icon: '📅', label: 'Play any past puzzle from the archive' },
-    { icon: '🔥', label: 'Keep your streak and achievements across devices' },
-    { icon: '⚡', label: 'Earn XP and level up on the cryptic clues' },
+    { icon: '📊', label: 'Track your solve history & stats' },
+    { icon: '🔥', label: 'Keep your streak across devices' },
   ];
 
   // Don't flash the gate while a returning user's session is restoring.
@@ -116,7 +109,7 @@ export function SignInGate({
               marginBottom: '0.5rem',
             }}
           >
-            {title}
+            Unlock Your Progress
           </h1>
           <p
             style={{
@@ -126,7 +119,7 @@ export function SignInGate({
               lineHeight: 1.5,
             }}
           >
-            {subtitle}
+            Sign in with Google to access your puzzle history, stats, and personal progress.
           </p>
 
           <div className="text-left mb-6 flex flex-col gap-2">

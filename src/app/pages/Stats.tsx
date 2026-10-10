@@ -80,12 +80,7 @@ export function Stats() {
 
   // Members only: signed-out visitors see what an account gets them.
   if (!isSignedIn) {
-    return (
-      <SignInGate
-        title="Sign in to see your progress"
-        subtitle="Your finishes, best times and streaks, on every device. Sign in with Google to see them."
-      />
-    );
+    return <SignInGate />;
   }
 
   return (

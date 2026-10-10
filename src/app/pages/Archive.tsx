@@ -92,13 +92,7 @@ export function Archive() {
   const months = useMemo(() => byMonth(days ?? []), [days]);
   const played = (days ?? []).filter(d => plays[`${game.id}:${d.date}`]).length;
 
-  if (!isSignedIn)
-    return (
-      <SignInGate
-        title="Sign in to open the archive"
-        subtitle="Every past puzzle is waiting. Sign in with Google to play any day you missed."
-      />
-    );
+  if (!isSignedIn) return <SignInGate />;
 
   const pick = (id: GameId) => setSearchParams({ game: id }, { replace: true });
 

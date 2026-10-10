@@ -268,13 +268,7 @@ export function Puzzle() {
   }, [notFound]);
 
   // Past clues are the archive: members only.
-  if (isArchive && !isSignedIn)
-    return (
-      <SignInGate
-        title="Sign in to open the archive"
-        subtitle="Every past puzzle is waiting. Sign in with Google to play any day you missed."
-      />
-    );
+  if (isArchive && !isSignedIn) return <SignInGate />;
 
   // Loading state for archive puzzles
   if (notFound) {

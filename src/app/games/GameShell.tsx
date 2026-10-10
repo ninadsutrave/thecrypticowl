@@ -150,13 +150,7 @@ export function GameShell({
     setRound(r => r + 1);
   };
 
-  if (archiveDate && !isSignedIn)
-    return (
-      <SignInGate
-        title="Sign in to open the archive"
-        subtitle="Every past puzzle is waiting. Sign in with Google to play any day you missed."
-      />
-    );
+  if (archiveDate && !isSignedIn) return <SignInGate />;
 
   return (
     <div className="max-w-2xl mx-auto px-4 pb-20 pt-6" style={{ fontFamily: FONT_BODY }}>

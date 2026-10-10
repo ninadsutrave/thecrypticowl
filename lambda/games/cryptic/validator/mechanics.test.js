@@ -58,20 +58,29 @@ describe('verifyAnagram', () => {
     expect(verifyAnagram('the eyes', 'THEYSEE').status).toBe(VERIFIED);
   });
 
-  it('flags a same-length mismatch as a synonym substitution, not a refutation', () => {
-    // An anagram fodder is routinely a synonym ("flower" → ROSE), so a failed
-    // literal check proves nothing and must not hard-reject.
+  // No indirect anagrams: British cryptic convention requires the letters
+  // to be in the clue as written, so any mismatch is a wrong clue.
+  it('refutes a same-length mismatch (no indirect anagrams)', () => {
     const r = verifyAnagram('HOUSE', 'CANOE');
-    expect(r.status).toBe(UNVERIFIABLE);
-    expect(r.detail).toMatch(/synonym/);
+    expect(r.status).toBe(REFUTED);
+    expect(r.detail).toMatch(/not an anagram/);
   });
 
-  it('flags a length mismatch as unverifiable', () => {
-    expect(verifyAnagram('SEA', 'CANOE').status).toBe(UNVERIFIABLE);
+  it('refutes a length mismatch, like the TRIANGLE clue that shipped', () => {
+    expect(verifyAnagram('great ruin', 'TRIANGLE').status).toBe(REFUTED);
   });
 
-  it('treats missing fodder as unverifiable', () => {
-    expect(verifyAnagram('', 'CANOE').status).toBe(UNVERIFIABLE);
+  it('refutes missing fodder', () => {
+    expect(verifyAnagram('', 'CANOE').status).toBe(REFUTED);
+  });
+
+  it('refutes fodder that is not in the clue as written', () => {
+    const r = verifyAnagram('ocean', 'CANOE', 'Small boat when sea is disturbed (5)');
+    expect(r.status).toBe(REFUTED);
+    expect(r.detail).toMatch(/does not appear in the clue/);
+    expect(verifyAnagram('ocean', 'CANOE', 'Small boat when ocean is disturbed (5)').status).toBe(
+      VERIFIED
+    );
   });
 });
 

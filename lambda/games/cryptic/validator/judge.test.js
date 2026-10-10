@@ -294,14 +294,10 @@ describe('judgeClue', () => {
   });
 
   it('tells the judge exactly what to check when arithmetic is inconclusive', async () => {
-    await judgeClue(
-      goodClue({ fodder: 'sea', wordplay_summary: 'Anagram of a synonym of sea' }),
-      lexical(),
-      approvingJudge
-    );
+    // Compound wordplay combines mechanisms, so the arithmetic is inconclusive.
+    await judgeClue(goodClue(), lexical({ type: 'compound' }), approvingJudge);
     const prompt = approvingJudge.mock.calls[0][0];
     expect(prompt).toMatch(/MECHANICAL CHECK — INCONCLUSIVE/);
-    expect(prompt).toMatch(/synonym/);
   });
 
   it.each([

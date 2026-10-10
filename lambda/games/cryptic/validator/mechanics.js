@@ -36,6 +36,7 @@ export const UNVERIFIABLE = 'unverifiable';
 
 /** Mechanisms whose fodder must be taken literally from the clue surface. */
 export const LITERAL_FODDER_TYPES = new Set([
+  'anagram',
   'hidden',
   'initial_letters',
   'final_letters',
@@ -86,23 +87,26 @@ export function splitFodderParts(fodder) {
 
 // ─── PER-MECHANISM VERIFIERS ──────────────────────────────────────────────────
 
-/** Letters of the fodder rearranged spell the answer. */
-export function verifyAnagram(fodder, answer) {
+/**
+ * Letters of the fodder rearranged spell the answer, and the fodder is in the
+ * clue as written. British cryptic convention (Times, Guardian, Telegraph)
+ * does not allow indirect anagrams, so any mismatch is a wrong clue, not a
+ * synonym to give the benefit of the doubt. ("Altering great ruin" for
+ * TRIANGLE shipped because this used to be lenient.)
+ */
+export function verifyAnagram(fodder, answer, clueText = null) {
   const f = letters(fodder);
   const a = letters(answer);
-  if (!f) return meh('No fodder supplied to check.');
+  if (!f) return no('No anagram fodder given.');
+  if (clueText !== null && !letters(clueText).includes(f)) {
+    return no(`Anagram fodder "${fodder}" does not appear in the clue as written.`);
+  }
   if (sortedLetters(f) === sortedLetters(a)) {
     return ok(`"${f}" is an exact anagram of ${a}.`);
   }
-  if (f.length === a.length) {
-    return meh(
-      `Fodder "${f}" has the same length as ${a} but different letters ` +
-        `(${sortedLetters(f)} vs ${sortedLetters(a)}), so it must be standing in for a synonym.`
-    );
-  }
-  return meh(
-    `Fodder "${f}" is ${f.length} letters and ${a} is ${a.length}, so the fodder must be a ` +
-      `synonym of the word actually being anagrammed.`
+  return no(
+    `Fodder "${f}" is not an anagram of ${a} (${sortedLetters(f)} vs ${sortedLetters(a)}). ` +
+      `Anagram fodder must be the exact letters, taken literally from the clue.`
   );
 }
 
@@ -321,7 +325,7 @@ export function verifyDoubleDefinition(clueText, definition, second) {
 export function verifyMechanism(type, clue, answer) {
   switch (type) {
     case 'anagram':
-      return verifyAnagram(clue.fodder, answer);
+      return verifyAnagram(clue.fodder, answer, clue.clue);
     case 'reversal':
       return verifyReversal(clue.fodder, answer);
     case 'hidden':

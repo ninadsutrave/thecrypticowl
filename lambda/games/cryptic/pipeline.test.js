@@ -13,7 +13,7 @@ const { getRecentUsage } = await import('./services/dbService.js');
  * and the clue generator. It distinguishes them by which schema it passes, so
  * the fake does the same — it answers by looking at what was asked for.
  */
-function makeAI({ answers = ['CANOE'], clue = 'Small boat when ocean is disturbed (5)' } = {}) {
+function makeAI({ answers = ['CANOE'], clue = null } = {}) {
   const queue = [...answers];
   let lastAnswer = null;
   return vi.fn(async (_prompt, _system, schema) => {
@@ -21,17 +21,20 @@ function makeAI({ answers = ['CANOE'], clue = 'Small boat when ocean is disturbe
       lastAnswer = queue.length > 1 ? queue.shift() : queue[0];
       return { answer: lastAnswer, definition: 'Small boat', type: 'anagram', difficulty: 'easy' };
     }
+    // Fodder is the answer's letters reversed, and it appears in the clue, so
+    // the strict anagram check passes for any answer.
+    const fodder = [...lastAnswer].reverse().join('').toLowerCase();
     return {
-      clue,
+      clue: clue ?? `Small boat when ${fodder} is disturbed (${lastAnswer.length})`,
       definition: 'Small boat',
       indicator: 'disturbed',
-      fodder: 'ocean',
+      fodder,
       indicator_type: 'anagram',
       wordplay_summary: `Anagram of OCEAN = ${lastAnswer}`,
       clue_parts: [
         { text: 'Small boat', type: 'definition' },
         { text: ' when ', type: null },
-        { text: 'ocean', type: 'fodder' },
+        { text: fodder, type: 'fodder' },
         { text: ' is ', type: null },
         { text: 'disturbed', type: 'indicator', indicator_subtype: 'anagram' },
       ],

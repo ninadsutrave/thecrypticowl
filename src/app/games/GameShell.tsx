@@ -346,10 +346,10 @@ function GameHeader({
         <div className="flex items-center gap-2">
           <button
             onClick={onTutorial}
-            className="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 border text-sm font-bold"
+            className="inline-flex items-center gap-1.5 rounded-full px-2.5 sm:px-3 py-1.5 border text-sm font-bold whitespace-nowrap"
             style={{ borderColor: T.brandBorder, color: T.brandText, background: T.brandSurface }}
           >
-            <GraduationCap size={14} /> Tutorial
+            <GraduationCap size={14} className="hidden min-[400px]:inline" /> How to play
           </button>
           <div
             className="flex items-center gap-1.5 rounded-full px-3 py-1.5 border"
@@ -428,7 +428,7 @@ function RulesPanel({
         className="w-full flex items-center justify-between px-4 py-3 text-left"
         style={{ fontWeight: 800, fontSize: '0.88rem', color: T.brandText }}
       >
-        How to play
+        Rules
         <m.span
           animate={{ rotate: open ? 180 : 0 }}
           transition={{ duration: 0.2 }}

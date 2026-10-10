@@ -178,11 +178,14 @@ export function createGameHandler(spec, deps = {}) {
               payload: result.payload,
               source_keys: result.sourceKeys,
               difficulty: 'medium',
-              generator: needsAI
-                ? `${ai.aiProvider} / judged by ${ai.judgeProvider}`
-                : aiReady
-                  ? `${generator} / screened by ${ai.judgeProvider}`
-                  : generator,
+              // A backup-bank puzzle is hand-written: say so, not the model.
+              generator: result.fallback
+                ? 'fallback bank'
+                : needsAI
+                  ? `${ai.aiProvider} / judged by ${ai.judgeProvider}`
+                  : aiReady
+                    ? `${generator} / screened by ${ai.judgeProvider}`
+                    : generator,
               review: { attempts: result.attempts, checks: result.checks, judge: result.verdict },
             },
             config.dbProvider
@@ -341,6 +344,7 @@ export function createGameHandler(spec, deps = {}) {
             summary: `${candidate.summary ?? ''} (fallback source)`.trim(),
             checks: review.checks ?? {},
             verdict: { ok: true, feedback: 'fallback source, not judged' },
+            fallback: true,
           };
         }
         lastRejection += `; fallback rejected: ${review.errors.join('; ')}`;

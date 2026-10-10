@@ -6,7 +6,7 @@ import { GameShell, type PlayApi } from '../GameShell';
 import { GameLoading } from '../GameLoading';
 import { useDailyPuzzle } from '../useDailyPuzzle';
 import { useGameState } from '../useGameState';
-import { ballpark, formatValue, isHigher, rounds, roundsGrid } from './logic';
+import { formatValue, isHigher, rounds, roundsGrid } from './logic';
 import { parseHigherLower } from './parse';
 import { SAMPLE_HIGHER_LOWER, type HigherLowerItem, type HigherLowerPuzzle } from './sample';
 import { getHigherLowerTutorial } from './tutorial';
@@ -117,7 +117,9 @@ function HigherLowerBoard({ puzzle, api }: { puzzle: HigherLowerPuzzle; api: Pla
         <ItemCard
           item={known}
           label={puzzle.noun}
-          value={formatValue(known.value, puzzle.format)}
+          // No numbers while you decide: both stay hidden until you answer
+          // (or the hint reveals this one).
+          value={answered || hintRound === round ? formatValue(known.value, puzzle.format) : '?'}
           T={T}
         />
         <span
@@ -142,7 +144,8 @@ function HigherLowerBoard({ puzzle, api }: { puzzle: HigherLowerPuzzle; api: Pla
           className="m-0 rounded-2xl px-4 py-2.5 text-sm font-extrabold border flex items-center gap-2"
           style={{ background: T.fodderBg, borderColor: T.streakBorder, color: T.text }}
         >
-          <Lightbulb size={15} aria-hidden /> {hidden.name}: {ballpark(hidden.value, puzzle.format)}
+          <Lightbulb size={15} aria-hidden /> {known.name}:{' '}
+          {formatValue(known.value, puzzle.format)}
         </p>
       )}
 
@@ -169,7 +172,7 @@ function HigherLowerBoard({ puzzle, api }: { puzzle: HigherLowerPuzzle; api: Pla
               className="w-full py-2.5 rounded-2xl border-2 text-sm font-extrabold flex items-center justify-center gap-2"
               style={{ borderColor: T.streakBorder, color: T.streakText, background: T.fodderBg }}
             >
-              <Lightbulb size={15} /> Hint: a ballpark (one per game)
+              <Lightbulb size={15} /> Hint: show one number (once per game)
             </button>
           )}
         </>

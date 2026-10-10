@@ -91,7 +91,7 @@ game stays fresh. **No AI.**
 **Grid size for the 5–6 minute target:** a 9×9 variant with few givens takes
 most people 15–30 minutes. Default to **6×6** grids (2×3 boxes), and use 9×9
 only with generous givens where testing shows it still lands near six
-minutes. The sample is a 6×6 Killer with two givens.
+minutes. The sample is a 6×6 Killer with five givens.
 
 | Day | Variant | Extra rule (on top of normal Sudoku) |
 |---|---|---|
@@ -432,8 +432,8 @@ Proverbs with no author are always fine.
 
 ### 8. Slitherlink
 
-Draw **one closed loop** along the lines of a 6×6 grid of dots. Each number
-says how many of its cell's four sides the loop uses. 6×6 gives big cells,
+Draw **one closed loop** along the lines of a 5×5 grid of cells. Each number
+says how many of its cell's four sides the loop uses. 5×5 (was 6×6) gives big cells,
 so a stroke follows the finger easily on a small phone; replaced Shikaku in the lineup.
 
 **Gameplay**

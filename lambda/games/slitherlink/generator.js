@@ -2,7 +2,7 @@ import { cellCounts, isSingleLoop, makeGrid, toBits, zeroThreePairs } from './mo
 import { solve } from './solver.js';
 
 /**
- * Slitherlink, 6×6: big cells, so a drawn line follows the finger easily on
+ * Slitherlink, 5×5: big cells, so a drawn line follows the finger easily on
  * the smallest phone, with clues thinned until it's a medium puzzle. Built in code:
  *
  *   1. Loop: grow a random blob of cells with no holes and no corner-only
@@ -13,14 +13,14 @@ import { solve } from './solver.js';
  *   3. Keep it if logic plus at most a few guesses solves it (medium), and
  *      enough clues are left to start from.
  */
-export const SIZE = 6;
+export const SIZE = 5;
 export const MEDIUM = {
   /** Share of cells inside the loop: enough for a long, winding outline. */
   fill: [0.42, 0.6],
   // Eased after play-testing: less guessing, more numbers to work from.
   maxNodes: 6,
-  /** Clued cells: fewer is harder. */
-  minClues: 15,
+  /** Clued cells: fewer is harder (about 42% of the grid). */
+  minClues: 11,
 };
 
 /** Cell (r, c) inside the blob? Outside the grid counts as outside. */

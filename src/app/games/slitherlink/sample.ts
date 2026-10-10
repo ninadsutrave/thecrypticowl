@@ -16,8 +16,8 @@ export interface SlitherlinkPuzzle {
  * medium like every daily one.
  */
 export const SAMPLE_SLITHERLINK: SlitherlinkPuzzle = {
-  rows: 6,
-  cols: 6,
-  clues: '3..22..2213.22..301.11..2112........',
-  solution: '111100111010110010001010000110110000001000100010000010101011100100001010010000011000',
+  rows: 5,
+  cols: 5,
+  clues: '.111.121.2.1.03...1.1123.',
+  solution: '000000111000001100011110000010000000010010010001100010000110',
 };

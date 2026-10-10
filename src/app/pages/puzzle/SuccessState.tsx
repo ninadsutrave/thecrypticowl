@@ -29,6 +29,7 @@ export function SuccessState({
   isDark,
   activePuzzle,
   wasRevealed,
+  archive = false,
 }: {
   hintsUsed: number;
   wrongAttemptsCount: number;
@@ -38,6 +39,8 @@ export function SuccessState({
   isDark: boolean;
   activePuzzle: ActivePuzzle;
   wasRevealed: boolean;
+  /** A past clue from the archive: celebrated, but no streak or XP. */
+  archive?: boolean;
 }) {
   const [copied, setCopied] = useState(false);
   const [shareError, setShareError] = useState(false);
@@ -51,7 +54,7 @@ export function SuccessState({
   // for good. Treat it as practice: the celebration still plays, the score
   // does not move.
   const isPractice = Boolean(activePuzzle.isFallback);
-  const countsTowardProgress = !wasRevealed && !isPractice;
+  const countsTowardProgress = !wasRevealed && !isPractice && !archive;
   const xpEarned = countsTowardProgress ? getXPForSolve(hintsUsed) : 0;
   const [finalData, setFinalData] = useState<{
     streak: number;
@@ -65,9 +68,13 @@ export function SuccessState({
       runConfetti.current = true;
 
       if (!countsTowardProgress) {
-        // Revealed the answer, or solved the offline fallback clue.
+        // Revealed the answer, solved the offline fallback clue, or an archive clue.
         setFinalData({ streak, total: totalSolved, xp, level });
-      } else {
+      }
+      if (archive && !wasRevealed) {
+        // A real solve, just not today's: it still gets its confetti.
+        confetti({ particleCount: 90, spread: 70, origin: { y: 0.7 } });
+      } else if (countsTowardProgress) {
         // Record the solve — passes wrongAttemptsCount, puzzleId, and solveTime for Supabase
         const result = recordSolve(
           hintsUsed,
@@ -427,7 +434,11 @@ export function SuccessState({
         {!countsTowardProgress ? (
           <>
             <p style={{ fontFamily: "'Outfit', sans-serif", fontSize: '1.5rem', color: '#D97706' }}>
-              {wasRevealed ? 'No XP this time 🙈' : 'Practice clue 🎯'}
+              {wasRevealed
+                ? 'No XP this time 🙈'
+                : archive
+                  ? 'Archive clue 📅'
+                  : 'Practice clue 🎯'}
             </p>
             <p
               style={{
@@ -439,7 +450,9 @@ export function SuccessState({
             >
               {wasRevealed
                 ? 'XP is only earned when you solve without peeking — come back tomorrow!'
-                : "We couldn't reach today's puzzle, so this one was a warm-up. It doesn't count toward your streak — check back in a moment for the real clue."}
+                : archive
+                  ? 'Nicely cracked! Archive clues are for fun: they don’t count toward your streak or XP.'
+                  : "We couldn't reach today's puzzle, so this one was a warm-up. It doesn't count toward your streak — check back in a moment for the real clue."}
             </p>
           </>
         ) : (

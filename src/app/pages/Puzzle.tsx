@@ -848,6 +848,7 @@ export function Puzzle() {
             isDark={isDark}
             activePuzzle={activePuzzle}
             wasRevealed={wasRevealed}
+            archive={isArchive}
           />
         )
       )}

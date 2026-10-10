@@ -44,14 +44,6 @@ unvalidated beyond an XP ceiling. The date parameter exists for a real reason
 
 *Fix:* clamp `p_client_date` server-side to within a day of `CURRENT_DATE`.
 
-### Archive solves count as today's solve
-
-Solving `/puzzle/1` when you haven't played today records a streak day. A
-solver can build a streak entirely out of the archive.
-
-*Fix:* pass a flag so archive solves record history without touching the
-streak.
-
 ---
 
 ## Documented-but-untrue

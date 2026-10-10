@@ -30,6 +30,9 @@ interface AuthContextType {
 
 // ─── HELPERS ──────────────────────────────────────────────────────────────────
 
+/** The sign-in popup's window name, so the app inside it knows to close. */
+const SIGN_IN_WINDOW = 'google-signin';
+
 function toAppUser(u: User): AppUser {
   return {
     id: u.id,
@@ -65,16 +68,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // Defer session restoration until after LCP so we're not contending with
     // hydration for main-thread time. `getSupabaseClient()` also dynamic-imports
     // the Supabase SDK chunk on first call, keeping it out of the initial bundle.
+    // This window is the sign-in popup (see signIn): once Supabase has read
+    // the session from the redirect, the opener picks it up from storage and
+    // this copy of the app has nothing left to do.
+    const inPopup = window.name === SIGN_IN_WINDOW && !!window.opener;
+    const closePopup = () => {
+      if (inPopup) window.close();
+    };
+
     const run = async () => {
       const supabase = await getSupabaseClient();
 
       supabase.auth.getSession().then(({ data: { session } }) => {
         setSession(session);
         setLoading(false);
+        if (session) closePopup();
       });
 
       subscription = supabase.auth.onAuthStateChange(async (event, session) => {
         setSession(session);
+        if (inPopup) {
+          if (session) closePopup();
+          return; // the opener does the syncing
+        }
 
         // On first sign-in, push any local progress to Supabase
         if ((event === 'SIGNED_IN' || event === 'INITIAL_SESSION') && session?.user) {
@@ -137,7 +153,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (error || !data?.url) return;
     const popup = window.open(
       data.url,
-      'google-signin',
+      SIGN_IN_WINDOW,
       'width=500,height=620,popup=yes,left=' +
         Math.round(window.screenX + (window.outerWidth - 500) / 2) +
         ',top=' +

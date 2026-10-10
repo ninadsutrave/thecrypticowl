@@ -56,18 +56,28 @@ export function useClueReaction(puzzleNumber: number, userId?: string, puzzleId?
     return () => window.removeEventListener('storage', onStorage);
   }, [puzzleNumber]);
 
-  const vote = (r: 'like' | 'dislike') => {
+  /**
+   * Applies the vote at once. When signed in it is also saved; if the save
+   * fails the vote is rolled back, so the widget never claims a rating the
+   * server didn't keep. Resolves false on a rollback.
+   */
+  const vote = async (r: 'like' | 'dislike'): Promise<boolean> => {
+    const previous = reaction;
     const next: Reaction = reaction === r ? null : r;
 
     setReaction(next);
     persistReaction(puzzleNumber, next);
 
-    if (userId && puzzleId) {
-      if (next) {
-        upsertClueReaction(userId, puzzleId, next).catch(console.error);
-      } else {
-        deleteClueReaction(userId, puzzleId).catch(console.error);
-      }
+    if (!userId || !puzzleId) return true;
+    try {
+      if (next) await upsertClueReaction(userId, puzzleId, next);
+      else await deleteClueReaction(userId, puzzleId);
+      return true;
+    } catch (err) {
+      console.warn('[reaction] not saved, rolling back:', err);
+      setReaction(previous);
+      persistReaction(puzzleNumber, previous);
+      return false;
     }
   };
 

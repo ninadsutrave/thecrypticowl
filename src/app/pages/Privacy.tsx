@@ -40,7 +40,7 @@ export function Privacy() {
     {
       title: 'Cookies & Authentication',
       content:
-        'We use essential cookies and browser storage tokens to maintain your authentication session via Supabase and Google, and to remember your theme preference. These are strictly necessary for the site to function. We do not use any advertising cookies, and we do not sell or share your data with advertisers. We do use Google Analytics, which sets its own cookies — see the Analytics section below.',
+        'We use essential cookies and browser storage tokens to maintain your authentication session via Supabase and Google, and to remember your theme preference and cookie choice. These are strictly necessary for the site to function. We do not use any advertising cookies, and we do not sell or share your data with advertisers. Google Analytics cookies are only set if you accept them — see the Analytics section below.',
     },
     {
       title: 'Third-Party Services',
@@ -49,8 +49,26 @@ export function Privacy() {
     },
     {
       title: 'Analytics',
-      content:
-        'We use Google Analytics to collect aggregate usage statistics — page views, which puzzles are solved, and how many hints are typically needed — to help us improve the learning experience. Google Analytics sets its own cookies (such as _ga) to distinguish visitors between sessions. We do not send your name, email address or solve history to Google Analytics. Analytics only loads after your first interaction with the page, so simply opening the site and leaving loads nothing. You can block it with any standard browser privacy setting or extension without affecting the puzzle.',
+      content: (
+        <>
+          With your permission, we use Google Analytics to collect aggregate usage statistics — page
+          views, which puzzles are solved, and how many hints are typically needed — to help us
+          improve the site. It sets its own cookies (such as _ga) to distinguish visitors between
+          sessions. On your first visit we ask; nothing loads unless you choose Accept, and the
+          puzzles work exactly the same either way. We never send your name, email address or solve
+          history to Google Analytics.{' '}
+          <button
+            type="button"
+            onClick={() =>
+              (window as Window & { tcoConsent?: { reset: () => void } }).tcoConsent?.reset()
+            }
+            style={{ color: T.brand, textDecoration: 'underline', fontWeight: 700 }}
+          >
+            Change your cookie choice
+          </button>
+          .
+        </>
+      ),
     },
     {
       title: 'Your Choices',

@@ -700,10 +700,28 @@ export function Learn() {
         className="sticky top-16 z-30 py-3 mb-8"
         style={{ background: T.stickyNavBg, backdropFilter: 'blur(12px)' }}
       >
-        <div className="flex gap-2 overflow-x-auto pb-1 hide-scrollbar [mask-image:linear-gradient(to_right,black_85%,transparent)] sm:[mask-image:none]">
+        <div
+          className="flex gap-2 overflow-x-auto pb-1 hide-scrollbar [mask-image:linear-gradient(to_right,black_85%,transparent)] sm:[mask-image:none]"
+          role="tablist"
+          aria-label="Guide sections"
+          onKeyDown={e => {
+            // Arrow keys move between tabs, as screen-reader users expect.
+            const step = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : 0;
+            if (!step) return;
+            e.preventDefault();
+            const next = (activeSection + step + TABS.length) % TABS.length;
+            openTab(next);
+            document.getElementById(`learn-tab-${next}`)?.focus();
+          }}
+        >
           {TABS.map(({ key, label, index: i }) => (
             <m.button
               key={key}
+              id={`learn-tab-${i}`}
+              role="tab"
+              aria-selected={activeSection === i}
+              aria-controls="learn-panel"
+              tabIndex={activeSection === i ? 0 : -1}
               whileHover={{ scale: 1.04 }}
               whileTap={{ scale: 0.96 }}
               onClick={() => openTab(i)}
@@ -726,6 +744,9 @@ export function Learn() {
       <AnimatePresence mode="wait">
         <m.div
           key={activeSection}
+          id="learn-panel"
+          role="tabpanel"
+          aria-labelledby={`learn-tab-${activeSection}`}
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -16 }}

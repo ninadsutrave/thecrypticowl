@@ -29,7 +29,7 @@ today.
 
 **Status:** all nine are built end to end. Each game has its own Lambda
 (`lambda/games/<game>/`) that generates, reviews and judges a medium puzzle
-every night, a few days ahead, into `game_puzzles`; the app plays that day's
+every night, a week ahead, into `game_puzzles`; the app plays that day's
 puzzle and falls back to a labelled practice one only if it's missing. See
 [lambdas.md](./lambdas.md) for the pipeline, configuration and deploys.
 

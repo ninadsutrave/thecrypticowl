@@ -696,7 +696,8 @@ export async function upsertClueReaction(
     reaction,
     updated_at: new Date().toISOString(),
   });
-  if (error) console.warn('[supabase] upsertClueReaction:', error.message);
+  // Thrown, not swallowed: the widget reverts its optimistic state on failure.
+  if (error) throw new Error(`upsertClueReaction: ${error.message}`);
 }
 
 /** Remove a user's reaction (when they toggle off). */
@@ -708,7 +709,7 @@ export async function deleteClueReaction(userId: string, clueId: string): Promis
     .delete()
     .eq('user_id', userId)
     .eq('clue_id', clueId);
-  if (error) console.warn('[supabase] deleteClueReaction:', error.message);
+  if (error) throw new Error(`deleteClueReaction: ${error.message}`);
 }
 
 // ─── APP LIKES ───────────────────────────────────────────────────────────────

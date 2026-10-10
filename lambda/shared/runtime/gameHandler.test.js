@@ -98,14 +98,23 @@ describe('createGameHandler', () => {
     expect(store.insertPuzzle).not.toHaveBeenCalled();
   });
 
-  it('fills yesterday through three days ahead, skipping dates that exist', async () => {
+  it('fills yesterday through a week ahead, skipping dates that exist', async () => {
     const store = memoryStore(['2026-10-09']);
     const { handler } = make(
       { generate: async ({ date }) => ({ payload: { date }, sourceKeys: [`src:${date}`] }) },
       { store }
     );
     const res = body(await handler({}));
-    expect(res.created).toEqual(['2026-10-08', '2026-10-10', '2026-10-11', '2026-10-12']);
+    expect(res.created).toEqual([
+      '2026-10-08',
+      '2026-10-10',
+      '2026-10-11',
+      '2026-10-12',
+      '2026-10-13',
+      '2026-10-14',
+      '2026-10-15',
+      '2026-10-16',
+    ]);
     expect(store.rows.map(r => r.puzzle_date)).toEqual(res.created);
     expect(store.rows[0]).toMatchObject({
       game: 'sudoku',
@@ -192,7 +201,7 @@ describe('createGameHandler', () => {
     const { handler, store } = make({ generate: async () => ({ payload: {} }) });
     const res = body(await handler({}, { getRemainingTimeInMillis: () => 10_000 }));
     expect(store.rows).toHaveLength(0);
-    expect(res.skippedForTime).toHaveLength(5);
+    expect(res.skippedForTime).toHaveLength(9);
   });
 
   it('previews without touching the database', async () => {

@@ -64,7 +64,7 @@ export function Root() {
   const { refresh: refreshStreak } = useStreak();
   // Days in a row with any puzzle finished: the same streak as the home page.
   const [streak, setStreak] = useState(() => currentStreak());
-  const { user, isSignedIn, signOut } = useAuth();
+  const { user, isSignedIn, signIn, signOut } = useAuth();
   const location = useLocation();
   const isOnline = useOnlineStatus();
   // The dedicated offline screen owns /offline; everywhere else it takes over
@@ -294,21 +294,20 @@ export function Root() {
                   </AnimatePresence>
                 </div>
               ) : (
-                <NavLink to="/history" className="no-underline">
-                  <m.div
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-bold border"
-                    style={{
-                      background: T.brandSurface,
-                      borderColor: T.brandBorder,
-                      color: T.brandText,
-                      fontFamily: "'Nunito', sans-serif",
-                    }}
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                  >
-                    Sign in
-                  </m.div>
-                </NavLink>
+                <m.button
+                  onClick={signIn}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-bold border"
+                  style={{
+                    background: T.brandSurface,
+                    borderColor: T.brandBorder,
+                    color: T.brandText,
+                    fontFamily: "'Nunito', sans-serif",
+                  }}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  Sign in
+                </m.button>
               )}
             </div>
 
@@ -447,10 +446,12 @@ export function Root() {
                       </button>
                     </div>
                   ) : (
-                    <NavLink
-                      to="/history"
-                      onClick={() => setMenuOpen(false)}
-                      className="flex items-center gap-3 px-4 py-3 rounded-2xl text-sm no-underline font-bold transition-all"
+                    <button
+                      onClick={() => {
+                        setMenuOpen(false);
+                        void signIn();
+                      }}
+                      className="w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-bold transition-all text-left"
                       style={{
                         background: T.brandSurface,
                         color: T.brandText,
@@ -459,7 +460,7 @@ export function Root() {
                     >
                       <Lock size={18} />
                       Sign in with Google
-                    </NavLink>
+                    </button>
                   )}
                 </m.div>
               </div>
@@ -506,16 +507,13 @@ export function Root() {
           </div>
 
           <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2">
-            {/* Not on the home page: it keeps the first screen about today's puzzles. */}
-            {location.pathname !== '/' && (
-              <NavLink
-                to="/about#suggest"
-                className="text-sm font-semibold hover:underline no-underline"
-                style={{ color: T.brand }}
-              >
-                Suggest a puzzle
-              </NavLink>
-            )}
+            <NavLink
+              to="/about#suggest"
+              className="text-sm font-semibold hover:underline no-underline"
+              style={{ color: T.brand }}
+            >
+              Suggest a puzzle
+            </NavLink>
             <NavLink
               to="/privacy"
               className="text-sm font-semibold hover:underline no-underline"

@@ -11,21 +11,6 @@ Ordered by consequence, not effort.
 
 Things that are wrong in production right now.
 
-### Clue ratings are silently discarded — **critical**
-
-`useClueReaction` writes to `clue_reactions` as the authenticated user, but the
-only write policy on that table requires `service_role`, and RLS is forced.
-Every insert is denied. The failure is a `console.warn` while the UI still
-shows "Thanks! 🙏".
-
-The table is therefore permanently empty, so `clue_reaction_counts` and the
-`likes`/`dislikes`/`like_pct` columns of `clue_solve_stats` are hardcoded
-zeros. There is no solver-side quality signal at all.
-
-*Fix:* an owner-write policy mirroring `solve_history`, plus making
-`upsertClueReaction` reject rather than swallow so the widget can revert its
-optimistic state. Details in [`database.md`](./database.md#known-gaps).
-
 ### Streaks can only ever go up
 
 `useStreak` merges local and remote stats with `Math.max` on every field. A
@@ -36,31 +21,11 @@ Making the server authoritative is the correct fix, but it changes what
 existing solvers see the next time they open the app — so it is a product
 decision, not a refactor. Flagged rather than done.
 
-### `record_solve` trusts the client
-
-`p_client_date`, `p_hints_used` and `p_wrong_attempts` arrive from the browser
-unvalidated beyond an XP ceiling. The date parameter exists for a real reason
-(timezone-correct streaks) but nothing stops a crafted call fabricating one.
-
-*Fix:* clamp `p_client_date` server-side to within a day of `CURRENT_DATE`.
-
 ---
 
 ## Documented-but-untrue
 
 Claims that need either code or a correction.
-
-### The privacy policy contradicts itself
-
-The Cookies section says "We do not use any third-party advertising or
-tracking cookies"; the Analytics section says Google Analytics is used. GA4
-sets `_ga`/`_gid`, which are exactly that.
-
-There is also no consent gate — a real ePrivacy/GDPR exposure for a product
-whose stated audience is British solvers. The interaction-gated GA loader in
-`index.html` is already the right hook to hang consent on.
-
-*Status: the wording is corrected; the consent gate is not built.*
 
 ### No offline *caching*
 
@@ -76,33 +41,8 @@ and background sync are below.*
 
 ## Planned
 
-### Accessibility pass
-
-The largest remaining quality gap, and the one with real users behind it.
-
-- The answer input has `focus:outline-none` with no replacement ring —
-  keyboard focus is invisible on the app's primary control (WCAG 2.4.7).
-- That input has no `<label>` or `aria-label`, only a placeholder.
-- Wrong-answer feedback is not in an `aria-live` region, so screen readers
-  announce nothing.
-- `Learn.tsx` has zero `aria-`/`role`/`htmlFor` attributes; its five tabs are
-  plain buttons rather than a `tablist`.
-- The decorative floating letters on the About page are not `aria-hidden`, so a
-  screen reader reads "E A ? T R S ★ N I" before the headline.
-- The submission form's labels are not associated with their inputs.
-
-### Social preview image
-
-`og:image` points at `favicon.svg`. No major platform renders SVG previews, so
-every shared link is a bare text card — which undercuts the share-result
-feature that exists to drive growth. A 1200×630 PNG is the whole fix.
-
 ### Onboarding
 
-- "Sign in" in the nav is a `NavLink` to `/history`, a gated page that then
-  shows another sign-in prompt. It never calls `signIn()`.
-- The OAuth popup redirects to the origin and is never closed, leaving the
-  solver looking at a second copy of the app in a small window.
 - The 🔥 streak chip is hidden from signed-out solvers, even though streaks are
   tracked locally from the first solve — the single strongest reason to create
   an account is invisible to everyone who hasn't.
@@ -121,20 +61,10 @@ nothing to solvers who never open Progress, but for those who do it dwarfs the
 rest of the app. Two or three series on linear axes with a tooltip does not
 need a charting library; a hand-rolled SVG chart would be a fraction of it.
 
-### Column-level protection for `clues.notes`
-
-Commented "internal only, never sent to the frontend", but RLS is row-level.
-`SELECT notes FROM clues` works for `anon`. Convention, not enforcement.
-
 ### `user_stats.level` is dead
 
 Never written by `record_solve`; sits at 1 forever while the frontend
 recomputes from XP. Either compute it in the RPC or drop the column.
-
-### `app_likes` is unguarded
-
-`WITH CHECK (true)` for `anon`. A script can inflate the counter and grow the
-table without bound. Low stakes, but unbounded.
 
 ---
 
@@ -163,6 +93,22 @@ Recorded so the history is legible.
 - Fixed: the three-outage abort was swallowed by the inner catch and never
   fired; Gemini read the response body twice on an exhausted 429; OpenAI strict
   schemas returned 400; whitespace-only link segments rejected valid clues
+
+**Hardening (migration 008 and its frontend):**
+
+- Future puzzles unreadable until their date begins somewhere (UTC+14); the
+  cryptic answer was readable as soon as it was generated
+- Clue ratings save (owner-write policy); a failed save rolls the widget back
+- `record_solve` validates the date (±1 day), counts, and that the clue is
+  that day's puzzle; archive solves no longer touch streaks or XP
+- `app_likes` throttled server-side; `clues.notes` hidden by column grants;
+  `clue_solve_stats` no longer readable by every signed-in user
+- Cookie consent: Google Analytics loads only after "Accept"; choice can be
+  changed from the Privacy page
+- 1200×630 social preview image; navbar "Sign in" signs in directly and the
+  popup closes itself
+- Accessibility: labelled answer input, wrong answers announced, Learn tabs
+  are a real tablist with arrow keys
 
 **Frontend:**
 

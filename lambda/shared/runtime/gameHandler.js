@@ -28,8 +28,9 @@ import * as defaultStore from './store.js';
  * AI generator can correct itself rather than retrying blind.
  *
  * Each run fills a window of dates — yesterday to `aheadDays` ahead — so
- * every time zone's "today" exists and a few days of buffer ride out an
- * outage. Dates already in the table are skipped, so re-running is safe.
+ * every time zone's "today" exists and a week of buffer rides out an
+ * outage. Future days stay unreadable to players until they begin
+ * somewhere (RLS, migration 008). Dates already in the table are skipped, so re-running is safe.
  *
  * Context a generator receives: date, attempt, a seeded `rng`, `used` (source
  * keys already taken), `usedSince(days)` (keys taken in the last N days, for
@@ -65,7 +66,7 @@ export function createGameHandler(spec, deps = {}) {
   return async function handler(event = {}, context = {}) {
     const env = deps.env ?? process.env;
     const config = resolveRunConfig(env, { needsAI });
-    const aheadDays = clampInt(env.PUZZLE_DAYS_AHEAD, 3, 0, 14);
+    const aheadDays = clampInt(env.PUZZLE_DAYS_AHEAD, 7, 0, 14);
     for (const w of config.warnings) console.warn(`[preflight] ${w}`);
 
     // Preview never touches the database, so it does not need its secrets.

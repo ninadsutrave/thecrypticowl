@@ -24,6 +24,7 @@ export function WrongFeedback({
       initial={{ opacity: 0, y: 10, scale: 0.96 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
       exit={{ opacity: 0, y: -10, scale: 0.96 }}
+      role="alert"
       className="rounded-2xl p-4 flex items-start gap-3"
       style={{
         background: isDark ? '#2A0F15' : '#FFF1F2',

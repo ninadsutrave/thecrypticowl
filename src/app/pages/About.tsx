@@ -1,14 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { Link, useLocation } from 'react-router';
-import {
-  Coffee,
-  Gift,
-  Lightbulb,
-  Presentation,
-  Sparkles,
-  TrainFront,
-  UserRound,
-} from 'lucide-react';
+import { Coffee, Gift, Lightbulb, Sunrise, Sparkles, TrainFront, UserRound } from 'lucide-react';
 import { Mascot } from '../components/Mascot';
 import { useDarkMode } from '../context/DarkModeContext';
 import { getTheme } from '../theme';
@@ -35,7 +27,7 @@ export function About() {
   const moments = [
     { Icon: TrainFront, text: 'On the way to the office' },
     { Icon: Coffee, text: 'While the kettle boils' },
-    { Icon: Presentation, text: 'Stuck in a boring meeting' },
+    { Icon: Sunrise, text: 'Sharp start to the day' },
   ];
 
   const promises = [

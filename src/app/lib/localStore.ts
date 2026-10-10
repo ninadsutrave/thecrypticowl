@@ -39,6 +39,8 @@ export const StoreKeys = {
   suggestionAt: `${PREFIX}suggestion-at`,
   /** Past puzzles finished from the archive, keyed `game:date`. */
   archivePlays: `${PREFIX}archive-plays`,
+  /** Analytics cookie choice: 'granted' | 'denied' (set by index.html). */
+  consent: `${PREFIX}consent`,
   /** Chess board colours: a device preference. */
   chessBoard: `${PREFIX}chess-board`,
 } as const;
@@ -127,12 +129,17 @@ export function prunePuzzleCache(today = new Date()): number {
  * Clear everything belonging to the signed-in user, plus Supabase's own
  * session keys. Called on sign-out.
  *
- * `tco-dark-mode` and `tco-tutorials-seen` are deliberately kept: they are
- * device preferences, not user data. Resetting the theme, or replaying every
+ * `tco-dark-mode`, `tco-tutorials-seen` and the cookie choice are deliberately
+ * kept: they are device preferences, not user data. Resetting the theme, or replaying every
  * game's tutorial, on sign-out would be jarring.
  */
 export function clearUserData(): void {
-  const keep = new Set<string>([StoreKeys.darkMode, StoreKeys.tutorialsSeen, StoreKeys.chessBoard]);
+  const keep = new Set<string>([
+    StoreKeys.darkMode,
+    StoreKeys.tutorialsSeen,
+    StoreKeys.chessBoard,
+    StoreKeys.consent,
+  ]);
   for (const key of appKeys()) {
     if (!keep.has(key)) remove(key);
   }

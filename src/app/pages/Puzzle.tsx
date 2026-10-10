@@ -32,6 +32,7 @@ import { getGame } from '../games/registry';
 import { hasSeenTutorial, markTutorialSeen } from '../games/tutorialSeen';
 import { getCrypticTutorial } from './puzzle/crypticTutorial';
 import { archivePath, recordArchivePlay } from '../games/archive';
+import { localDateKey } from '../games/solveRecords';
 import { SignInPrompt } from '../components/SignInPrompt';
 
 const CRYPTIC_TUTORIAL = getCrypticTutorial();
@@ -99,7 +100,9 @@ export function Puzzle() {
       // Fetch today's puzzle with stale-while-revalidate caching. Using
       // `updated_at` as the cache key lets us paint instantly from cache and
       // silently refresh if admin edited the clue mid-day.
-      const isoDate = new Date().toISOString().split('T')[0];
+      // The player's own date, like every other game: by UTC, India saw
+      // yesterday's clue until 05:30.
+      const isoDate = localDateKey();
       const cacheKey = StoreKeys.puzzle(isoDate);
       // One entry is written per day; without this they accumulate forever.
       prunePuzzleCache();
@@ -679,6 +682,10 @@ export function Puzzle() {
                 onChange={e => setAnswer(e.target.value.replace(/[^a-zA-Z]/g, ''))}
                 onKeyDown={e => e.key === 'Enter' && handleSubmit()}
                 placeholder={loading ? 'Loading…' : 'Your answer'}
+                aria-label={`Your answer${activePuzzle ? `, ${activePuzzle.letterCount} letters` : ''}`}
+                autoComplete="off"
+                autoCapitalize="characters"
+                spellCheck={false}
                 className="flex-1 py-3 sm:py-4 px-3 sm:px-4 rounded-2xl border-2 focus:outline-none transition-all min-w-0"
                 style={{
                   borderColor: T.inputBorder,

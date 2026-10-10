@@ -20,15 +20,14 @@ export function ClueReactionWidget({
 }) {
   const T = getTheme(isDark);
   const { reaction, vote } = useClueReaction(puzzleNumber, userId, puzzleId);
-  const [flash, setFlash] = useState<'like' | 'dislike' | null>(null);
+  const [flash, setFlash] = useState<'like' | 'dislike' | 'failed' | null>(null);
 
-  const handleVote = (r: 'like' | 'dislike') => {
+  const handleVote = async (r: 'like' | 'dislike') => {
     const isDeselect = reaction === r;
-    vote(r);
-    if (!isDeselect) {
-      setFlash(r);
-      setTimeout(() => setFlash(null), 1800);
-    }
+    if (!isDeselect) setFlash(r);
+    const saved = await vote(r);
+    if (!saved) setFlash('failed');
+    if (!isDeselect || !saved) setTimeout(() => setFlash(null), 1800);
   };
 
   const likeActive = reaction === 'like';
@@ -74,7 +73,8 @@ export function ClueReactionWidget({
       <AnimatePresence>
         {flash && (
           <m.span
-            key="thanks"
+            key={flash}
+            role="status"
             initial={{ opacity: 0, x: -6 }}
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0 }}
@@ -86,7 +86,11 @@ export function ClueReactionWidget({
               fontFamily: "'Nunito', sans-serif",
             }}
           >
-            {flash === 'like' ? 'Thanks! 🙏' : 'Noted! 📝'}
+            {flash === 'like'
+              ? 'Thanks! 🙏'
+              : flash === 'dislike'
+                ? 'Noted! 📝'
+                : 'Couldn’t save that, try again'}
           </m.span>
         )}
       </AnimatePresence>

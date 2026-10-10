@@ -134,7 +134,7 @@ Model keys are written only to the AI Lambdas' environments.
 |---|---|---|
 | `LAMBDA_NAME_PREFIX` | `crypticowl` | Functions are named `<prefix>-<game>` |
 | `CONTACT_EMAIL` | site URL | Sent in the User-Agent. **Set it** — Wikimedia asks for a contact |
-| `PUZZLE_DAYS_AHEAD` | `3` | Days generated ahead of today (0–14) |
+| `PUZZLE_DAYS_AHEAD` | `7` | Days generated ahead of today (0–14). Players can't read a day until it has begun somewhere on Earth (migration 008) |
 | `AI_PROVIDER`, `JUDGE_PROVIDER` | `gemini` | Writer and judge models, as for cryptic |
 | `<GAME>_SCHEDULE` | staggered 03:00–03:35 UTC | Per-game cron, e.g. `SUDOKU_SCHEDULE`; cryptic keeps `LAMBDA_SCHEDULE` |
 

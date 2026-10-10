@@ -144,58 +144,11 @@ bypassing them.
 
 Documented because they are live, not because they are acceptable.
 
-### `clue_reactions` writes are blocked
-
-The only write policy requires `service_role`, but the app writes as the
-authenticated user. **Every 👍/👎 is silently discarded** — the failure is a
-`console.warn` while the UI still says "Thanks! 🙏".
-
-Consequences: `clue_reactions` is permanently empty, so
-`clue_reaction_counts` and the `likes`/`dislikes`/`like_pct` columns of
-`clue_solve_stats` are hardcoded zeros. There is no clue-quality signal from
-solvers at all.
-
-The fix mirrors the policy already used for `solve_history`:
-
-```sql
-CREATE POLICY "clue_reactions_owner"
-  ON clue_reactions FOR ALL
-  USING     (auth.uid() = user_id)
-  WITH CHECK (auth.uid() = user_id);
-```
-
-…and `upsertClueReaction` should reject rather than swallow, so the widget can
-revert its optimistic state.
-
-### `record_solve` trusts client-supplied values
-
-`p_client_date`, `p_hints_used` and `p_wrong_attempts` come straight from the
-browser with no validation beyond the XP ceiling. `p_client_date` exists for a
-good reason — it stops a player in UTC+ who solves at 11pm from being recorded
-against the next day — but nothing stops a crafted call passing an arbitrary
-date to fabricate a streak.
-
-Clamping it server-side to within a day of `CURRENT_DATE` would close this
-without losing the timezone fix.
-
-### `clues.notes` is readable by `anon`
-
-The column is commented "internal only, never sent to the frontend". RLS is
-row-level, not column-level, so `SELECT notes FROM clues` works for anyone.
-`src/lib/supabase.ts` never selects it, which is convention rather than
-enforcement. A column-level `GRANT` would make it real.
-
 ### `user_stats.level` is never written
 
 `record_solve` updates `xp` but not `level`, so the column sits at 1 forever
 while the frontend recomputes it from XP. Either compute it in the RPC or drop
 the column.
-
-### `app_likes` accepts unlimited anonymous inserts
-
-`WITH CHECK (true)` granted to `anon`. A script can inflate the counter
-indefinitely and grow the table without bound. Low stakes — it is a vanity
-metric — but it is unguarded.
 
 ---
 
@@ -209,6 +162,8 @@ Applied in order, each idempotent where it reasonably can be.
 | `002_pipeline_hardening.sql` | Author rows for DeepSeek/Grok/Mistral, `clues.mechanically_verified`, `clue_quality_by_mechanism` view |
 | `003_game_plays.sql` | `game_plays` table for every game's play history, owner-only RLS (no update/delete: a recorded play is final) |
 | `004_game_puzzles.sql` | `game_puzzles` table for the per-game Lambdas; public read up to tomorrow (UTC) so the generated-ahead buffer stays private |
+| `005`–`007` | Game list changes and `puzzle_suggestions` (insert-only, throttled) |
+| `008_hardening.sql` | Puzzles readable only once their date has begun somewhere (`puzzle_unlocked_through()`, UTC+14); owner-write `clue_reactions`; `record_solve` validates date, counts and that the clue is the day's; `app_likes` throttle; `clues.notes` hidden by column grants; `clue_solve_stats` owner-only |
 
 Apply with `supabase db push`, or paste into the SQL editor.
 

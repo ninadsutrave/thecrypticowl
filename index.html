@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
@@ -15,8 +15,15 @@
       content="Nine fresh puzzles every day: sudoku variants, cryptic clues, trivia, chess and more."
     />
     <meta property="og:type" content="website" />
-    <meta property="og:image" content="/favicon.svg" />
-    <meta name="twitter:card" content="summary" />
+    <meta property="og:url" content="https://www.thecrypticowl.com/" />
+    <!-- Absolute URL and a raster image: WhatsApp, X, LinkedIn and iMessage
+         ignore relative paths and SVG. Kept under 300 KB for WhatsApp. -->
+    <meta property="og:image" content="https://www.thecrypticowl.com/og-image.jpg" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="The Cryptic Owl: nine fresh puzzles, every day" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:image" content="https://www.thecrypticowl.com/og-image.jpg" />
     <meta name="twitter:title" content="The Cryptic Owl — Daily Puzzles" />
     <meta
       name="twitter:description"
@@ -36,23 +43,47 @@
          is preloaded: it paints the LCP heading. Preloading Nunito too made it
          compete with the critical scripts for bandwidth on slow phones; it's
          discovered from the inlined CSS almost as early anyway. -->
-    <link rel="preload" href="/fonts/outfit-700-latin.woff2" as="font" type="font/woff2" crossorigin />
+    <link
+      rel="preload"
+      href="/fonts/outfit-700-latin.woff2"
+      as="font"
+      type="font/woff2"
+      crossorigin
+    />
   </head>
 
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
 
-    <!-- Google Analytics — loaded only on the user's FIRST interaction
-         (scroll / click / keydown / touchstart), never during initial paint.
-         On mobile Lighthouse runs, the user never interacts, so GA (~152 KB)
-         never downloads — eliminating 63 KB of "unused JavaScript" from the
-         report entirely. Real users get analytics the instant they engage. -->
+    <!-- Google Analytics, behind cookie consent. Plain script, not React, so
+         it costs the app bundle nothing.
+         - First visit: a small banner asks. Nothing loads until "Accept".
+         - Accepted: GA loads on the first interaction (scroll / click / key /
+           touch), never during first paint, as before.
+         - Declined: GA never loads. The choice lives in localStorage
+           (tco-consent) and can be changed from the Privacy page, which calls
+           window.tcoConsent.reset(). -->
     <script>
-      (function loadGA() {
+      (function consentAndAnalytics() {
         var id = '%VITE_GA_ID%';
         if (!id || id.indexOf('VITE_GA_ID') !== -1) return;
+        var KEY = 'tco-consent';
+        function read() {
+          try {
+            return localStorage.getItem(KEY);
+          } catch (e) {
+            return null;
+          }
+        }
+        function save(v) {
+          try {
+            localStorage.setItem(KEY, v);
+          } catch (e) {}
+        }
+
         var loaded = false;
+        var events = ['scroll', 'pointerdown', 'touchstart', 'keydown'];
         function init() {
           if (loaded) return;
           loaded = true;
@@ -70,10 +101,77 @@
           window.gtag('js', new Date());
           window.gtag('config', id);
         }
-        var events = ['scroll', 'pointerdown', 'touchstart', 'keydown'];
-        events.forEach(function (evt) {
-          window.addEventListener(evt, init, { passive: true, once: true });
-        });
+        function loadOnInteraction() {
+          events.forEach(function (evt) {
+            window.addEventListener(evt, init, { passive: true, once: true });
+          });
+        }
+
+        function banner() {
+          if (document.getElementById('tco-consent')) return;
+          var dark = document.documentElement.classList.contains('dark');
+          var el = document.createElement('div');
+          el.id = 'tco-consent';
+          el.setAttribute('role', 'dialog');
+          el.setAttribute('aria-label', 'Cookie choice');
+          el.style.cssText =
+            'position:fixed;left:12px;right:12px;bottom:12px;z-index:60;max-width:440px;margin:0 auto;' +
+            'padding:14px 16px;border-radius:16px;font:600 13px/1.5 Nunito,system-ui,sans-serif;' +
+            'box-shadow:0 10px 30px -10px rgba(30,27,75,.35);border:1px solid ' +
+            (dark
+              ? '#3B2A6B;background:#1A1035;color:#E9E5FF'
+              : '#DDD6FE;background:#fff;color:#2E1065');
+          el.innerHTML =
+            '<p style="margin:0 0 10px">May we use Google Analytics cookies to see which puzzles people enjoy? ' +
+            'No ads, nothing sold. <a href="/privacy" style="color:inherit;text-decoration:underline">Privacy</a></p>' +
+            '<div style="display:flex;gap:8px;justify-content:flex-end">' +
+            '<button type="button" data-choice="denied" style="padding:8px 14px;border-radius:12px;border:1px solid ' +
+            (dark ? '#3B2A6B' : '#DDD6FE') +
+            ';background:transparent;color:inherit;font:inherit;cursor:pointer">No thanks</button>' +
+            '<button type="button" data-choice="granted" style="padding:8px 14px;border-radius:12px;border:0;' +
+            'background:#7C3AED;color:#fff;font:inherit;font-weight:800;cursor:pointer">Accept</button></div>';
+          el.addEventListener('click', function (e) {
+            var choice = e.target && e.target.getAttribute && e.target.getAttribute('data-choice');
+            if (!choice) return;
+            save(choice);
+            el.remove();
+            if (choice === 'granted') init();
+          });
+          document.body.appendChild(el);
+        }
+
+        // Clears _ga cookies on this host and its parent domain.
+        function dropGaCookies() {
+          var host = location.hostname.replace(/^www\./, '');
+          document.cookie.split(';').forEach(function (c) {
+            var name = c.split('=')[0].trim();
+            if (name.indexOf('_ga') !== 0) return;
+            ['', '; domain=' + host, '; domain=.' + host].forEach(function (d) {
+              document.cookie = name + '=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/' + d;
+            });
+          });
+        }
+        window.tcoConsent = {
+          get: read,
+          reset: function () {
+            try {
+              localStorage.removeItem(KEY);
+            } catch (e) {}
+            dropGaCookies();
+            location.reload();
+          },
+        };
+
+        var choice = read();
+        if (choice === 'granted') loadOnInteraction();
+        else if (choice !== 'denied') {
+          // After first paint, so the banner never competes with the page.
+          if (document.readyState === 'complete') setTimeout(banner, 600);
+          else
+            window.addEventListener('load', function () {
+              setTimeout(banner, 600);
+            });
+        }
       })();
     </script>
   </body>

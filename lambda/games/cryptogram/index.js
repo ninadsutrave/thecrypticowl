@@ -7,6 +7,7 @@ import { isSuitable, reviewCryptogram } from './reviewer.js';
 
 /** Unused quotes left before the alert starts nagging. */
 const LOW_STOCK = 45;
+const LOW_STOCK_INDIAN = 10;
 
 const usable = () => [...QUOTES, ...INDIAN_QUOTES].filter(q => isSuitable(q.text));
 
@@ -40,12 +41,22 @@ export const spec = {
   review: candidate => reviewCryptogram(candidate),
   healthCheck: async ({ store, dbProvider }) => {
     const used = await store.usedSourceKeys('cryptogram', null, dbProvider);
-    const left = usable().filter(q => !used.has(`quote:${q.id}`)).length;
-    return left < LOW_STOCK
-      ? [
-          `Only ${left} unused cryptogram quotes left (~${left} days). Add more to games/cryptogram/quotes.js.`,
-        ]
-      : [];
+    const unused = usable().filter(q => !used.has(`quote:${q.id}`));
+    const indian = unused.filter(q => q.india).length;
+    const rest = unused.length - indian;
+    const warnings = [];
+    if (rest < LOW_STOCK) {
+      warnings.push(
+        `Only ${rest} unused cryptogram quotes left (~${Math.round(rest * 1.25)} days). Add more to games/cryptogram/quotes.js.`
+      );
+    }
+    // Indian quotes go 2 days in 10: 10 left is about seven weeks.
+    if (indian < LOW_STOCK_INDIAN) {
+      warnings.push(
+        `Only ${indian} unused Indian cryptogram quotes left (~${indian * 5} days). Add to INDIAN_QUOTES in games/cryptogram/quotes.js.`
+      );
+    }
+    return warnings;
   },
 };
 

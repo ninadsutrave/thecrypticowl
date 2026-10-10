@@ -1,5 +1,6 @@
 import { getAIClient, getJudgeClient } from '../clients/aiClient.js';
 import { notify } from './alerts.js';
+import { notifySNS } from '../clients/providers/sns.js';
 import { addDays, dateKey, dateWindow, isDateKey } from './dates.js';
 import { hasAlertChannel, resolveRunConfig } from './preflight.js';
 import { createRng } from './random.js';
@@ -58,6 +59,7 @@ export function createGameHandler(spec, deps = {}) {
   } = spec;
   const store = deps.store ?? defaultStore;
   const alert = deps.notify ?? notify;
+  const stockAlert = deps.notifyStock ?? notifySNS;
   const source = `${label} Lambda`;
 
   return async function handler(event = {}, context = {}) {
@@ -220,6 +222,16 @@ export function createGameHandler(spec, deps = {}) {
       ...health.map(h => `⚠️ ${h}`),
     ];
 
+    // Low stock also goes out tagged "stock", which the owner's email
+    // subscription filters for: weekly (Mondays) so it nudges without
+    // nagging; every threshold gives at least three weeks' notice.
+    if (health.length > 0 && isMonday(today)) {
+      await stockAlert(
+        [`${source}: puzzle stock is running low.`, '', ...health.map(h => `• ${h}`)].join('\n'),
+        { subject: `Cryptic Owl: ${label} puzzles are running low`, kind: 'stock' }
+      ).catch(err => console.error('Stock alert failed:', err.message));
+    }
+
     // Quiet success: nothing to create and nothing wrong is not worth an alert.
     if (lines.length > 0) {
       await safeAlert(
@@ -364,4 +376,9 @@ async function safeHealth(check, args) {
   } catch (err) {
     return [`health check failed: ${err.message}`];
   }
+}
+
+/** Monday, for a date key (YYYY-MM-DD). */
+function isMonday(key) {
+  return new Date(`${key}T00:00:00Z`).getUTCDay() === 1;
 }

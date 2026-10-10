@@ -200,9 +200,9 @@ npx vitest run --project lambda
 
 | Pool | Size | Lasts | Alert |
 |---|---|---|---|
-| What Am I answers (`candidates.js`) | 297 in 11 categories, 108 of them Indian | ~5 months unique (smallest category); Indian answers drawn 5 days in 8 until used, then the rest | < 3 unused in any category |
-| Cryptogram quotes (`quotes.js`) | 154 usable + 47 Indian (Tagore, Gandhi, Vivekananda) | ~6 months unique; Indian quotes 2 days in 10 | < 45 unused |
-| Trivia subjects (`topics.js`) | 419 in 10 categories, 96 Indian | Indian subjects 5 days in 8 (~5 months unique), the rest ~2 years | < 30 unused |
+| What Am I answers (`candidates.js`) | 297 in 11 categories, 108 of them Indian | ~5 months unique (smallest category); Indian answers drawn 5 days in 8 until used, then the rest | < 3 unused in any category; < 20 Indian |
+| Cryptogram quotes (`quotes.js`) | 154 usable + 47 Indian (Tagore, Gandhi, Vivekananda) | ~6 months unique; Indian quotes 2 days in 10 | < 45 unused; < 10 Indian |
+| Trivia subjects (`topics.js`) | 419 in 10 categories, 96 Indian | Indian subjects 5 days in 8 (~5 months unique), the rest ~2 years | < 30 unused; < 25 India |
 | Lichess puzzles | Millions | — | — |
 | "On this day" | 17–28 usable events per date | Fresh for ~2–4 years per date; then at most 2 events unused for 3 years per puzzle, then older events in new mixes (never fails) | — |
 
@@ -211,6 +211,17 @@ used, a generator takes one not used in the last year, then six months, then
 three. A forgotten top-up means an occasional repeat — What Am I gets fresh
 clues from a different stretch of the article — never a missing day. The
 low-stock alert fires well before that point.
+
+**Low-stock email.** Every threshold above gives at least three weeks'
+notice. On Mondays, any low-stock warning is also published to the alert
+SNS topic tagged `kind=stock`, so an email subscription can take only those
+(not every run report). One-time setup, then confirm the email AWS sends:
+
+```bash
+aws sns subscribe --topic-arn "$SNS_TOPIC_ARN" --protocol email \
+  --notification-endpoint you@example.com \
+  --attributes '{"FilterPolicy":"{\"kind\":[\"stock\"]}"}'
+```
 
 The run alert lists each date created or failed and any low-stock warning. A
 run with nothing to do sends nothing.

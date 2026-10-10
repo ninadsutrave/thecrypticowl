@@ -37,6 +37,7 @@ export const THEMES = [
   },
   {
     id: 'country-area',
+    countries: true,
     title: 'Which country is bigger?',
     noun: 'area',
     higher: 'Bigger',
@@ -100,6 +101,7 @@ export const THEMES = [
   },
   {
     id: 'country-population',
+    countries: true,
     title: 'Which country has more people?',
     noun: 'population',
     higher: 'More',
@@ -145,95 +147,22 @@ export const THEMES = [
   },
 ];
 
-/** India's first-level divisions as they stand: states and union territories. */
-const INDIA_DIVISIONS = `wd:Q668 wdt:P150 ?item . FILTER NOT EXISTS { ?item wdt:P576 ?ended }`;
-
 /**
- * India-focused themes: five days in eight (shared/runtime/india.js) draw
- * from these instead.
+ * The theme's query, also reporting which items are Indian (most players are
+ * in India): an item located in India, or, for a theme of countries, India
+ * itself. A chain then includes a couple of them (generator.js).
  */
-export const INDIA_THEMES = [
-  {
-    id: 'indian-city-population',
-    title: 'Which Indian city has more people?',
-    noun: 'population (city proper)',
-    higher: 'More',
-    lower: 'Fewer',
-    format: 'count',
-    poolSize: 120,
-    close: { minRatio: 1.12, maxRatio: 1.9 },
-    query: `SELECT ?item ?itemLabel ?itemDescription (MAX(?pop) AS ?value) (MAX(?sl) AS ?links) WHERE {
-      VALUES ?type { wd:Q1549591 wd:Q1637706 wd:Q200250 }
-      ?item wdt:P31 ?type ; wdt:P17 wd:Q668 ; wdt:P1082 ?pop ; wikibase:sitelinks ?sl .
-      FILTER(?sl >= 25)
-      ${LABELS}
-    } GROUP BY ?item ?itemLabel ?itemDescription`,
-  },
-  {
-    id: 'indian-state-population',
-    title: 'Which Indian state or territory has more people?',
-    noun: 'population',
-    higher: 'More',
-    lower: 'Fewer',
-    format: 'count',
-    close: { minRatio: 1.15, maxRatio: 2.5 },
-    query: `SELECT ?item ?itemLabel ?itemDescription (MAX(?pop) AS ?value) (MAX(?sl) AS ?links) WHERE {
-      ${INDIA_DIVISIONS}
-      ?item wdt:P1082 ?pop ; wikibase:sitelinks ?sl .
-      ${LABELS}
-    } GROUP BY ?item ?itemLabel ?itemDescription`,
-  },
-  {
-    id: 'indian-state-area',
-    title: 'Which Indian state or territory is bigger?',
-    noun: 'area',
-    higher: 'Bigger',
-    lower: 'Smaller',
-    format: 'area',
-    close: { minRatio: 1.15, maxRatio: 2.5 },
-    query: `SELECT ?item ?itemLabel ?itemDescription (MAX(?v) AS ?value) (MAX(?sl) AS ?links) WHERE {
-      ${INDIA_DIVISIONS}
-      ?item wikibase:sitelinks ?sl .
-      ${quantity('P2046').replace('?value', '?v')}
-      ${LABELS}
-    } GROUP BY ?item ?itemLabel ?itemDescription`,
-  },
-  {
-    id: 'indian-river-length',
-    title: 'Which Indian river is longer?',
-    noun: 'length',
-    higher: 'Longer',
-    lower: 'Shorter',
-    format: 'kilometres',
-    poolSize: 80,
-    close: { minRatio: 1.12, maxRatio: 2 },
-    query: `SELECT ?item ?itemLabel ?itemDescription (MAX(?v) AS ?value) (MAX(?sl) AS ?links) WHERE {
-      ?item wdt:P31 wd:Q4022 ; wdt:P17 wd:Q668 ; wikibase:sitelinks ?sl .
-      ${quantity('P2043').replace('?value', '?v')}
-      FILTER(?sl >= 15)
-      ${LABELS}
-    } GROUP BY ?item ?itemLabel ?itemDescription`,
-  },
-  {
-    id: 'indian-peak-height',
-    title: 'Which Indian peak is higher?',
-    noun: 'height',
-    higher: 'Higher',
-    lower: 'Lower',
-    format: 'metres',
-    poolSize: 50,
-    close: { minRatio: 1.04, maxRatio: 1.6 },
-    query: `SELECT ?item ?itemLabel ?itemDescription (MAX(?v) AS ?value) (MAX(?sl) AS ?links) WHERE {
-      ?item wdt:P31 wd:Q8502 ; wdt:P17 wd:Q668 ; wikibase:sitelinks ?sl .
-      ${quantity('P2044').replace('?value', '?v')}
-      FILTER(?sl >= 10)
-      ${LABELS}
-    } GROUP BY ?item ?itemLabel ?itemDescription`,
-  },
-];
-
-/** Every theme, for looking one up by id. */
-export const ALL_THEMES = [...THEMES, ...INDIA_THEMES];
+export function indiaAwareQuery(theme) {
+  const flag = theme.countries
+    ? 'BIND(?item = wd:Q668 AS ?inIndia)'
+    : 'BIND(EXISTS { ?item wdt:P17 wd:Q668 } AS ?inIndia)';
+  return theme.query
+    .replace(
+      'SELECT ?item ?itemLabel ?itemDescription',
+      'SELECT ?item ?itemLabel ?itemDescription (SAMPLE(?inIndia) AS ?india)'
+    )
+    .replace(LABELS, `${flag}\n      ${LABELS}`);
+}
 
 export const themeFor = dayIndex =>
   THEMES[((dayIndex % THEMES.length) + THEMES.length) % THEMES.length];

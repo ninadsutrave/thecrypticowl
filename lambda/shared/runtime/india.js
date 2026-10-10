@@ -1,7 +1,9 @@
 /**
- * India is most of the audience, so content leans Indian on a share of days:
- * five days in eight for What Am I, Trivia, Chronology and Higher or Lower,
- * two in ten for the Cryptogram (the rest are the world's famous quotes).
+ * India is most of the audience. Single-answer games lean Indian on a share
+ * of days: five days in eight for What Am I and Trivia, two in ten for the
+ * Cryptogram (the rest are the world's famous quotes). Games with several
+ * items mix instead: Chronology and Higher or Lower include one or two
+ * Indian items every day (see their selectors).
  *
  * The draw is per game and per day (the seeded rng), so it's reproducible.
  */

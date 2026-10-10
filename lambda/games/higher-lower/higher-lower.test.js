@@ -8,6 +8,7 @@ import {
   fairPair,
   fetchPool,
   generateHigherLower,
+  INDIAN_PER_CHAIN,
   ROUNDS,
 } from './generator.js';
 import { reviewHigherLower } from './reviewer.js';
@@ -88,6 +89,25 @@ describe('chains', () => {
     expect(c.payload.theme).toBe('stadium-capacity');
     expect(reviewHigherLower(c.payload).errors).toEqual([]);
     expect(c.sourceKeys.some(key => used.has(key))).toBe(false);
+  });
+});
+
+describe('Indian items', () => {
+  it('puts a couple in each chain, never all', () => {
+    // Every fourth stadium marked Indian.
+    const pool = POOL.map((x, i) => ({ ...x, india: i % 4 === 0 }));
+    for (let i = 0; i < 20; i++) {
+      const rng = createRng(`india-${i}`);
+      const chain = buildChain(stadium, pool, rng, directions(rng));
+      expect(chain.filter(x => x.india)).toHaveLength(INDIAN_PER_CHAIN);
+    }
+  });
+
+  it('takes the one there is when a theme has a single Indian entry', () => {
+    const pool = POOL.map((x, i) => ({ ...x, india: i === 3 }));
+    const rng = createRng('one');
+    const chain = buildChain(stadium, pool, rng, directions(rng));
+    expect(chain.filter(x => x.india).length).toBeLessThanOrEqual(1);
   });
 });
 

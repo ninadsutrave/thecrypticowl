@@ -1,35 +1,41 @@
 import { fetchJson } from '../../shared/runtime/http.js';
-import { INDIA_THEMES, THEMES, themeFor } from './themes.js';
-import { isIndiaDay } from '../../shared/runtime/india.js';
+import { indiaAwareQuery, themeFor } from './themes.js';
 
 const SPARQL = 'https://query.wikidata.org/sparql';
 export const ROUNDS = 5;
 /** The best-known entries of a theme: the ones most players will have heard of. */
 const DEFAULT_POOL_SIZE = 150;
+/** Indian entries kept past the fame cap, so a chain can include a couple. */
+const INDIA_EXTRA = 12;
+/** Indian items in a chain of six: a few, never all. */
+export const INDIAN_PER_CHAIN = 2;
 
 /** Display units: SI values from Wikidata to what the game shows. */
 const SCALE = { count: 1, area: 1e-6, metres: 1, kilometres: 1e-3 };
 
 export async function fetchPool(theme, { fetcher = fetchJson } = {}) {
-  const url = `${SPARQL}?format=json&query=${encodeURIComponent(theme.query)}`;
+  const url = `${SPARQL}?format=json&query=${encodeURIComponent(indiaAwareQuery(theme))}`;
   const data = await fetcher(url, {
     headers: { Accept: 'application/sparql-results+json' },
     timeoutMs: 60_000,
     retries: 2,
   });
   const seen = new Set();
-  return (data?.results?.bindings ?? [])
+  const all = (data?.results?.bindings ?? [])
     .map(b => ({
       id: b.item.value.split('/').pop(),
       name: b.itemLabel?.value ?? '',
       description: cleanDescription(b.itemDescription?.value),
       value: Number(b.value?.value) * SCALE[theme.format],
       links: Number(b.links?.value ?? 0),
+      india: b.india?.value === 'true',
     }))
     .filter(x => x.name && !/^Q\d+$/.test(x.name) && Number.isFinite(x.value) && x.value > 0)
     .sort((a, b) => b.links - a.links)
-    .filter(x => !seen.has(x.name) && seen.add(x.name))
-    .slice(0, theme.poolSize ?? DEFAULT_POOL_SIZE);
+    .filter(x => !seen.has(x.name) && seen.add(x.name));
+  const top = all.slice(0, theme.poolSize ?? DEFAULT_POOL_SIZE);
+  const extra = all.filter(x => x.india && !top.includes(x)).slice(0, INDIA_EXTRA);
+  return [...top, ...extra];
 }
 
 /** Rankings that would answer the question for the player. */
@@ -86,19 +92,43 @@ export function directions(rng) {
  */
 const pickFamous = (rng, list) => list[Math.floor(rng.next() ** 2 * list.length)];
 
-/** A chain of ROUNDS + 1 items following the pattern, each step a fair pair. */
+/**
+ * A chain of ROUNDS + 1 items following the pattern, each step a fair pair,
+ * with `INDIAN_PER_CHAIN` Indian items where the pool allows (fewer if it
+ * can't: a theme with one Indian entry, like countries, gets that one).
+ */
 export function buildChain(theme, pool, rng, pattern) {
-  for (let attempt = 0; attempt < 300; attempt++) {
-    const chain = [pickFamous(rng, pool)];
-    for (const dir of pattern) {
-      const cur = chain[chain.length - 1];
-      const options = pool.filter(
-        x => !chain.includes(x) && Math.sign(x.value - cur.value) === dir && fairPair(theme, cur, x)
-      );
-      if (!options.length) break;
-      chain.push(pickFamous(rng, options));
+  const indianInPool = pool.filter(x => x.india).length;
+  for (let want = Math.min(INDIAN_PER_CHAIN, indianInPool); want >= 0; want--) {
+    for (let attempt = 0; attempt < 300; attempt++) {
+      // Lean towards Indian items while the chain still needs them.
+      const choose = (options, chain) => {
+        const short = chain.filter(x => x.india).length < want;
+        const indian = options.filter(x => x.india);
+        return short && indian.length && rng.chance(0.6)
+          ? pickFamous(rng, indian)
+          : pickFamous(rng, options);
+      };
+      const chain = [];
+      chain.push(choose(pool, chain));
+      for (const dir of pattern) {
+        const cur = chain[chain.length - 1];
+        const options = pool.filter(
+          x =>
+            !chain.includes(x) && Math.sign(x.value - cur.value) === dir && fairPair(theme, cur, x)
+        );
+        if (!options.length) break;
+        chain.push(choose(options, chain));
+      }
+      const indian = chain.filter(x => x.india).length;
+      if (
+        chain.length === ROUNDS + 1 &&
+        indian >= want &&
+        indian <= Math.max(want, INDIAN_PER_CHAIN)
+      ) {
+        return chain;
+      }
     }
-    if (chain.length === ROUNDS + 1) return chain;
   }
   throw new Error(`could not build a ${theme.id} chain`);
 }
@@ -106,10 +136,9 @@ export function buildChain(theme, pool, rng, pattern) {
 const dayNumber = date => Math.floor(Date.parse(`${date}T00:00:00Z`) / 86_400_000);
 
 export async function generateHigherLower(ctx, deps = {}) {
-  // Five days in eight an India theme; a later attempt moves along the
-  // rotation, in case one query is failing today.
-  const list = isIndiaDay(ctx.rng) ? INDIA_THEMES : THEMES;
-  const theme = themeFor(dayNumber(ctx.date) + Math.floor(((ctx.attempt ?? 1) - 1) / 2), list);
+  // The day's theme; a later attempt moves to the next one, in case a
+  // query is failing today.
+  const theme = themeFor(dayNumber(ctx.date) + Math.floor(((ctx.attempt ?? 1) - 1) / 2));
   const all = await (deps.fetchPool ?? fetchPool)(theme);
   const key = x => `wd:${x.id}`;
   const fresh = all.filter(x => !ctx.used.has(key(x)));

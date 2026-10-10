@@ -171,7 +171,7 @@ describe('suitability screen', () => {
   });
 });
 
-describe('India days', () => {
+describe('India-linked events', () => {
   const ev = (year, text, kind = 'event') => ({
     id: `${year}-x`,
     year,
@@ -195,10 +195,19 @@ describe('India days', () => {
     expect(isIndian(pool[0])).toBe(false);
   });
 
-  it('always includes an Indian event when asked to', () => {
+  it('includes one when asked, and never more than two', () => {
+    const extra = [
+      ev(1857, 'An uprising begins in Meerut, India'),
+      ev(1983, 'India wins the Cricket World Cup'),
+      ev(2008, 'Chandrayaan-1 is launched by ISRO'),
+    ];
     for (let i = 0; i < 20; i++) {
-      const pick = pickEvents(pool, createRng(`india-${i}`), new Set(), { needIndia: true });
-      expect(pick.some(isIndian)).toBe(true);
+      const pick = pickEvents([...pool, ...extra], createRng(`india-${i}`), new Set(), {
+        needIndia: true,
+      });
+      const indian = pick.filter(isIndian).length;
+      expect(indian).toBeGreaterThanOrEqual(1);
+      expect(indian).toBeLessThanOrEqual(2);
     }
   });
 });

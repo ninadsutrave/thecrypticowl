@@ -33,12 +33,19 @@ export async function notifySNS(message, options = {}) {
     return;
   }
 
-  const { subject = SNS_DEFAULT_SUBJECT } = options;
+  // `kind` tags the message so a subscription can filter on it: the owner's
+  // email subscribes to "stock" only, not to every run report.
+  const { subject = SNS_DEFAULT_SUBJECT, kind = 'run' } = options;
 
   try {
     const { client, PublishCommand } = await getClient();
     await client.send(
-      new PublishCommand({ TopicArn: topicArn, Message: message, Subject: subject })
+      new PublishCommand({
+        TopicArn: topicArn,
+        Message: message,
+        Subject: subject,
+        MessageAttributes: { kind: { DataType: 'String', StringValue: kind } },
+      })
     );
   } catch (e) {
     // Alerting must never be able to fail the run it is reporting on.

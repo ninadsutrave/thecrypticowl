@@ -1,6 +1,5 @@
 import { fetchMonthlyViews, fetchOnThisDay } from '../../shared/sources/wikipedia.js';
 import { screenEvents } from './judge.js';
-import { isIndiaDay } from '../../shared/runtime/india.js';
 
 export const EVENTS_PER_DAY = 6;
 /** Two "close" pairs make it medium: real knowledge, not "sounds medieval". */
@@ -60,8 +59,10 @@ const GRIM =
 export const INDIA_TERMS =
   /\b(India|Indian|Indians|Delhi|Mumbai|Bombay|Kolkata|Calcutta|Chennai|Madras|Bengaluru|Bangalore|Hyderabad|Punjab|Bengal|Gujarat|Kerala|Maharashtra|Rajasthan|Kashmir|Goa|Assam|Bihar|Odisha|Mysore|Mughal|Maratha|Gandhi|Nehru|Bollywood|ISRO|Hindi|Tagore)\b/;
 export const isIndian = c => INDIA_TERMS.test(`${c.text} ${c.title ?? ''}`);
-/** India-linked entries kept beyond the fame cap, so India days have some to pick. */
+/** India-linked entries kept beyond the fame cap, so a set can include one. */
 const INDIA_EXTRA = 8;
+/** A few of the six, never most: at most two India-linked events a day. */
+const MAX_INDIAN = 2;
 
 export function dayLabel(date) {
   const [, m, d] = date.split('-').map(Number);
@@ -227,7 +228,8 @@ export function pickEvents(
     for (let t = 0; t < 400; t++) {
       const pick = rng.shuffle(pool).slice(0, EVENTS_PER_DAY);
       if (pick.filter(e => oldKeys.has(keyOf(e))).length > maxReused) continue;
-      if (needIndia && !pick.some(isIndian)) continue;
+      const indian = pick.filter(isIndian).length;
+      if ((needIndia && indian === 0) || indian > MAX_INDIAN) continue;
       if (pick.filter(e => e.kind === 'birth').length > MAX_BIRTHS) continue;
       const years = pick.map(e => e.year);
       const perCentury = new Map();
@@ -300,9 +302,9 @@ export async function generateChronology(ctx, deps = {}) {
     ? null
     : await sourcesFor(ctx.date, getFeed, getViews, ctx.callJudge);
   const candidates = pool ?? (await uncachedSources(ctx.date, getFeed, getViews, ctx.callJudge));
-  // Five days in eight, at least one event with an Indian link, when the
-  // date has one that fits; otherwise any good set.
-  const wantIndia = isIndiaDay(ctx.rng) && candidates.some(isIndian);
+  // Every day, one or two of the six events have an Indian link when the
+  // date has one that fits (most players are in India); otherwise any good set.
+  const wantIndia = candidates.some(isIndian);
   let result;
   if (wantIndia) {
     try {

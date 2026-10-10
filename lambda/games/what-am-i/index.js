@@ -1,5 +1,5 @@
 import { createGameHandler } from '../../shared/runtime/gameHandler.js';
-import { CATEGORIES } from './candidates.js';
+import { CATEGORIES, INDIAN } from './candidates.js';
 import { generateWhatAmI } from './generator.js';
 import { judgeWhatAmI } from './judge.js';
 import { reviewWhatAmI } from './reviewer.js';
@@ -10,6 +10,8 @@ import { reviewWhatAmI } from './reviewer.js';
  * about a month's notice.
  */
 const LOW_STOCK_PER_CATEGORY = 3;
+/** Indian answers go 5 days in 8: 20 left is about a month's notice. */
+const LOW_STOCK_INDIAN = 20;
 
 /**
  * What Am I Talking About?: subject picked in code, clues written by the
@@ -26,13 +28,20 @@ export const spec = {
   judge: (candidate, ctx) => judgeWhatAmI(candidate, ctx),
   healthCheck: async ({ store, dbProvider }) => {
     const used = await store.usedSourceKeys('what-am-i', null, dbProvider);
-    return Object.entries(CATEGORIES)
+    const warnings = Object.entries(CATEGORIES)
       .map(([category, titles]) => [category, titles.filter(t => !used.has(`wiki:${t}`)).length])
       .filter(([, left]) => left < LOW_STOCK_PER_CATEGORY)
       .map(
         ([category, left]) =>
           `What Am I: only ${left} unused "${category}" answers left — extend games/what-am-i/candidates.js`
       );
+    const indianLeft = [...INDIAN].filter(t => !used.has(`wiki:${t}`)).length;
+    if (indianLeft < LOW_STOCK_INDIAN) {
+      warnings.push(
+        `What Am I: only ${indianLeft} unused Indian answers left (about ${Math.round(indianLeft * 1.6)} days) — add to INDIA in games/what-am-i/candidates.js`
+      );
+    }
+    return warnings;
   },
 };
 

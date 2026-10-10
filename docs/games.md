@@ -484,17 +484,18 @@ that reason, company founding years because Wikidata's are unreliable).
 
 ## India focus
 
-Most players are in India, so content leans Indian on a share of days
-(`lambda/shared/runtime/india.js`), drawn per game from the day's seeded
-random number, so it is reproducible:
+Most players are in India. Single-answer games lean Indian on a share of
+days (`lambda/shared/runtime/india.js`, drawn from the day's seeded random
+number, so reproducible); games with several items include a few Indian
+ones every day instead of making a whole day Indian.
 
-| Game | India days | What changes |
+| Game | How | What's Indian |
 |---|---|---|
-| What Am I | 5 in 8 | The answer comes from the day's category's Indian entries (cities, landmarks, companies, films, festivals, historical figures, food…) |
-| Trivia | 5 in 8 | The subject comes from the India list (brands, engineering, places, space, culture, food) |
-| Higher or Lower | 5 in 8 | One of five India themes: city and state populations, state areas, river lengths, peak heights |
-| Chronology | 5 in 8 | At least one event with an Indian link, when the date has one |
-| Cryptogram | 2 in 10 | An Indian quote: Tagore's *Stray Birds* and *Gitanjali*, Gandhi, Vivekananda, an Indian proverb |
+| What Am I | 5 days in 8 | The answer, from the day's category's Indian entries (cities, landmarks, companies, films, festivals, historical figures, food…) |
+| Trivia | 5 days in 8 | The subject, from the India list (brands, engineering, places, space, culture, food) |
+| Cryptogram | 2 days in 10 | An Indian quote: Tagore's *Stray Birds* and *Gitanjali*, Gandhi, Vivekananda, an Indian proverb |
+| Higher or Lower | Every day | Two of the six items are Indian where the theme has them (Indian cities, peaks, rivers, stadiums; India itself among countries) |
+| Chronology | Every day | One or two of the six events have an Indian link, when the date has one |
 
 When the Indian side of a pool is used up, a game falls back to the rest
 rather than going without a puzzle. Sudoku, Slitherlink and Checkmate have

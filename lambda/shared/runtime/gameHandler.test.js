@@ -241,4 +241,28 @@ describe('createGameHandler', () => {
     expect(notify.mock.calls[0][0]).toMatch(/pool low/);
     expect(notify.mock.calls[0][1]).toBe(false);
   });
+
+  it('emails low stock tagged "stock", on Mondays only', async () => {
+    const run = async today => {
+      const notifyStock = vi.fn(async () => {});
+      const handler = createGameHandler(
+        {
+          game: 'sudoku',
+          label: 'Trivia',
+          review: () => ({ ok: true, errors: [] }),
+          generate: async () => ({ payload: {} }),
+          healthCheck: async () => ['only 12 India subjects left'],
+        },
+        { store: memoryStore(), env: ENV, notify: vi.fn(), notifyStock, today }
+      );
+      await handler({ date: today });
+      return notifyStock;
+    };
+    const monday = await run('2026-10-12');
+    expect(monday).toHaveBeenCalledTimes(1);
+    expect(monday.mock.calls[0][0]).toMatch(/only 12 India subjects left/);
+    expect(monday.mock.calls[0][1]).toMatchObject({ kind: 'stock' });
+    expect(monday.mock.calls[0][1].subject).toMatch(/Trivia puzzles are running low/);
+    expect(await run('2026-10-13')).not.toHaveBeenCalled();
+  });
 });

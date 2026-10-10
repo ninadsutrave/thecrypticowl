@@ -1,7 +1,17 @@
-export const GEMINI_MODEL = 'gemini-2.5-pro';
-// gemini-3-flash: user-specified judge model. If this ID causes a 400/404,
-// verify the exact model name at https://ai.google.dev/gemini-api/docs/models
-export const GEMINI_JUDGE_MODEL = 'gemini-2.5-flash';
+// Models in order of preference. Google retires model IDs (2.5 Pro and Flash
+// were shut down for new keys in 2026), so each call falls back to the next
+// ID when Google answers 404 "no longer available", instead of failing the
+// day. The "-latest" aliases always point at Google's current model.
+// Current list: https://ai.google.dev/gemini-api/docs/models
+export const GEMINI_MODELS = ['gemini-3.1-pro-preview', 'gemini-pro-latest', 'gemini-flash-latest'];
+export const GEMINI_JUDGE_MODELS = [
+  'gemini-flash-latest',
+  'gemini-3-flash-preview',
+  'gemini-3.8-flash',
+];
+/** First choices, for logs and single-model callers. */
+export const GEMINI_MODEL = GEMINI_MODELS[0];
+export const GEMINI_JUDGE_MODEL = GEMINI_JUDGE_MODELS[0];
 
 // v1beta covers all Gemini models including 2.5-pro, 2.5-flash, and 3.x variants.
 // v1 (stable) only includes older GA models — using it with 2.5+ returns 404.

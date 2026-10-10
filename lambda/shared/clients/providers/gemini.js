@@ -1,6 +1,6 @@
 import {
-  GEMINI_MODEL,
-  GEMINI_JUDGE_MODEL,
+  GEMINI_MODELS,
+  GEMINI_JUDGE_MODELS,
   GEMINI_BASE_URL,
   GEMINI_GENERATE_ACTION,
   GEMINI_HEADERS,
@@ -107,16 +107,57 @@ class GeminiQuotaExhaustedError extends Error {
  * @param {string}      prompt
  * @param {string}      systemInstruction
  * @param {object|null} responseSchema   - Gemini OpenAPI-style schema object
- * @param {string}      model            - Gemini model ID (defaults to GEMINI_MODEL)
+ * @param {string|string[]} models        - model ID, or IDs in order of preference
  * @param {object}      baseConfig       - Generation config (defaults to GEMINI_CONFIG)
  * @param {number}      _retryCount      - internal: current retry depth (do not pass)
+ */
+/** The model that answered last time, per list: skip retired IDs after the first call. */
+const working = new Map();
+
+/** Google's reply when a model ID has been retired or never existed. */
+const isRetired = err => /Gemini API error \([^)]*\): 404\b/.test(String(err?.message));
+
+/**
+ * Calls the first available model in `models` (a list, or one ID). A 404 for
+ * a retired model moves on to the next; any other error is thrown as is.
  */
 export async function callGemini(
   prompt,
   systemInstruction = '',
   responseSchema = null,
-  model = GEMINI_MODEL,
-  baseConfig = GEMINI_CONFIG,
+  models = GEMINI_MODELS,
+  baseConfig = GEMINI_CONFIG
+) {
+  const list = Array.isArray(models) ? models : [models];
+  const key = list.join('|');
+  const start = Math.max(0, list.indexOf(working.get(key)));
+  let lastErr;
+  for (const model of list.slice(start)) {
+    try {
+      const out = await callGeminiModel(
+        prompt,
+        systemInstruction,
+        responseSchema,
+        model,
+        baseConfig
+      );
+      working.set(key, model);
+      return out;
+    } catch (err) {
+      if (!isRetired(err)) throw err;
+      console.warn(`[gemini] ${model} is not available; trying the next model`);
+      lastErr = err;
+    }
+  }
+  throw lastErr;
+}
+
+async function callGeminiModel(
+  prompt,
+  systemInstruction,
+  responseSchema,
+  model,
+  baseConfig,
   _retryCount = 0
 ) {
   const generationConfig = { ...baseConfig };
@@ -162,7 +203,7 @@ export async function callGemini(
         `[gemini] network error on ${model} (${reason}). Waiting ${(delayMs / 1000).toFixed(1)}s before retry #${_retryCount + 1}…`
       );
       await sleep(delayMs);
-      return callGemini(
+      return callGeminiModel(
         prompt,
         systemInstruction,
         responseSchema,
@@ -212,7 +253,7 @@ export async function callGemini(
       );
       await sleep(delayMs);
 
-      return callGemini(
+      return callGeminiModel(
         prompt,
         systemInstruction,
         responseSchema,
@@ -230,7 +271,7 @@ export async function callGemini(
       `[gemini] ${res.status} on ${model}. Waiting ${(delayMs / 1000).toFixed(1)}s before retry #${_retryCount + 1}…`
     );
     await sleep(delayMs);
-    return callGemini(
+    return callGeminiModel(
       prompt,
       systemInstruction,
       responseSchema,
@@ -274,9 +315,9 @@ export async function callGemini(
 }
 
 /**
- * Judge variant: Gemini 3 Flash at temperature 0.1.
+ * Judge variant: Gemini Flash at temperature 0.1.
  *
- * Different model family from the generator (2.5 Pro) → different blind spots.
+ * Different model from the generator (Pro) → different blind spots.
  * Near-zero temperature → deterministic, consistent scoring across runs.
  */
 export function callGeminiFlash(prompt, systemInstruction, responseSchema) {
@@ -284,7 +325,7 @@ export function callGeminiFlash(prompt, systemInstruction, responseSchema) {
     prompt,
     systemInstruction,
     responseSchema,
-    GEMINI_JUDGE_MODEL,
+    GEMINI_JUDGE_MODELS,
     GEMINI_JUDGE_CONFIG
   );
 }

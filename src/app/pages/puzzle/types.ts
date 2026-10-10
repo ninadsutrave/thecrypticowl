@@ -54,7 +54,7 @@ export const FALLBACK_HINTS: PuzzleHintCard[] = [
     mascotComment: '"Mixed up" signals an anagram — letters are getting scrambled! 🔀',
     color: '#7C3AED',
     bg: '#F5F3FF',
-    bgDark: '#1A0F35',
+    bgDark: '#1D1B26',
     border: '#C4B5FD',
   },
   {
@@ -105,7 +105,7 @@ export const PART_STYLES: Record<
   },
   indicator: {
     bg: '#F5F3FF',
-    bgDark: '#1A0F35',
+    bgDark: '#1D1B26',
     color: '#5B21B6',
     border: '#7C3AED',
     label: 'Indicator',

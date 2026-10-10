@@ -7,7 +7,7 @@ import type { ActivePuzzle } from './ActivePuzzle';
 /** Fixed colour scheme per hint slot (1→blue, 2→purple, 3→orange, 4→green). */
 export const HINT_STYLES = [
   { color: '#3B82F6', bg: '#EFF6FF', bgDark: '#0D1F35', border: '#93C5FD' },
-  { color: '#7C3AED', bg: '#F5F3FF', bgDark: '#1A0F35', border: '#C4B5FD' },
+  { color: '#7C3AED', bg: '#F5F3FF', bgDark: '#1D1B26', border: '#C4B5FD' },
   { color: '#F97316', bg: '#FFF7ED', bgDark: '#2A1505', border: '#FED7AA' },
   { color: '#059669', bg: '#ECFDF5', bgDark: '#062010', border: '#6EE7B7' },
 ] as const;

@@ -23,7 +23,7 @@ function ChartSkeleton({ height, isDark }: { height: number; isDark: boolean }) 
   return (
     <div
       className="rounded-2xl animate-pulse"
-      style={{ height, background: isDark ? '#1A1035' : '#F5F3FF' }}
+      style={{ height, background: isDark ? '#1C1B24' : '#F5F3FF' }}
       aria-label="Loading chart"
     />
   );
@@ -138,7 +138,7 @@ function SignInGate({ isDark }: { isDark: boolean }) {
               <m.div
                 key={i}
                 className="flex items-center gap-3 px-3 py-2 rounded-xl"
-                style={{ background: isDark ? '#1A1035' : '#F9F7FF' }}
+                style={{ background: isDark ? '#1C1B24' : '#F9F7FF' }}
                 initial={{ opacity: 0, x: -12 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.2 + i * 0.07 }}
@@ -302,7 +302,7 @@ function SolveRow({
         <span
           className="px-2 py-0.5 rounded-full text-xs font-bold"
           style={{
-            background: isDark ? '#1A1035' : '#F5F0FF',
+            background: isDark ? '#1C1B24' : '#F5F0FF',
             color: hintColors[hintsIdx],
             border: `1px solid ${hintColors[hintsIdx]}40`,
           }}
@@ -416,7 +416,7 @@ function SolveInsights({
   const weekLabels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
   const cardStyle = { background: T.cardBg, borderColor: T.cardBorder };
   const axisColor = isDark ? '#6B5FA0' : '#9CA3AF';
-  const gridColor = isDark ? '#2D1F55' : '#E5E7EB';
+  const gridColor = isDark ? '#2E2B3B' : '#E5E7EB';
 
   // Trend badge component
   const TrendBadge = ({
@@ -440,7 +440,7 @@ function SolveInsights({
           ? '#2A0F15'
           : '#FFF1F2'
         : isDark
-          ? '#1A1035'
+          ? '#1C1B24'
           : '#F5F0FF';
     const arrow = improving ? '↓' : declining ? '↑' : '→';
     const msg = improving
@@ -631,7 +631,7 @@ function SolveInsights({
                             : day.solved
                               ? '#7C3AED'
                               : isDark
-                                ? '#2D1F55'
+                                ? '#2E2B3B'
                                 : '#E5E7EB',
                       border: day?.isToday ? '2px solid #A78BFA' : 'none',
                       flexShrink: 0,
@@ -648,7 +648,7 @@ function SolveInsights({
               width: 10,
               height: 10,
               borderRadius: 2,
-              background: isDark ? '#2D1F55' : '#E5E7EB',
+              background: isDark ? '#2E2B3B' : '#E5E7EB',
             }}
           />
           <span style={{ fontSize: '0.65rem', color: T.textFaint }}>No solve</span>
@@ -937,7 +937,7 @@ export function Progress() {
             className="block rounded-3xl border p-5 relative overflow-hidden group no-underline"
             style={{
               background: isDark
-                ? 'linear-gradient(135deg, #1A1035 0%, #261845 100%)'
+                ? 'linear-gradient(135deg, #1C1B24 0%, #26242F 100%)'
                 : 'linear-gradient(135deg, #F5F3FF 0%, #EDE9FE 100%)',
               borderColor: T.brandBorder,
             }}
@@ -946,7 +946,7 @@ export function Progress() {
               <div className="flex items-center gap-4 min-w-0">
                 <div
                   className="w-12 h-12 shrink-0 rounded-2xl flex items-center justify-center"
-                  style={{ background: isDark ? '#2D1B69' : 'white' }}
+                  style={{ background: isDark ? '#2F2C3D' : 'white' }}
                 >
                   <CalendarDays size={22} style={{ color: '#7C3AED' }} />
                 </div>

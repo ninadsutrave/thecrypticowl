@@ -51,7 +51,7 @@ export function LikeButton({ isDark }: { isDark: boolean }) {
       disabled={liked}
       className="flex items-center gap-2 px-3 py-1.5 rounded-full border transition-all"
       style={{
-        background: liked ? (isDark ? '#2D1B69' : '#F5F0FF') : 'transparent',
+        background: liked ? (isDark ? '#2F2C3D' : '#F5F0FF') : 'transparent',
         borderColor: liked ? activePurple : T.navBorder,
         color: liked ? activePurple : T.text,
         cursor: liked ? 'default' : 'pointer',
@@ -63,7 +63,7 @@ export function LikeButton({ isDark }: { isDark: boolean }) {
         <span
           className="ml-1.5 px-1.5 py-0.5 rounded-full text-[0.65rem] font-black"
           style={{
-            background: isDark ? '#1A1035' : liked ? 'white' : '#EDE9FE',
+            background: isDark ? '#1C1B24' : liked ? 'white' : '#EDE9FE',
             color: activePurple,
           }}
         >

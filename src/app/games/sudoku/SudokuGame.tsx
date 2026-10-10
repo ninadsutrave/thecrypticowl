@@ -420,7 +420,7 @@ function BoardOverlay({
 }) {
   const n = puzzle.size;
   const span = n * CELL;
-  const thin = isDark ? '#3D2A6B' : '#CBD5E1';
+  const thin = isDark ? '#393547' : '#CBD5E1';
   const cageInk = isDark ? '#E2E8F0' : '#334155';
 
   // Cell edges are thick where the region changes — square boxes and jigsaw

@@ -439,7 +439,7 @@ export function Puzzle() {
                   <div className="space-y-2 animate-pulse">
                     <div
                       className="h-4 w-32 rounded-md"
-                      style={{ background: isDark ? '#261845' : '#EDE9FE' }}
+                      style={{ background: isDark ? '#26242F' : '#EDE9FE' }}
                     />
                     <div className="h-3 w-24 rounded-md" style={{ background: T.indicatorBg }} />
                   </div>
@@ -567,11 +567,11 @@ export function Puzzle() {
                   <div className="flex flex-col items-center gap-3">
                     <div
                       className="h-5 w-full max-w-[400px] rounded-md"
-                      style={{ background: isDark ? '#261845' : '#EDE9FE' }}
+                      style={{ background: isDark ? '#26242F' : '#EDE9FE' }}
                     />
                     <div
                       className="h-5 w-3/4 max-w-[300px] rounded-md"
-                      style={{ background: isDark ? '#261845' : '#EDE9FE' }}
+                      style={{ background: isDark ? '#26242F' : '#EDE9FE' }}
                     />
                   </div>
                 ) : (
@@ -607,7 +607,7 @@ export function Puzzle() {
                         className="w-11 h-11 rounded-xl border-2"
                         style={{
                           borderColor: T.inputBorder,
-                          background: isDark ? '#1A1035' : '#FAFAFA',
+                          background: isDark ? '#1C1B24' : '#FAFAFA',
                         }}
                       />
                     ))}
@@ -626,10 +626,10 @@ export function Puzzle() {
                           borderColor: char ? '#7C3AED' : T.inputBorder,
                           background: char
                             ? isDark
-                              ? '#261845'
+                              ? '#26242F'
                               : '#F5F0FF'
                             : isDark
-                              ? '#1A1035'
+                              ? '#1C1B24'
                               : '#FAFAFA',
                         }}
                       >
@@ -695,7 +695,7 @@ export function Puzzle() {
                   color: T.text,
                   fontWeight: 700,
                   letterSpacing: '0.12em',
-                  background: isDark ? '#1A1035' : '#FAFAFA',
+                  background: isDark ? '#1C1B24' : '#FAFAFA',
                   textTransform: 'uppercase',
                   textAlign: 'left',
                 }}
@@ -720,13 +720,13 @@ export function Puzzle() {
                     !loading && answer.length === activePuzzle?.letterCount
                       ? 'linear-gradient(135deg, #7C3AED, #5B21B6)'
                       : isDark
-                        ? '#261845'
+                        ? '#26242F'
                         : '#E5E7EB',
                   color:
                     !loading && answer.length === activePuzzle?.letterCount
                       ? 'white'
                       : isDark
-                        ? '#4C3580'
+                        ? '#4A4560'
                         : '#9CA3AF',
                   fontFamily: "'Nunito', sans-serif",
                   fontWeight: 800,
@@ -787,7 +787,7 @@ export function Puzzle() {
                 className="w-full py-3 mt-3 rounded-2xl flex items-center justify-center gap-2 border-2 transition-all"
                 style={{
                   borderColor: T.inputBorder,
-                  background: isDark ? '#1A1035' : '#F9FAFB',
+                  background: isDark ? '#1C1B24' : '#F9FAFB',
                   color: isDark ? '#A78BFA' : '#6B7280',
                   fontFamily: "'Nunito', sans-serif",
                   fontWeight: 800,

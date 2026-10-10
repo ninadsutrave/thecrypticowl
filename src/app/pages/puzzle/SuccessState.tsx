@@ -302,8 +302,8 @@ export function SuccessState({
           <div
             className="rounded-2xl px-4 py-3 mb-4 text-center"
             style={{
-              background: isDark ? '#261845' : '#F9F7FF',
-              border: `1.5px solid ${isDark ? '#4C3580' : '#EDE9FE'}`,
+              background: isDark ? '#26242F' : '#F9F7FF',
+              border: `1.5px solid ${isDark ? '#4A4560' : '#EDE9FE'}`,
             }}
           >
             <p
@@ -335,7 +335,7 @@ export function SuccessState({
           <div
             className="rounded-2xl px-4 py-3 mb-4 text-center"
             style={{
-              background: isDark ? '#100820' : '#F5F0FF',
+              background: isDark ? '#121118' : '#F5F0FF',
               border: `1.5px dashed ${T.brandBorder}`,
             }}
           >
@@ -420,14 +420,14 @@ export function SuccessState({
               ? '#2A1A00'
               : '#FFFBEB'
             : isDark
-              ? '#1A0F35'
+              ? '#1D1B26'
               : '#F5F0FF',
           borderColor: wasRevealed
             ? isDark
               ? '#92400E'
               : '#FDE68A'
             : isDark
-              ? '#4C3580'
+              ? '#4A4560'
               : '#C4B5FD',
         }}
       >
@@ -562,7 +562,7 @@ export function SuccessState({
           <div
             className="rounded-2xl p-4 mb-4 text-center"
             style={{
-              background: isDark ? '#261845' : '#F9F7FF',
+              background: isDark ? '#26242F' : '#F9F7FF',
               border: `2px dashed ${T.brandBorder}`,
             }}
           >
@@ -691,7 +691,7 @@ export function SuccessState({
         onClick={onReset}
         className="w-full py-3 rounded-2xl flex items-center justify-center gap-2 border-2 transition-colors"
         style={{
-          borderColor: isDark ? '#3D2A6B' : '#EDE9FE',
+          borderColor: isDark ? '#393547' : '#EDE9FE',
           background: 'transparent',
           color: '#7C3AED',
           fontFamily: "'Nunito', sans-serif",

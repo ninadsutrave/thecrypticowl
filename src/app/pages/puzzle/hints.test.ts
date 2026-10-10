@@ -28,7 +28,7 @@ const storedHints: PuzzleHint[] = [
     mascot_comment: 'Road signs!',
     color: '#7C3AED',
     bg: '#F5F3FF',
-    bg_dark: '#1A0F35',
+    bg_dark: '#1D1B26',
     border: '#C4B5FD',
   },
   {

@@ -86,7 +86,7 @@ const PART_COLORS: Record<
   },
   indicator: {
     bg: '#F5F3FF',
-    bgDark: '#1A0F35',
+    bgDark: '#1D1B26',
     text: '#5B21B6',
     textDark: '#C4B5FD',
     border: '#7C3AED',
@@ -579,7 +579,7 @@ function CompoundExampleCard({
               onClick={() => setRevealed(true)}
               className="px-6 py-2.5 rounded-xl flex items-center gap-2 transition-all hover:scale-105"
               style={{
-                background: isDark ? '#2D1B69' : '#F5F3FF',
+                background: isDark ? '#2F2C3D' : '#F5F3FF',
                 border: `2px solid ${isDark ? '#7C3AED' : '#C4B5FD'}`,
                 color: T.brandText,
                 fontFamily: "'Nunito', sans-serif",
@@ -731,7 +731,7 @@ export function Learn() {
                 fontWeight: 700,
                 background: activeSection === i ? '#7C3AED' : T.cardBg,
                 color: activeSection === i ? 'white' : T.brandText,
-                border: `2px solid ${activeSection === i ? '#7C3AED' : isDark ? '#3D2A6B' : '#EDE9FE'}`,
+                border: `2px solid ${activeSection === i ? '#7C3AED' : isDark ? '#393547' : '#EDE9FE'}`,
                 boxShadow: activeSection === i ? '0 4px 12px rgba(124,58,237,0.3)' : undefined,
               }}
             >
@@ -853,7 +853,7 @@ export function Learn() {
                 <div
                   className="rounded-2xl p-4 mb-4"
                   style={{
-                    background: isDark ? '#261845' : '#F9F7FF',
+                    background: isDark ? '#26242F' : '#F9F7FF',
                     border: `2px dashed ${T.brandBorder}`,
                   }}
                 >

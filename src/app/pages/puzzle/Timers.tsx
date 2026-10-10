@@ -46,8 +46,8 @@ export function NextPuzzleCountdown({ isDark }: { isDark: boolean }) {
     <div
       className="rounded-2xl p-4 text-center border"
       style={{
-        background: isDark ? '#1A0F35' : '#F5F0FF',
-        borderColor: isDark ? '#3D2A6B' : '#C4B5FD',
+        background: isDark ? '#1D1B26' : '#F5F0FF',
+        borderColor: isDark ? '#393547' : '#C4B5FD',
       }}
     >
       <p

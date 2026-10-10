@@ -69,7 +69,7 @@ export function HomeAchievements() {
             key={ms.label}
             className="text-center rounded-2xl px-2 py-3 border-2"
             style={{
-              background: ms.done ? (isDark ? '#1A0F35' : '#F5F0FF') : T.inputBg,
+              background: ms.done ? (isDark ? '#1D1B26' : '#F5F0FF') : T.inputBg,
               borderColor: ms.done ? '#7C3AED' : T.cardBorder,
             }}
             aria-label={`${ms.label}${ms.done ? ', unlocked' : ', locked'}`}

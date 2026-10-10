@@ -57,7 +57,7 @@ export function Modal({
   return createPortal(
     <div
       className="fixed inset-0 z-[100] flex items-center justify-center p-4"
-      style={{ background: 'rgba(13, 8, 32, 0.6)', backdropFilter: 'blur(3px)' }}
+      style={{ background: 'rgba(17, 16, 22, 0.6)', backdropFilter: 'blur(3px)' }}
       onMouseDown={e => e.target === e.currentTarget && onClose()}
     >
       <div

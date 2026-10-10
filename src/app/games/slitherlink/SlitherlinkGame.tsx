@@ -29,6 +29,8 @@ const ACCENT = '#6366F1';
 /** SVG units: one cell, and the margin around the dots. */
 const S = 40;
 const M = 14;
+/** How close (in cells) the finger must come to a dot for the pen to reach it. */
+const SNAP = 0.25;
 
 export function SlitherlinkGame() {
   const { puzzle, isPractice, loading } = useDailyPuzzle(
@@ -101,7 +103,7 @@ function SlitherBoard({ puzzle, api }: { puzzle: SlitherlinkPuzzle; api: PlayApi
   /**
    * Links that just appeared, so each grows out of the dot it was drawn
    * from: `from` is that dot, `start` how much of it was already showing
-   * (the live segment covers the first half of a dragged link), `delay`
+   * (the live segment covers most of a dragged link), `delay`
    * staggers the links a fast swipe fills in, and `id` restarts the
    * animation if the same link is drawn again.
    */
@@ -170,17 +172,23 @@ function SlitherBoard({ puzzle, api }: { puzzle: SlitherlinkPuzzle; api: PlayApi
     g.pos = p;
     if (!g.dragging && Math.hypot(p.x - g.start.x, p.y - g.start.y) > 0.25) g.dragging = true;
     if (!g.dragging) return;
-    // The pen moves to the nearest dot as soon as the finger crosses half
-    // way. A fast swipe can jump several dots at once: walk there link by
-    // link, along the axis the finger has travelled further, so the line
-    // never has gaps.
-    const target: [number, number] = [
+    // The pen moves to a dot only once the finger reaches it (within
+    // SNAP of it), never just past half way: until then the live segment
+    // follows the finger along the line. A fast swipe can jump several dots
+    // at once: walk there link by link, along the axis the finger has
+    // travelled further, so the line never has gaps.
+    const nearest: [number, number] = [
       Math.max(0, Math.min(puzzle.rows, Math.round(p.y))),
       Math.max(0, Math.min(puzzle.cols, Math.round(p.x))),
     ];
+    if (Math.hypot(p.y - nearest[0], p.x - nearest[1]) > SNAP) {
+      redraw(n => n + 1); // the live segment follows the finger
+      return;
+    }
+    const target = nearest;
     let [r, c] = g.last;
     let steps = 0;
-    // One link at a time: the live segment has already drawn its first half.
+    // One link at a time: the live segment has already drawn most of it.
     // A fast jump over several: they grow from scratch, one after another.
     const single = Math.abs(target[0] - r) + Math.abs(target[1] - c) === 1;
     while (r !== target[0] || c !== target[1]) {
@@ -199,7 +207,9 @@ function SlitherBoard({ puzzle, api }: { puzzle: SlitherlinkPuzzle; api: PlayApi
         } else {
           g.path.push({ edge, prev: g.marks[edge] });
           g.marks[edge] = g.mode === 'draw' ? LINE : EMPTY;
-          if (g.mode === 'draw') grow(edge, [r, c], single ? 0.5 : 0, single ? 0 : steps * 45);
+          if (g.mode === 'draw') {
+            grow(edge, [r, c], single ? 1 - SNAP : 0, single ? 0 : steps * 45);
+          }
         }
         steps++;
       }
@@ -387,7 +397,7 @@ function SlitherBoard({ puzzle, api }: { puzzle: SlitherlinkPuzzle; api: PlayApi
         })}
 
         {/* The live segment: from the pen's dot towards the finger, along the
-            grid line it's heading for, until the link commits half way. */}
+            grid line it's heading for, until the finger reaches the next dot. */}
         {(() => {
           const g = gesture.current;
           if (!g?.dragging || g.mode === 'erase') return null;
@@ -396,7 +406,7 @@ function SlitherBoard({ puzzle, api }: { puzzle: SlitherlinkPuzzle; api: PlayApi
           const dy = g.pos.y - r;
           const across = Math.abs(dx) >= Math.abs(dy);
           const d = across ? dx : dy;
-          const len = Math.min(Math.abs(d), 0.5);
+          const len = Math.min(Math.abs(d), 1);
           const next: [number, number] = across ? [r, c + Math.sign(d)] : [r + Math.sign(d), c];
           const edge = len > 0.04 ? edgeBetween(grid, [r, c], next) : null;
           if (edge === null || shown[edge] === LINE) return null;

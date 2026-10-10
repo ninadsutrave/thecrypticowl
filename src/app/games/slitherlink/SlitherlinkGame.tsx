@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState, type PointerEvent } from 'react';
+import { useEffect, useMemo, useRef, useState, type CSSProperties, type PointerEvent } from 'react';
 import { Lightbulb, RotateCcw, Trash2 } from 'lucide-react';
 import { useDarkMode } from '../../context/DarkModeContext';
 import { getTheme } from '../../theme';
@@ -78,8 +78,9 @@ function SlitherBoard({ puzzle, api }: { puzzle: SlitherlinkPuzzle; api: PlayApi
   const gesture = useRef<{
     id: number;
     start: { x: number; y: number };
-    /** The dot the pen is on. */
+    /** The dot the pen is on, and where the finger is (in cell units). */
     last: [number, number];
+    pos: { x: number; y: number };
     dragging: boolean;
     /** Set by the stroke's first link: drawing over a line erases instead. */
     mode: 'draw' | 'erase' | null;
@@ -90,6 +91,19 @@ function SlitherBoard({ puzzle, api }: { puzzle: SlitherlinkPuzzle; api: PlayApi
   } | null>(null);
   // A live copy for the gesture, so a fast drag never reads stale marks.
   const [, redraw] = useState(0);
+  /**
+   * Links that just appeared, so each grows out of the dot it was drawn
+   * from: `from` is that dot, `start` how much of it was already showing
+   * (the live segment covers the first half of a dragged link), `delay`
+   * staggers the links a fast swipe fills in, and `id` restarts the
+   * animation if the same link is drawn again.
+   */
+  const grows = useRef(
+    new Map<number, { from: [number, number]; start: number; delay: number; id: number }>()
+  );
+  const growId = useRef(0);
+  const grow = (edge: number, from: [number, number], start = 0, delay = 0) =>
+    grows.current.set(edge, { from, start, delay, id: ++growId.current });
 
   const W = puzzle.cols * S + 2 * M;
   const H = puzzle.rows * S + 2 * M;
@@ -132,6 +146,7 @@ function SlitherBoard({ puzzle, api }: { puzzle: SlitherlinkPuzzle; api: PlayApi
       id: e.pointerId,
       start: p,
       last: [Math.round(p.y), Math.round(p.x)],
+      pos: p,
       dragging: false,
       mode: null,
       path: [],
@@ -145,6 +160,7 @@ function SlitherBoard({ puzzle, api }: { puzzle: SlitherlinkPuzzle; api: PlayApi
     const g = gesture.current;
     if (!g || e.pointerId !== g.id) return;
     const p = toCells(e);
+    g.pos = p;
     if (!g.dragging && Math.hypot(p.x - g.start.x, p.y - g.start.y) > 0.25) g.dragging = true;
     if (!g.dragging) return;
     // The pen moves to the nearest dot as soon as the finger crosses half
@@ -156,7 +172,10 @@ function SlitherBoard({ puzzle, api }: { puzzle: SlitherlinkPuzzle; api: PlayApi
       Math.max(0, Math.min(puzzle.cols, Math.round(p.x))),
     ];
     let [r, c] = g.last;
-    let changed = false;
+    let steps = 0;
+    // One link at a time: the live segment has already drawn its first half.
+    // A fast jump over several: they grow from scratch, one after another.
+    const single = Math.abs(target[0] - r) + Math.abs(target[1] - c) === 1;
     while (r !== target[0] || c !== target[1]) {
       const dr = target[0] - r;
       const dc = target[1] - c;
@@ -173,13 +192,14 @@ function SlitherBoard({ puzzle, api }: { puzzle: SlitherlinkPuzzle; api: PlayApi
         } else {
           g.path.push({ edge, prev: g.marks[edge] });
           g.marks[edge] = g.mode === 'draw' ? LINE : EMPTY;
+          if (g.mode === 'draw') grow(edge, [r, c], single ? 0.5 : 0, single ? 0 : steps * 45);
         }
-        changed = true;
+        steps++;
       }
       [r, c] = next;
     }
     g.last = [r, c];
-    if (changed) redraw(n => n + 1);
+    redraw(n => n + 1); // the live segment follows the finger
   };
 
   const onUp = (e: PointerEvent) => {
@@ -192,6 +212,7 @@ function SlitherBoard({ puzzle, api }: { puzzle: SlitherlinkPuzzle; api: PlayApi
       if (edge === null) return;
       const next = [...g.before];
       next[edge] = ((next[edge] + 1) % 3) as Mark;
+      if (next[edge] === LINE) grow(edge, grid.ends[edge][0]);
       finishWith(next, g.before);
       return;
     }
@@ -204,6 +225,7 @@ function SlitherBoard({ puzzle, api }: { puzzle: SlitherlinkPuzzle; api: PlayApi
     if (!h) return;
     const next = [...marks];
     next[h.edge] = h.mark;
+    if (h.mark === LINE) grow(h.edge, grid.ends[h.edge][0]);
     setHints(hints + 1);
     finishWith(next, marks, hints + 1);
   };
@@ -306,16 +328,39 @@ function SlitherBoard({ puzzle, api }: { puzzle: SlitherlinkPuzzle; api: PlayApi
           if (m === EMPTY) return null;
           const [[r1, c1], [r2, c2]] = grid.ends[e];
           if (m === LINE) {
+            // Drawn from the dot the player started at, growing towards the other.
+            const g = grows.current.get(e);
+            const fromFirst = !g || (g.from[0] === r1 && g.from[1] === c1);
+            const [a, b] = fromFirst
+              ? [
+                  [r1, c1],
+                  [r2, c2],
+                ]
+              : [
+                  [r2, c2],
+                  [r1, c1],
+                ];
             return (
               <line
-                key={e}
-                x1={px(c1)}
-                y1={px(r1)}
-                x2={px(c2)}
-                y2={px(r2)}
+                key={g ? `${e}-${g.id}` : e}
+                x1={px(a[1])}
+                y1={px(a[0])}
+                x2={px(b[1])}
+                y2={px(b[0])}
                 stroke={lineColour}
                 strokeWidth={5}
                 strokeLinecap="round"
+                pathLength={1}
+                strokeDasharray={g ? '1 1' : undefined}
+                className={g ? 'slither-grow' : undefined}
+                style={
+                  g
+                    ? ({
+                        '--from': 1 - g.start,
+                        animationDelay: `${g.delay}ms`,
+                      } as CSSProperties)
+                    : undefined
+                }
               />
             );
           }
@@ -328,6 +373,36 @@ function SlitherBoard({ puzzle, api }: { puzzle: SlitherlinkPuzzle; api: PlayApi
             </g>
           );
         })}
+
+        {/* The live segment: from the pen's dot towards the finger, along the
+            grid line it's heading for, until the link commits half way. */}
+        {(() => {
+          const g = gesture.current;
+          if (!g?.dragging || g.mode === 'erase') return null;
+          const [r, c] = g.last;
+          const dx = g.pos.x - c;
+          const dy = g.pos.y - r;
+          const across = Math.abs(dx) >= Math.abs(dy);
+          const d = across ? dx : dy;
+          const len = Math.min(Math.abs(d), 0.5);
+          const next: [number, number] = across ? [r, c + Math.sign(d)] : [r + Math.sign(d), c];
+          const edge = len > 0.04 ? edgeBetween(grid, [r, c], next) : null;
+          if (edge === null || shown[edge] === LINE) return null;
+          const x2 = px(c + (across ? Math.sign(d) * len : 0));
+          const y2 = px(r + (across ? 0 : Math.sign(d) * len));
+          return (
+            <line
+              x1={px(c)}
+              y1={px(r)}
+              x2={x2}
+              y2={y2}
+              stroke={lineColour}
+              strokeWidth={5}
+              strokeLinecap="round"
+              opacity={0.85}
+            />
+          );
+        })()}
 
         {/* Dots: red where more than two lines meet. */}
         {Array.from({ length: (puzzle.rows + 1) * (puzzle.cols + 1) }, (_, k) => {

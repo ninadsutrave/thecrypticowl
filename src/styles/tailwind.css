@@ -49,6 +49,19 @@ main {
 
 /* Chess: the last-moved piece slides in from its origin square
    (--dx/--dy are set per move by games/chess/Board.tsx). */
+/* Slitherlink: a new link grows out of the dot it was drawn from. */
+@keyframes slitherGrow {
+  from {
+    stroke-dashoffset: var(--from, 1);
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+.slither-grow {
+  animation: slitherGrow 110ms ease-out both;
+}
+
 @keyframes chessSlide {
   from {
     transform: translate(var(--dx), var(--dy));
@@ -59,7 +72,8 @@ main {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  img[style*='chessSlide'] {
+  img[style*='chessSlide'],
+  .slither-grow {
     animation: none !important;
   }
 }

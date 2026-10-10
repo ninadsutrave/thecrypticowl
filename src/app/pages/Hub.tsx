@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { lazy, Suspense, useEffect, useState } from 'react';
 import { Link } from 'react-router';
 import { ArrowRight, BookOpen, CheckCircle2, Clock } from 'lucide-react';
 import { Mascot } from '../components/Mascot';
@@ -10,6 +10,14 @@ import { isDoneToday } from '../games/progress';
 import { formatClock, getSolveRecord } from '../games/solveRecords';
 
 const FONT_HEADING = "'Outfit', sans-serif";
+
+// Below the fold (or only once everything's played): loaded after first paint.
+const HomeAchievements = lazy(() =>
+  import('../games/HomeAchievements').then(mod => ({ default: mod.HomeAchievements }))
+);
+const DayComplete = lazy(() =>
+  import('../games/DayComplete').then(mod => ({ default: mod.DayComplete }))
+);
 
 /** The lineup's size in words, so the copy follows the registry. */
 const COUNT_WORD =
@@ -143,6 +151,14 @@ export function Hub() {
         </div>
       </header>
 
+      {doneCount === GAMES.length && (
+        <div className="mb-6 max-w-xl mx-auto">
+          <Suspense fallback={null}>
+            <DayComplete />
+          </Suspense>
+        </div>
+      )}
+
       <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 list-none p-0 m-0">
         {/* No entrance animation: the grid is the page's main content, and
             starting it at opacity 0 would delay first paint (LCP). */}
@@ -152,6 +168,10 @@ export function Hub() {
           </li>
         ))}
       </ul>
+
+      <Suspense fallback={<div className="mt-8 h-[190px]" aria-hidden />}>
+        <HomeAchievements />
+      </Suspense>
 
       <Link
         to="/about#suggest"
@@ -235,15 +255,13 @@ function GameCard({
       </p>
 
       <div className="mt-5 flex items-center justify-between gap-2">
-        {/* Cryptic has its own long-form guide; every other game opens its
-            step-by-step walkthrough on the game page. */}
+        {/* Every game opens its step-by-step walkthrough on the game page. */}
         <Link
-          to={game.tutorialPath ?? `${game.path}?tutorial`}
+          to={`${game.path}?tutorial`}
           className="relative z-10 inline-flex items-center gap-1 text-xs font-extrabold no-underline hover:underline min-h-[36px] -my-2.5"
           style={{ color: T.brandText }}
         >
-          <BookOpen size={13} aria-hidden />{' '}
-          {game.tutorialPath ? 'New to cryptics? Tutorial' : 'How to play'}
+          <BookOpen size={13} aria-hidden /> How to play
         </Link>
         {/* Decorative, and click-through: on hover its nudge (a transform)
             lifts it above the card's link, where it would swallow clicks. */}

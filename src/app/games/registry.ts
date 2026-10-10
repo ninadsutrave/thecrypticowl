@@ -30,8 +30,6 @@ export interface GameMeta {
   accentStrong: string;
   /** Accent for text on dark surfaces (≥ 4.5:1 on the dark card). */
   accentOnDark: string;
-  /** Beginner guide, where one exists. */
-  tutorialPath?: string;
 }
 
 export const GAMES: readonly GameMeta[] = [
@@ -55,7 +53,6 @@ export const GAMES: readonly GameMeta[] = [
     accent: '#7C3AED',
     accentStrong: '#6D28D9',
     accentOnDark: '#C4B5FD',
-    tutorialPath: '/learn',
   },
   {
     id: 'what-am-i',

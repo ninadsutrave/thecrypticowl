@@ -77,7 +77,7 @@ export function TutorialFlow({
 
         <div className="flex items-center justify-between mt-6 gap-3">
           <div
-            className="flex gap-1.5"
+            className="flex gap-1 sm:gap-1.5 min-w-0"
             role="progressbar"
             aria-valuemin={1}
             aria-valuemax={steps.length}
@@ -99,7 +99,7 @@ export function TutorialFlow({
             {index > 0 ? (
               <button
                 onClick={() => setIndex(i => i - 1)}
-                className="px-3 py-2 rounded-xl border-2 text-sm font-extrabold flex items-center gap-1"
+                className="px-3 py-2 rounded-xl border-2 text-sm font-extrabold flex items-center gap-1 whitespace-nowrap"
                 style={{ borderColor: T.cardBorder, color: T.brandText }}
               >
                 <ArrowLeft size={14} /> Back
@@ -115,7 +115,7 @@ export function TutorialFlow({
             )}
             <button
               onClick={() => (last ? onClose() : setIndex(i => i + 1))}
-              className="px-4 py-2 rounded-xl text-sm font-extrabold flex items-center gap-1.5"
+              className="px-4 py-2 rounded-xl text-sm font-extrabold flex items-center gap-1.5 whitespace-nowrap"
               style={{ background: game.accent, color: 'white' }}
               autoFocus
             >

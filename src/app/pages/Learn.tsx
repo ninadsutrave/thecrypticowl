@@ -1,10 +1,12 @@
 import { useEffect, useState } from 'react';
+import { useLocation } from 'react-router';
 import { m, AnimatePresence } from 'motion/react';
 import { Mascot } from '../components/Mascot';
 import { Search, ChevronRight, Eye } from 'lucide-react';
 import { useDarkMode } from '../context/DarkModeContext';
 import { getTheme, type Theme } from '../theme';
 import learningData from '../data/learning_examples.json';
+import { GlossaryPanel, IndicatorsPanel } from './learn/ReferencePanels';
 
 // ─── TYPES & CONSTANTS ────────────────────────────────────────────────────────
 
@@ -501,7 +503,19 @@ function WordplayPreview({
 
 // ─── MAIN LEARN PAGE ──────────────────────────────────────────────────────────
 
-const SECTIONS = ['Intro', 'Parts', 'Wordplay', 'Compound', 'Synonyms'];
+/**
+ * Tabs in reading order. `index` is the panel each shows; `key` is its
+ * deep link (/learn#glossary), used by the cryptic tutorial's "Know more".
+ */
+const TABS = [
+  { key: 'intro', label: 'Intro', index: 0 },
+  { key: 'parts', label: 'Parts', index: 1 },
+  { key: 'wordplay', label: 'Wordplay', index: 2 },
+  { key: 'indicators', label: 'Indicators', index: 5 },
+  { key: 'examples', label: 'Sample clues', index: 3 },
+  { key: 'cheatsheet', label: 'Cheat sheet', index: 4 },
+  { key: 'glossary', label: 'Glossary', index: 6 },
+];
 
 function CompoundExampleCard({
   ex,
@@ -631,7 +645,20 @@ function CompoundExampleCard({
 }
 
 export function Learn() {
-  const [activeSection, setActiveSection] = useState(0);
+  const { hash } = useLocation();
+  const [activeSection, setActiveSection] = useState(
+    () => TABS.find(t => `#${t.key}` === hash)?.index ?? 0
+  );
+  // Follow links to a tab while already on the page.
+  useEffect(() => {
+    const tab = TABS.find(t => `#${t.key}` === hash);
+    if (tab) setActiveSection(tab.index);
+  }, [hash]);
+  const openTab = (index: number) => {
+    setActiveSection(index);
+    const key = TABS.find(t => t.index === index)?.key;
+    if (key) window.history.replaceState(null, '', `#${key}`);
+  };
   const [activeWordplayTab, setActiveWordplayTab] = useState(learningData.wordplayTypes[0].id);
   const [searchQuery, setSearchQuery] = useState('');
   const { isDark } = useDarkMode();
@@ -677,12 +704,12 @@ export function Learn() {
         style={{ background: T.stickyNavBg, backdropFilter: 'blur(12px)' }}
       >
         <div className="flex gap-2 overflow-x-auto pb-1 hide-scrollbar [mask-image:linear-gradient(to_right,black_85%,transparent)] sm:[mask-image:none]">
-          {SECTIONS.map((s, i) => (
+          {TABS.map(({ key, label, index: i }) => (
             <m.button
-              key={s}
+              key={key}
               whileHover={{ scale: 1.04 }}
               whileTap={{ scale: 0.96 }}
-              onClick={() => setActiveSection(i)}
+              onClick={() => openTab(i)}
               className="flex-shrink-0 px-4 py-2 rounded-full text-sm transition-all"
               style={{
                 fontFamily: "'Nunito', sans-serif",
@@ -693,7 +720,7 @@ export function Learn() {
                 boxShadow: activeSection === i ? '0 4px 12px rgba(124,58,237,0.3)' : undefined,
               }}
             >
-              {s}
+              {label}
             </m.button>
           ))}
         </div>
@@ -887,7 +914,7 @@ export function Learn() {
               </div>
 
               <button
-                onClick={() => setActiveSection(1)}
+                onClick={() => openTab(1)}
                 className="w-full py-3 rounded-2xl flex items-center justify-center gap-2 transition-all hover:opacity-90"
                 style={{
                   background: 'linear-gradient(135deg, #7C3AED, #5B21B6)',
@@ -923,7 +950,7 @@ export function Learn() {
               <PartsOfClue isDark={isDark} />
 
               <button
-                onClick={() => setActiveSection(2)}
+                onClick={() => openTab(2)}
                 className="w-full py-3 rounded-2xl flex items-center justify-center gap-2 transition-all hover:opacity-90"
                 style={{
                   background: 'linear-gradient(135deg, #7C3AED, #5B21B6)',
@@ -972,7 +999,7 @@ export function Learn() {
               </div>
 
               <button
-                onClick={() => setActiveSection(3)}
+                onClick={() => openTab(5)}
                 className="w-full py-3 rounded-2xl flex items-center justify-center gap-2 transition-all hover:opacity-90"
                 style={{
                   background: 'linear-gradient(135deg, #7C3AED, #5B21B6)',
@@ -981,7 +1008,7 @@ export function Learn() {
                   fontWeight: 800,
                 }}
               >
-                Master Compound Clues <ChevronRight size={16} />
+                Learn the indicators <ChevronRight size={16} />
               </button>
             </div>
           )}
@@ -1012,7 +1039,7 @@ export function Learn() {
               </div>
 
               <button
-                onClick={() => setActiveSection(4)}
+                onClick={() => openTab(4)}
                 className="w-full py-3 rounded-2xl flex items-center justify-center gap-2 transition-all hover:opacity-90"
                 style={{
                   background: 'linear-gradient(135deg, #7C3AED, #5B21B6)',
@@ -1116,6 +1143,10 @@ export function Learn() {
               </div>
             </div>
           )}
+
+          {/* ── Indicators and glossary ── */}
+          {activeSection === 5 && <IndicatorsPanel onNext={() => openTab(3)} />}
+          {activeSection === 6 && <GlossaryPanel />}
         </m.div>
       </AnimatePresence>
     </div>

@@ -34,8 +34,14 @@ function criticalChunks(html) {
 const BUDGETS_KB = {
   /** index.html, which carries the inlined CSS. */
   html: 40,
-  /** Sum of every critical-path JS chunk, gzipped. */
-  criticalJs: 110,
+  /**
+   * Sum of every critical-path JS chunk, gzipped. Raised from 110 when the
+   * home page grew to nine games plus the suggestion link: everything
+   * below the fold (achievements, the day-complete card, the like button,
+   * the offline screen) already loads lazily. Raise it again only with a
+   * reason like that one.
+   */
+  criticalJs: 114,
   /** Any single lazy chunk. Recharts lives behind a dynamic import. */
   lazyChunk: 200,
 };

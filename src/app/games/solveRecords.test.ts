@@ -85,3 +85,24 @@ describe('formatClock', () => {
     expect(formatClock(3725)).toBe('1:02:05');
   });
 });
+
+describe('currentStreak', () => {
+  it('counts consecutive days with any finish, from today or yesterday', async () => {
+    const { currentStreak } = await import('./solveRecords');
+    localStorage.clear();
+    const day = (n: number) => {
+      const d = new Date(2026, 9, 10 - n);
+      return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    };
+    const rec = { seconds: 60, outcome: 'solved', hints: 0, mistakes: 0, completedAt: '' };
+    localStorage.setItem(
+      'tco-solves',
+      JSON.stringify({
+        trivia: { [day(1)]: rec, [day(2)]: rec },
+        sudoku: { [day(3)]: rec, [day(5)]: rec },
+      })
+    );
+    expect(currentStreak(new Date(2026, 9, 10))).toBe(3); // today not played yet: 9, 8, 7 Oct
+    expect(currentStreak(new Date(2026, 9, 12))).toBe(0);
+  });
+});

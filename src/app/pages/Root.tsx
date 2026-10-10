@@ -16,6 +16,7 @@ import { m, AnimatePresence } from 'motion/react';
 import { useDarkMode } from '../context/DarkModeContext';
 import { getTheme } from '../theme';
 import { useStreak } from '../hooks/useStreak';
+import { currentStreak } from '../games/solveRecords';
 import { useAuth } from '../context/AuthContext';
 import { useOnlineStatus } from '../hooks/useOnlineStatus';
 
@@ -59,7 +60,9 @@ export function Root() {
   const avatarRef = useRef<HTMLDivElement>(null);
   const { isDark, toggle: toggleDark } = useDarkMode();
   const T = getTheme(isDark);
-  const { count: streak, refresh: refreshStreak } = useStreak();
+  const { refresh: refreshStreak } = useStreak();
+  // Days in a row with any puzzle finished: the same streak as the home page.
+  const [streak, setStreak] = useState(() => currentStreak());
   const { user, isSignedIn, signOut } = useAuth();
   const location = useLocation();
   const isOnline = useOnlineStatus();
@@ -90,6 +93,7 @@ export function Root() {
     setMenuOpen(false);
     setAvatarDropdown(false);
     refreshStreak();
+    setStreak(currentStreak());
     // refreshStreak identity is stable across renders; location.pathname is the only trigger
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [location.pathname]);

@@ -2,7 +2,7 @@ import { useState, useRef, useEffect, useMemo } from 'react';
 import { m, AnimatePresence } from 'motion/react';
 import {
   ArrowLeft,
-  BookOpen,
+  GraduationCap,
   Lightbulb,
   Send,
   RotateCcw,
@@ -10,7 +10,7 @@ import {
   Timer,
   ExternalLink,
 } from 'lucide-react';
-import { Link, useParams } from 'react-router';
+import { Link, useParams, useSearchParams } from 'react-router';
 import { Mascot, MascotMood } from '../components/Mascot';
 import { useDarkMode } from '../context/DarkModeContext';
 import { getTheme } from '../theme';
@@ -18,7 +18,6 @@ import { hasSolvedToday } from '../hooks/useStreak';
 import { useAuth } from '../context/AuthContext';
 import { fetchPuzzleByDate, fetchPuzzleByNumber, type DbDailyPuzzle } from '../../lib/supabase';
 import { StoreKeys, readRaw, writeRaw, readJSON, prunePuzzleCache } from '../lib/localStore';
-import { Achievements } from './puzzle/Achievements';
 import { ClueReactionWidget } from './puzzle/ClueReactionWidget';
 import { SolveTimer } from './puzzle/Timers';
 import { HintCard } from './puzzle/HintCard';
@@ -27,6 +26,12 @@ import { WrongFeedback, AlreadySolvedBanner } from './puzzle/Feedback';
 import { mapDbPuzzle, DEFAULT_PUZZLE } from './puzzle/hints';
 import type { ActivePuzzle } from './puzzle/ActivePuzzle';
 import { recordPlay } from '../games/playHistory';
+import { TutorialFlow } from '../games/TutorialFlow';
+import { getGame } from '../games/registry';
+import { hasSeenTutorial, markTutorialSeen } from '../games/tutorialSeen';
+import { getCrypticTutorial } from './puzzle/crypticTutorial';
+
+const CRYPTIC_TUTORIAL = getCrypticTutorial();
 
 /** Ollie's hint-2 nudge, per mechanism. */
 const MECHANISM_NUDGE: Record<string, string> = {
@@ -153,6 +158,28 @@ export function Puzzle() {
   const [newHintIndex, setNewHintIndex] = useState<number | null>(null);
   const [showAllHints, setShowAllHints] = useState(false);
   const [startTime, setStartTime] = useState<number>(0);
+  // How to play: opens on the first visit, from the header, and from the
+  // home card's "How to play" (?tutorial). Time spent reading isn't solve time.
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [tutorialOpen, setTutorialOpen] = useState(
+    () => searchParams.has('tutorial') || !hasSeenTutorial('cryptic')
+  );
+  const tutorialOpenedAt = useRef(Date.now());
+  const openTutorial = () => {
+    tutorialOpenedAt.current = Date.now();
+    setTutorialOpen(true);
+  };
+  const closeTutorial = () => {
+    setTutorialOpen(false);
+    markTutorialSeen('cryptic');
+    const away = Date.now() - tutorialOpenedAt.current;
+    setStartTime(t => (t ? Math.min(Date.now(), t + away) : t));
+    if (searchParams.has('tutorial')) {
+      const next = new URLSearchParams(searchParams);
+      next.delete('tutorial');
+      setSearchParams(next, { replace: true });
+    }
+  };
   const [solveTime, setSolveTime] = useState(0);
   const [puzzleId, setPuzzleId] = useState<string | undefined>(undefined);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -353,14 +380,20 @@ export function Puzzle() {
         >
           <ArrowLeft size={15} /> All puzzles
         </Link>
-        <Link
-          to="/learn"
-          className="inline-flex items-center gap-1.5 text-sm font-bold no-underline hover:underline"
-          style={{ color: T.brandText }}
+        <button
+          onClick={openTutorial}
+          className="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 border text-sm font-bold"
+          style={{ borderColor: T.brandBorder, color: T.brandText, background: T.brandSurface }}
         >
-          <BookOpen size={15} /> New to cryptics? Tutorial
-        </Link>
+          <GraduationCap size={14} /> How to play
+        </button>
       </div>
+      <TutorialFlow
+        game={getGame('cryptic')}
+        steps={CRYPTIC_TUTORIAL}
+        open={tutorialOpen}
+        onClose={closeTutorial}
+      />
       {!isCorrect ? (
         <div className="space-y-5">
           {/* Already solved notice */}
@@ -792,11 +825,6 @@ export function Puzzle() {
           />
         )
       )}
-
-      {/* Achievements at the bottom */}
-      <div className="mt-8">
-        <Achievements isDark={isDark} />
-      </div>
     </div>
   );
 }

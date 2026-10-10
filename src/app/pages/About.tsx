@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { Link, useLocation } from 'react-router';
-import { Coffee, Lightbulb, ShieldCheck, Sparkles, Sunrise, TrainFront } from 'lucide-react';
+import { Coffee, Lightbulb, Presentation, Sparkles, TrainFront, UserRound } from 'lucide-react';
 import { Mascot } from '../components/Mascot';
 import { useDarkMode } from '../context/DarkModeContext';
 import { getTheme } from '../theme';
@@ -27,7 +27,7 @@ export function About() {
   const moments = [
     { Icon: TrainFront, text: 'On the way to the office' },
     { Icon: Coffee, text: 'While the kettle boils' },
-    { Icon: Sunrise, text: 'For a sharp start to the day' },
+    { Icon: Presentation, text: 'Stuck in a boring meeting' },
   ];
 
   const promises = [
@@ -37,14 +37,14 @@ export function About() {
       text: 'One of each puzzle, new every day at midnight your time. Most take a few minutes.',
     },
     {
-      Icon: ShieldCheck,
-      title: 'Always solvable',
-      text: 'Logic puzzles are checked by a solver to have exactly one answer; facts come from Wikipedia, Wikidata and Lichess.',
+      Icon: Lightbulb,
+      title: 'Hints when you are stuck',
+      text: 'Every puzzle has a nudge or two, and a quick walkthrough for anything new.',
     },
     {
-      Icon: Lightbulb,
+      Icon: UserRound,
       title: 'Free, no sign-up',
-      text: 'Play straight away. Hints when you are stuck. Sign in only if you want your history on every device.',
+      text: 'Play straight away. Sign in only if you want your streak and history on every device.',
     },
   ];
 
@@ -74,8 +74,8 @@ export function About() {
           style={{ color: T.textMuted, fontWeight: 600, fontSize: '1.05rem', lineHeight: 1.65 }}
         >
           The Cryptic Owl is an everyday puzzle site: a small set of fun, fresh puzzles every day,
-          each worth a few minutes of your time. Whether you're on the way to the office or after a
-          good start to the day, there's always something here to solve.
+          each worth a few minutes of your time. Whether you're on the way to the office or stuck in
+          a boring meeting, there's always something here to solve.
         </p>
         <ul className="mt-6 flex flex-wrap justify-center gap-2 list-none p-0 m-0">
           {moments.map(({ Icon, text }) => (
@@ -161,7 +161,10 @@ export function About() {
         <SuggestForm />
       </section>
 
-      <p className="mt-12 text-center text-sm" style={{ color: T.textMuted, fontWeight: 600 }}>
+      <p
+        className="mt-12 flex flex-wrap items-center justify-center gap-x-1 text-sm"
+        style={{ color: T.textMuted, fontWeight: 600 }}
+      >
         Made by{' '}
         <a
           href="https://ninadsutrave.in"
@@ -171,8 +174,11 @@ export function About() {
           style={{ color: T.brandText }}
         >
           Ninad Sutrave
-        </a>
-        , with an owl for company.
+        </a>{' '}
+        and Ollie
+        <span className="inline-flex" aria-hidden>
+          <Mascot size={22} animate={false} />
+        </span>
       </p>
     </div>
   );

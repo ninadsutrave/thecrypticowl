@@ -71,8 +71,29 @@ export function getSolveRecord(game: GameId, date = localDateKey()): SolveRecord
   return r ? normalise(r) : null;
 }
 
-/** Every record on the device, newest first. */
 const LIVE_GAMES = new Set<string>(GAMES.map(g => g.id));
+
+/**
+ * Days in a row with any puzzle finished, counting back from today, or from
+ * yesterday while today's puzzles are still to play. The same rule as the
+ * Stats page, cheap enough for the nav bar.
+ */
+export function currentStreak(today = new Date()): number {
+  const days = new Set<string>();
+  for (const [game, byDate] of Object.entries(readJSON<SolveLog>(StoreKeys.solves, {}))) {
+    if (LIVE_GAMES.has(game)) for (const d of Object.keys(byDate ?? {})) days.add(d);
+  }
+  const cursor = new Date(today);
+  if (!days.has(localDateKey(cursor))) cursor.setDate(cursor.getDate() - 1);
+  let n = 0;
+  while (days.has(localDateKey(cursor))) {
+    n++;
+    cursor.setDate(cursor.getDate() - 1);
+  }
+  return n;
+}
+
+/** Every record on the device, newest first. */
 
 export function getAllPlays(): PlayRecord[] {
   const log = readJSON<SolveLog>(StoreKeys.solves, {});

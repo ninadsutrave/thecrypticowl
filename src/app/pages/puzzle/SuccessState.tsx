@@ -6,6 +6,7 @@ import { Mascot } from '../../components/Mascot';
 import { getTheme } from '../../theme';
 import { useStreak, getXPForSolve, getLevelTitle } from '../../hooks/useStreak';
 import { useAuth } from '../../context/AuthContext';
+import { DayComplete } from '../../games/DayComplete';
 import { ClueReactionWidget } from './ClueReactionWidget';
 import { NextPuzzleCountdown } from './Timers';
 import { PART_STYLES } from './types';
@@ -686,6 +687,11 @@ export function SuccessState({
       >
         <RotateCcw size={16} /> Practice Again
       </button>
+      {!isPractice && (
+        <div className="mt-6">
+          <DayComplete />
+        </div>
+      )}
     </m.div>
   );
 }

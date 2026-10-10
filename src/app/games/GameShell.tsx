@@ -34,6 +34,7 @@ import { TutorialFlow, type TutorialStep } from './TutorialFlow';
 import { hasSeenTutorial, markTutorialSeen } from './tutorialSeen';
 import { useGameTimer } from './useGameTimer';
 import { buildGameShare } from './share';
+import { DayComplete } from './DayComplete';
 import { computeHistoryStats } from './historyStats';
 import { getAllPlays } from './solveRecords';
 import { shareOrCopy } from '../pages/puzzle/shareResult';
@@ -460,7 +461,10 @@ function ResultCard({
     !practice && record.outcome === 'solved' && mine.solves > 1 && mine.best === record.seconds;
   const [shared, setShared] = useState<'idle' | 'shared' | 'copied' | 'failed'>('idle');
 
-  const share = async () => setShared(await shareOrCopy(buildGameShare(game, record)));
+  const share = async () =>
+    setShared(
+      await shareOrCopy(buildGameShare(game, record, { streak: practice ? 0 : mine.streak }))
+    );
 
   return (
     <m.section
@@ -577,9 +581,14 @@ function ResultCard({
         </button>
       </div>
       {!next && !practice && (
-        <p className="mt-4" style={{ color: T.textMuted, fontWeight: 700, fontSize: '0.85rem' }}>
-          That's every puzzle for today. New ones arrive at midnight 🦉
-        </p>
+        <>
+          <div className="mt-6 text-left">
+            <DayComplete />
+          </div>
+          <p className="mt-4" style={{ color: T.textMuted, fontWeight: 700, fontSize: '0.85rem' }}>
+            New puzzles arrive at midnight 🦉
+          </p>
+        </>
       )}
     </m.section>
   );

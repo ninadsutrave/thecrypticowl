@@ -17,5 +17,5 @@
 
 ## Learn
 
-- [About](https://thecrypticowl.com/about): what the site is, how puzzles are made, and a form to suggest new puzzle types
+- [About](https://thecrypticowl.com/about): what the site is, and a form to suggest new puzzle types
 - [Cryptic crossword tutorial](https://thecrypticowl.com/learn): how cryptic clues work — definitions, indicators, fodder and every wordplay type

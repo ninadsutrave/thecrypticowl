@@ -1,0 +1,36 @@
+name: Preview · AI puzzles
+
+# Manual: generate today's AI-written puzzles with the real code and this
+# repo's key, print them with full logs, and store nothing. For checking
+# quality, and for seeing why a Lambda's AI step fails.
+on:
+  workflow_dispatch:
+    inputs:
+      games:
+        description: 'Space-separated: cryptic what-am-i trivia'
+        default: 'cryptic what-am-i trivia'
+
+permissions:
+  contents: read
+
+jobs:
+  preview:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - run: npm ci --prefix lambda
+      - name: Generate
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          CONTACT_EMAIL: ${{ vars.CONTACT_EMAIL }}
+          GAMES: ${{ inputs.games }}
+        run: |
+          for g in $GAMES; do
+            echo "::group::$g"
+            node lambda/scripts/preview.mjs "$g" || echo "!! $g exited with an error"
+            echo "::endgroup::"
+          done

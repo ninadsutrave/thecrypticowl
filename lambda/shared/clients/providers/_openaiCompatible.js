@@ -41,8 +41,18 @@ export async function callOpenAICompatible(
   const { providerLabel, baseUrl, apiKey, model, schemaMode } = cfg;
   if (!apiKey) throw new Error(`${providerLabel}: API key is not set`);
 
+  // Loose JSON mode enforces "some JSON", not our shape (GPT-OSS on Groq
+  // returned no `clues` at all), and Groq refuses it unless the prompt says
+  // "json". Spelling the schema out fixes both.
+  let system = systemInstruction;
+  if (responseSchema && schemaMode === 'json_object') {
+    system =
+      `${systemInstruction ?? ''}\n\nRespond with one JSON object that matches this JSON ` +
+      `schema exactly (same field names and types):\n${JSON.stringify(toJsonSchema(responseSchema))}`;
+  }
+
   const messages = [];
-  if (systemInstruction) messages.push({ role: 'system', content: systemInstruction });
+  if (system) messages.push({ role: 'system', content: system.trim() });
   messages.push({ role: 'user', content: prompt });
 
   const body = {

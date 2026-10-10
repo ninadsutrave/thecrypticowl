@@ -52,7 +52,7 @@ function client(spec, temperature) {
 
 const WRITERS = list(
   'BENCH_WRITERS',
-  'gemini:gemini-3.5-flash-lite groq:openai/gpt-oss-120b groq:openai/gpt-oss-20b groq:qwen/qwen3.8-27b'
+  'gemini:gemini-3.5-flash-lite groq:openai/gpt-oss-120b groq:qwen/qwen3.8-27b'
 );
 const JUDGE = process.env.BENCH_JUDGE || 'groq:qwen/qwen3.8-27b';
 const SEEDS = list('BENCH_SEEDS', 'bench-1 bench-2 bench-3');

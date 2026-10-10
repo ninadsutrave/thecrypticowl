@@ -71,7 +71,7 @@ export async function generateTrivia(ctx, deps = {}) {
       category: pick.category,
       question: String(out?.question ?? '').trim(),
       answer,
-      accepted: acceptedNames(answer, aliases, out?.alsoAccept ?? []),
+      accepted: acceptedNames(answer, aliases, [].concat(out?.alsoAccept ?? [])),
       fact: String(out?.fact ?? '').trim(),
       source: { label: `${article.title} on Wikipedia`, url: article.url },
     },

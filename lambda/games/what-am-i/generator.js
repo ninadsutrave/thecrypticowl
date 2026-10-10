@@ -52,7 +52,13 @@ export async function generateWhatAmI(ctx, deps = {}) {
   const sourceText = excerpt(article.text, ctx.rng, 6000);
 
   const out = await ctx.callAI(
-    buildWriterPrompt({ category, answer, excerpt: sourceText, feedback: ctx.feedback }),
+    buildWriterPrompt({
+      category,
+      answer,
+      excerpt: sourceText,
+      feedback: ctx.feedback,
+      india: INDIAN.has(title),
+    }),
     WRITER_SYSTEM,
     CLUES_SCHEMA
   );
@@ -70,6 +76,8 @@ export async function generateWhatAmI(ctx, deps = {}) {
       source: { label: `${article.title} on Wikipedia`, url: article.url },
     },
     sourceKeys: [`wiki:${title}`],
+    // Not stored: Indian answers are judged against medium-hard.
+    india: INDIAN.has(title),
     summary: `${answer} (${category})`,
     // Not stored: what the reviewer needs to check grounding.
     evidence: clues.map(c => c.evidence),

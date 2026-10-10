@@ -3,6 +3,7 @@ import { createRng } from '../../shared/runtime/random.js';
 import { reviewChronology } from './reviewer.js';
 import {
   closePairs,
+  hardPairs,
   dayLabel,
   famous,
   generateChronology,
@@ -209,5 +210,15 @@ describe('India-linked events', () => {
       expect(indian).toBeGreaterThanOrEqual(1);
       expect(indian).toBeLessThanOrEqual(2);
     }
+  });
+});
+
+describe('hardPairs', () => {
+  it('counts close pairs, except those with an Indian event', () => {
+    const e = (year, text) => ({ year, text });
+    const world = [e(1900, 'A'), e(1910, 'B'), e(1700, 'C'), e(1800, 'D')];
+    expect(hardPairs(world)).toBe(1);
+    const indian = [e(1900, 'A'), e(1910, 'India becomes a republic'), e(1700, 'C'), e(1800, 'D')];
+    expect(hardPairs(indian)).toBe(0);
   });
 });

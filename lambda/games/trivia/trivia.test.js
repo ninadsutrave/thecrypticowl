@@ -125,6 +125,14 @@ describe('judge', () => {
     expect(hard.feedback).toMatch(/aim for medium/);
   });
 
+  it('lets an Indian subject be hard (medium-hard for an Indian audience)', async () => {
+    const v = await judgeTrivia(
+      { ...candidate(), india: true },
+      ctxWith(reply('Wi-Fi'), reply('Bluetooth', 'hard'))
+    );
+    expect(v.ok).toBe(true);
+  });
+
   it('rejects an opening that already gives it away', async () => {
     const v = await judgeTrivia(candidate(), ctxWith(reply('Bluetooth')));
     expect(v.ok).toBe(false);

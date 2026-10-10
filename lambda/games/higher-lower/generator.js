@@ -200,14 +200,16 @@ const DANGLING = /[\s,]+(?:born|since|from|until|to|and|in|between|circa|c\.|–
 
 /** Whether b is a fair next step from a: clearly different, not wildly so. */
 export function fairPair(theme, a, b) {
-  const { minRatio, maxRatio } = eased(theme.close);
+  // A pair with an Indian item keeps the theme's own (closer, medium-hard)
+  // band; the rest use the eased one (medium).
+  const { minRatio, maxRatio } = a.india || b.india ? theme.close : eased(theme.close);
   const ratio = Math.max(a.value, b.value) / Math.min(a.value, b.value);
   return ratio >= minRatio && ratio <= maxRatio;
 }
 
 /**
- * Pairs a notch further apart than each theme's calibration, which players
- * found too close: the gap above 1 grows by half (1.12× → 1.18×), and the
+ * Non-Indian pairs sit a notch further apart than each theme's calibration,
+ * which players found too close: the gap above 1 grows by half (1.12× → 1.18×), and the
  * upper bound by a fifth so a chain can still be built.
  */
 export const EASE = 1.5;
@@ -237,7 +239,9 @@ export function directions(rng) {
  * the picks come from the top quarter, so most rounds feature things people
  * have heard of, with the occasional deeper cut.
  */
-const pickFamous = (rng, list) => list[Math.floor(rng.next() ** 2 * list.length)];
+const pickFamous = (rng, list, power = 2) => list[Math.floor(rng.next() ** power * list.length)];
+/** Non-Indian items lean harder towards the best known (medium, popular). */
+const POPULAR_POWER = 3;
 
 /**
  * A chain of ROUNDS + 1 items following the pattern, each step a fair pair,
@@ -252,9 +256,8 @@ export function buildChain(theme, pool, rng, pattern) {
       const choose = (options, chain) => {
         const short = chain.filter(x => x.india).length < want;
         const indian = options.filter(x => x.india);
-        return short && indian.length && rng.chance(0.6)
-          ? pickFamous(rng, indian)
-          : pickFamous(rng, options);
+        if (short && indian.length && rng.chance(0.6)) return pickFamous(rng, indian);
+        return pickFamous(rng, options, POPULAR_POWER);
       };
       const chain = [];
       chain.push(choose(pool, chain));
@@ -303,12 +306,14 @@ export async function generateHigherLower(ctx, deps = {}) {
       higher: theme.higher,
       lower: theme.lower,
       format: theme.format,
-      items: chain.map(({ id, name, description, value, url }) => ({
+      items: chain.map(({ id, name, description, value, url, india }) => ({
         id,
         name,
         description,
         value: Number(value.toPrecision(6)),
         url: url ?? `https://www.wikidata.org/wiki/${id}`,
+        // Lets the reviewer apply the same pair rule the chain was built with.
+        ...(india ? { india: true } : {}),
       })),
     },
     sourceKeys: chain.map(key),

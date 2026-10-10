@@ -101,6 +101,12 @@ describe('fair pairs', () => {
     expect(fairPair(city, { value: 100 }, { value: 150 })).toBe(true);
     expect(fairPair(city, { value: 100 }, { value: 500 })).toBe(false);
   });
+
+  it('keep pairs with an Indian item closer (medium-hard) than the rest (medium)', () => {
+    // 1.15×: inside city's own band (1.12–1.9), but closer than the eased one.
+    expect(fairPair(city, { value: 100 }, { value: 115 })).toBe(false);
+    expect(fairPair(city, { value: 100, india: true }, { value: 115 })).toBe(true);
+  });
 });
 
 describe('directions', () => {

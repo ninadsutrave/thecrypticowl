@@ -8,17 +8,20 @@ export interface WhatAmIPuzzle {
   source: { label: string; url: string };
 }
 
-/** Practice riddle, shown when today's generated one is unavailable. */
+/**
+ * Practice riddle, shown when today's generated one is unavailable. Indian,
+ * so medium-hard: the first clues need real knowledge.
+ */
 export const SAMPLE_WHAT_AM_I: WhatAmIPuzzle = {
   category: 'Festival',
   answer: 'Holi',
   accepted: ['Holi', 'Holi festival', 'Phagwah'],
   clues: [
-    'I arrive on the full moon of the Hindu month of Phalguna.',
-    'The night before me, bonfires are lit to remember how Prahlad escaped Holika.',
-    'In Barsana and Nandgaon, women playfully chase men with sticks during my celebrations.',
-    'I mark the end of winter and the welcome of spring across India and Nepal.',
-    'People celebrate me by throwing coloured powder and water at each other: I am the festival of colours.',
+    'In the Caribbean, people of Indian descent celebrate me in spring under a different name.',
+    'I fall on the full moon of the Hindu month of Phalguna.',
+    'In Barsana, women playfully beat men with sticks as part of my celebrations.',
+    'The night before me, bonfires recall how Prahlad survived the fire that consumed Holika.',
+    'People throw coloured powder and water at each other: I am the festival of colours.',
   ],
   source: { label: 'Holi on Wikipedia', url: 'https://en.wikipedia.org/wiki/Holi' },
 };

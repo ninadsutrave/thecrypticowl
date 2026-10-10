@@ -45,6 +45,18 @@ checks; Higher or Lower pairs sit further apart (`EASE` in its generator);
 Trivia aims at medium and rejects "hard", with four guesses; What Am I
 should be gettable by clue 3.
 
+**Two pitches for the text and knowledge games** (Trivia, What Am I, Higher
+or Lower, Chronology): Indian subjects are **medium-hard** for an Indian
+audience; everything else is **medium** and about popular things
+(well-known companies, festivals, world affairs, general knowledge, famous
+films, authors, pop stars, sport). Trivia's writer and judge take the pitch
+from the subject (Indian subjects may rate "hard"; others must rate
+"medium"); What Am I's judge checks that clues 1–2 don't give away an Indian
+answer and that a popular one falls by clue 3; Higher or Lower keeps the
+theme's closer band for pairs with an Indian item and leans harder on fame
+for the rest; Chronology lets an Indian event sit close in time to another
+(`hardPairs`) while non-Indian events come from a tighter fame cut.
+
 
 - **Medium, every day.** Each puzzle should take a typical solver **about
   5–6 minutes**. There is no easy-Monday → hard-Sunday curve; the Sudoku

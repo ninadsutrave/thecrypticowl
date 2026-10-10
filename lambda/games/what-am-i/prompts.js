@@ -28,14 +28,24 @@ Rules:
 - Use ONLY facts stated in the SOURCE TEXT you are given. Never add outside knowledge.
 - For each clue, copy into "evidence" one sentence from the source that proves it, verbatim.
 - Never write the answer, any of its other names, or an obvious part of them (e.g. "Ice" for Iceland).
-- Clue 1 is vague but fair. Most people should be able to get it by clue 3, and clue 5 is close to a give-away. Difficulty must fall steadily from 1 to 5.
+- Clue 1 is vague but fair, and clue 5 is close to a give-away. Difficulty must fall steadily from 1 to 5. Pitch it at the DIFFICULTY line in the prompt.
 - Each clue is one sentence, 8 to 28 words, British English, playful but accurate.
 - For a person: only their work and public achievements. Never health, relationships, legal matters, scandal, or death details.
 - Avoid dates and numbers as the main hook of clues 1 and 2.`;
 
-export function buildWriterPrompt({ category, answer, excerpt, feedback }) {
+/**
+ * Indian answers are pitched medium-hard for an Indian audience; everything
+ * else is a popular subject pitched at medium.
+ */
+export const difficultyLine = india =>
+  india
+    ? 'DIFFICULTY: medium-hard, for an Indian audience. Clues 1 and 2 should need real knowledge of India (lesser-known facts); most Indian players should get it by clue 4.'
+    : 'DIFFICULTY: medium. This is a popular, well-known subject: most people should get it by clue 3.';
+
+export function buildWriterPrompt({ category, answer, excerpt, feedback, india = false }) {
   return [
     `CATEGORY: ${category}`,
+    difficultyLine(india),
     `HIDDEN SUBJECT (never write this or its aliases): ${answer}`,
     feedback ? `A previous attempt was rejected. Fix these problems:\n${feedback}` : null,
     `SOURCE TEXT:\n"""\n${excerpt}\n"""`,

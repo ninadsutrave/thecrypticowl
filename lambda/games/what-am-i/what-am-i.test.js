@@ -89,20 +89,39 @@ describe('reviewer', () => {
 });
 
 describe('judge', () => {
-  it('passes when clue 1 is opaque and all five lead to the answer', async () => {
+  const guess = g => ({ guesses: [g], fair: true, issues: '' });
+
+  it('passes a popular subject when clue 1 is opaque and clue 3 gets it', async () => {
     const callJudge = vi
       .fn()
-      .mockResolvedValueOnce({
-        guesses: ['Norway', 'Faroe Islands', 'Iceland'],
-        fair: true,
-        issues: '',
-      })
-      .mockResolvedValueOnce({
-        guesses: ['Iceland', 'Norway', 'Greenland'],
-        fair: true,
-        issues: '',
-      });
+      .mockResolvedValueOnce(guess('Norway')) // clue 1
+      .mockResolvedValueOnce(guess('Iceland')) // all five
+      .mockResolvedValueOnce(guess('Iceland')); // clues 1–3
     expect((await judgeWhatAmI(candidate(), { callJudge })).ok).toBe(true);
+  });
+
+  it('fails a popular subject still unsolved after three clues (too hard)', async () => {
+    const callJudge = vi
+      .fn()
+      .mockResolvedValueOnce(guess('Norway'))
+      .mockResolvedValueOnce(guess('Iceland'))
+      .mockResolvedValueOnce(guess('Greenland'));
+    const v = await judgeWhatAmI(candidate(), { callJudge });
+    expect(v.ok).toBe(false);
+    expect(v.feedback).toMatch(/Too hard/);
+  });
+
+  it('holds an Indian answer to medium-hard: clues 1–2 must not give it away', async () => {
+    const given = vi.fn().mockResolvedValue(guess('Iceland'));
+    const v = await judgeWhatAmI({ ...candidate(), india: true }, { callJudge: given });
+    expect(v.feedback).toMatch(/Clues 1 and 2/);
+    const fine = vi
+      .fn()
+      .mockResolvedValueOnce(guess('Norway')) // clues 1–2
+      .mockResolvedValueOnce(guess('Iceland')); // all five; no clue-3 check
+    expect((await judgeWhatAmI({ ...candidate(), india: true }, { callJudge: fine })).ok).toBe(
+      true
+    );
   });
 
   it('fails when clue 1 already gives it away', async () => {

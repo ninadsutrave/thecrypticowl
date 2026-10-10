@@ -60,6 +60,7 @@ export async function generateTrivia(ctx, deps = {}) {
       answer,
       excerpt: sourceText,
       feedback: ctx.feedback,
+      india: pick.category === 'India',
     }),
     WRITER_SYSTEM,
     QUESTION_SCHEMA
@@ -75,6 +76,8 @@ export async function generateTrivia(ctx, deps = {}) {
       source: { label: `${article.title} on Wikipedia`, url: article.url },
     },
     sourceKeys: [`wiki:${pick.title}`],
+    // Not stored: Indian subjects are judged against medium-hard.
+    india: pick.category === 'India',
     summary: `${answer} (${pick.category})`,
     // Not stored: what the reviewer needs to check grounding.
     evidence: (out?.evidence ?? []).map(e => String(e).trim()),

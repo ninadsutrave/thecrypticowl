@@ -14,12 +14,15 @@ const MAX_PER_CENTURY = 3;
  * failed in testing). Instead: the most-read events and people for the date,
  * above a low floor that only screens out the genuinely obscure.
  */
-const FAME_POOL = { event: 20, birth: 8 };
+// Tightened so non-Indian events are the best known (medium, popular);
+// Indian ones come in past this cap (INDIA_EXTRA), so they can be less famous.
+const FAME_POOL = { event: 14, birth: 6 };
 const FAME_FLOOR = { event: 1_000, birth: 20_000 };
 
 /**
  * Difficulty: close pairs (two events within 25 years) are what make a set
- * hard, so they're a ceiling, not a floor (eased after play-testing).
+ * hard, so they're a ceiling, not a floor (eased after play-testing). Pairs
+ * with an Indian event don't count (hardPairs): those may be close.
  * Tried strictest first: prefer none; a date whose feed can't manage that
  * allows one, then two, rather than failing the day.
  */
@@ -122,6 +125,25 @@ export function candidatesFrom(feed) {
   const byYear = new Map();
   for (const e of out) if (!byYear.has(e.year)) byYear.set(e.year, e);
   return [...byYear.values()];
+}
+
+/**
+ * Close pairs that count against the difficulty ceiling: two events within
+ * `within` years, neither of them Indian. A close pair with an Indian event
+ * is allowed (medium-hard for an Indian audience); the rest stay spread
+ * (medium).
+ */
+export function hardPairs(events, within = 25) {
+  const sorted = [...events].sort((a, b) => a.year - b.year);
+  let pairs = 0;
+  for (let i = 0; i + 1 < sorted.length; i++) {
+    const [a, b] = [sorted[i], sorted[i + 1]];
+    if (b.year - a.year <= within && !isIndian(a) && !isIndian(b)) {
+      pairs++;
+      i++;
+    }
+  }
+  return pairs;
 }
 
 export function closePairs(years, within = 25) {
@@ -238,7 +260,7 @@ export function pickEvents(
       if ([...perCentury.values()].some(n => n > MAX_PER_CENTURY)) continue;
       if (new Set(years).size !== years.length) continue;
       const span = Math.max(...years) - Math.min(...years);
-      if (span >= MIN_SPAN_YEARS && closePairs(years, rung.within) <= rung.maxPairs) return pick;
+      if (span >= MIN_SPAN_YEARS && hardPairs(pick, rung.within) <= rung.maxPairs) return pick;
     }
   }
   throw new Error('no set of well-spread events with a wide span in this feed');

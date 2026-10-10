@@ -13,7 +13,8 @@ export function opening(question) {
  *
  *   the opening alone → must NOT already name it (otherwise too easy)
  *   the full question → MUST name it first (solvable, one clear answer),
- *                       rated medium, and fair
+ *                       rated medium (Indian subjects: medium or
+ *                       hard), and fair
  */
 export async function judgeTrivia(candidate, ctx) {
   const { category, question, accepted } = candidate.payload;
@@ -48,13 +49,16 @@ export async function judgeTrivia(candidate, ctx) {
   if (full.fair === false) {
     return { ok: false, feedback: `Fairness problem: ${full.issues || 'unspecified'}` };
   }
+  // Indian subjects: medium-hard (medium or hard passes). Everything else is
+  // a popular subject at medium: hard is too much for it.
+  const india = candidate.india ?? category === 'India';
   if (full.difficulty === 'easy') {
     return {
       ok: false,
-      feedback: 'Rated easy: most people would get it at once. Use less famous facts about it.',
+      feedback: 'Rated easy: most people would get it at once. Lead with less familiar facts.',
     };
   }
-  if (full.difficulty === 'hard') {
+  if (full.difficulty === 'hard' && !india) {
     return {
       ok: false,
       feedback:

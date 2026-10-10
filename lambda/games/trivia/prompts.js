@@ -24,8 +24,8 @@ export const WRITER_SYSTEM = `You write the single daily trivia question for a p
 
 The shape:
 - 70 to 130 words, 4 to 6 sentences, ending with one direct question ("Name the product.", "What is this dish called?").
-- Chain 3 to 5 surprising facts about the HIDDEN SUBJECT: an accidental origin, an odd name, an unexpected first use, a strange record. Order them from oblique to telling, so the answer only clicks towards the end.
-- Medium. Most adults should get it by the end with a little thought: build to one well-known fact in the last sentence. The first two sentences must not identify the subject on their own.
+- Chain 3 to 5 interesting facts about the HIDDEN SUBJECT: an origin story, an odd name, a first, a record. Order them from oblique to telling, so the answer only clicks towards the end.
+- Pitch it at the DIFFICULTY line in the prompt. The first two sentences must never identify the subject on their own.
 - Refer to the subject as "this product", "this film", "it" and so on. Never write the answer, any of its other names, or a distinctive part of them (e.g. "Bubble" for Bubble Wrap).
 
 The rules:
@@ -39,9 +39,19 @@ The rules:
 An example of the style, for a different subject (Bubble Wrap):
 "In 1957 two engineers in New Jersey sealed a pair of shower curtains together, hoping to sell the result as a fashionable textured wallpaper. Nobody wanted to hang it. They tried pitching it as insulation for greenhouses; that flopped too. Its break came when a computer company needed a way to protect a new machine on its journey to customers. Today there is even an appreciation day for it on the last Monday of January. Name the product."`;
 
-export function buildWriterPrompt({ category, answer, excerpt, feedback }) {
+/**
+ * Indian subjects are pitched medium-hard for an Indian audience; everything
+ * else is a popular subject pitched at medium.
+ */
+export const difficultyLine = india =>
+  india
+    ? 'DIFFICULTY: medium-hard, for an Indian audience. A well-read Indian adult should have to connect the facts: lead with lesser-known details and keep the giveaway for the very end.'
+    : 'DIFFICULTY: medium. This is a popular, well-known subject: most adults should get it by the end with a little thought, building to one familiar fact in the last sentence.';
+
+export function buildWriterPrompt({ category, answer, excerpt, feedback, india = false }) {
   return [
     `CATEGORY: ${category}`,
+    difficultyLine(india),
     `HIDDEN SUBJECT (never write this or its other names): ${answer}`,
     feedback ? `A previous attempt was rejected. Fix these problems:\n${feedback}` : null,
     `SOURCE TEXT:\n"""\n${excerpt}\n"""`,

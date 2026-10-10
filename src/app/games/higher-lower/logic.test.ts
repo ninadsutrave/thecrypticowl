@@ -12,6 +12,10 @@ describe('formatValue', () => {
     expect(formatValue(643_801, 'area')).toBe('643,801 km²');
     expect(formatValue(8848.86, 'metres')).toBe('8,849 m');
     expect(formatValue(6650, 'kilometres')).toBe('6,650 km');
+    expect(formatValue(2_927_099_455, 'usd')).toBe('$2.93 billion');
+    expect(formatValue(4_153_190_000_000, 'usd')).toBe('$4.15 trillion');
+    expect(formatValue(19_680_000_000, 'inr')).toBe('₹1,968 crore');
+    expect(formatValue(14, 'years')).toBe('14 years');
   });
 });
 

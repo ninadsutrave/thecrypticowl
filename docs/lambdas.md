@@ -84,7 +84,7 @@ flowchart LR
 | Checkmate | Lichess puzzle API, mate in 3–5 | chess.js replay: legal, ends in mate, length matches, no shorter mate | Rating 1300–1800 and ≥500 plays |
 | Cryptogram | Unused quote from `quotes.js`, fresh derangement key, two mid-frequency givens | Length/variety band, valid key, givens present and not the commonest letter | — |
 | Slitherlink | 6×6 loop drawn as the outline of a random hole-free blob; every cell's count, then clues removed (zeros first) while the solver still finds one loop within 12 guesses | One closed loop; every clue equals its cell's sides on it; ≥25% of cells clued | Re-solves from the clues: unique, the stored loop, ≤12 guesses |
-| Higher or Lower | Theme by date (8 rotating, see `themes.js`; sizes and counts, never dates); Wikidata SPARQL for the best-known entries; a chain of 6 (five rounds) with a balanced up/down pattern, each step a fair pair | 6 distinct named items, values > 0, every step fair (no ties, ratio in range), 2–3 ups, descriptions with no numbers or rankings | — (data, not judgement) |
+| Higher or Lower | Theme by date (27 rotating, see `themes.js`; sizes, counts, money and fame, never dates); Wikidata SPARQL or a Wikipedia list article for the best-known entries; a chain of 6 (five rounds) with a balanced up/down pattern, each step a fair pair | 6 distinct named items, values > 0, every step fair (no ties, ratio in range), 2–3 ups, descriptions with no numbers or rankings | — (data, not judgement) |
 
 **Events** a handler accepts:
 

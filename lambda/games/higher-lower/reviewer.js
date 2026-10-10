@@ -1,6 +1,9 @@
 import { cleanDescription, fairPair, ROUNDS, UPS } from './generator.js';
 import { THEMES } from './themes.js';
 
+/** A Wikidata entry or an English Wikipedia article. */
+const SOURCE_URL = /^https:\/\/(www\.wikidata\.org\/wiki\/Q\d+|en\.wikipedia\.org\/wiki\/[^\s/]+)$/;
+
 /**
  * Deterministic review: the right number of distinct, named items with real
  * values; every step a fair pair (no ties, nothing absurdly far apart); and
@@ -20,8 +23,7 @@ export function reviewHigherLower(p) {
     if (x.description && cleanDescription(x.description) !== x.description) {
       errors.push(`item ${i}'s description gives the answer away`);
     }
-    if (!/^https:\/\/www\.wikidata\.org\/wiki\/Q\d+$/.test(x.url ?? ''))
-      errors.push(`item ${i} has no source`);
+    if (!SOURCE_URL.test(x.url ?? '')) errors.push(`item ${i} has no source`);
   });
   let ups = 0;
   for (let i = 1; i < items.length; i++) {

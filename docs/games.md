@@ -459,18 +459,34 @@ exist. In testing, every seed produced a puzzle in about 10 ms.
 number and a new one with it hidden: higher or lower? The new one becomes the
 next round's known one.
 
-**Themes** (rotating by date, `lambda/games/higher-lower/themes.js`): city
-populations (city proper), country areas, mountain heights, river lengths,
-building heights, country populations, stadium capacities, lake areas. No
-dates: ordering by date is Chronology's job (film years were dropped for
-that reason, company founding years because Wikidata's are unreliable).
+**Themes** (27, rotating by date, `lambda/games/higher-lower/themes.js`):
+
+- _Places and sizes (Wikidata):_ city and country populations, country
+  areas, mountain heights, river lengths, building heights, stadium
+  capacities, lake areas, and age at career start (singers and actors).
+- _People, money and fame (Wikipedia lists):_ Grammy wins, Forbes net worth,
+  Instagram and X followers, YouTube subscribers, claimed record sales, film
+  and Indian film box office, Spotify streams, international cricket
+  centuries, Olympic golds, career football goals, painting prices, company
+  revenue, museum visitors, and countries by islands, coastline and GDP.
+
+The rotation interleaves the two kinds. No dates: ordering by date is
+Chronology's job (film years were dropped for that reason, company founding
+years because Wikidata's are unreliable). Wikidata's own counts of awards
+are badly incomplete (it had Taylor Swift on 8 Grammys, not 14), which is
+why counts like these come from the maintained Wikipedia lists instead.
+"Number of lakes by country" has no dependable source, so it isn't a theme.
 
 **Generation (no AI)**
 
-1. **Pool:** one Wikidata SPARQL query per theme, keeping the best-known
-   entries (most Wikipedia language editions; 80–150 per theme).
-2. **Descriptions:** Wikidata's one-liners, minus numbers ("1995 film by…")
-   and any clause with a ranking ("…, the largest in the world by area").
+1. **Pool:** one Wikidata SPARQL query per theme, or the theme's Wikipedia
+   list article read fresh that day (`shared/runtime/wikiTables.js` reads its
+   tables; only rows linking to an article count). Either way the
+   best-known entries are kept, by how many Wikipedia language editions
+   cover each one (45–150 per theme).
+2. **Descriptions:** Wikidata's one-liners or the article's short
+   description, minus numbers ("1995 film by…", "(born 1992)") and any
+   clause with a ranking ("…, the largest in the world by area").
 3. **Chain:** six items, five rounds. An up/down pattern with 2–3 ups; then
    a random walk where each step is a **fair pair** (no ties, values within
    a ratio band, e.g. 1.12–1.9× for cities), picks leaning towards the

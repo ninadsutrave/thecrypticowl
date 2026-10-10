@@ -3,9 +3,9 @@ import { generateHigherLower } from './generator.js';
 import { reviewHigherLower } from './reviewer.js';
 
 /**
- * Higher or Lower: no AI. A theme a day (city populations, mountain
- * heights, film years…), with values from Wikidata; ten fair steps chosen
- * in code. Items rest for 60 days before they can return.
+ * Higher or Lower: no AI. A theme a day (city populations, Grammy wins,
+ * box office…), with values from Wikidata or a Wikipedia list; five fair
+ * steps chosen in code. Items rest for 60 days before they can return.
  */
 export const spec = {
   game: 'higher-lower',

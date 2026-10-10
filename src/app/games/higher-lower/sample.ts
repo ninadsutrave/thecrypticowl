@@ -1,4 +1,14 @@
-export type ValueFormat = 'count' | 'area' | 'metres' | 'kilometres';
+export type ValueFormat =
+  | 'count'
+  | 'area'
+  | 'metres'
+  | 'kilometres'
+  /** US dollars: net worth, box office, revenue. */
+  | 'usd'
+  /** Indian rupees, shown in crore: Indian box office. */
+  | 'inr'
+  /** An age in years. */
+  | 'years';
 
 export interface HigherLowerItem {
   id: string;

@@ -44,7 +44,9 @@ export function HigherLowerGame() {
             Get a majority right to solve it. One hint per game: a ballpark for the hidden{' '}
             {puzzle.noun}.
           </p>
-          <p className="text-xs">Numbers from Wikidata; each card links to its entry.</p>
+          <p className="text-xs">
+            Numbers from Wikidata and Wikipedia; each card in the final chain links to its source.
+          </p>
         </>
       }
     >

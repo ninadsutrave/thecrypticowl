@@ -2,12 +2,22 @@
 // were shut down for new keys in 2026), so each call falls back to the next
 // ID when Google answers 404 "no longer available", instead of failing the
 // day. The "-latest" aliases always point at Google's current model.
-// Current list: https://ai.google.dev/gemini-api/docs/models
-export const GEMINI_MODELS = ['gemini-3.1-pro-preview', 'gemini-pro-latest', 'gemini-flash-latest'];
-export const GEMINI_JUDGE_MODELS = [
-  'gemini-flash-latest',
+// Current list: https://ai.google.dev/gemini-api/docs/models. Checked with
+// the "Diagnose · AI models" workflow (Oct 2026): on the free tier Pro has no
+// quota, gemini-flash-latest was overloaded, and 3.6 Flash, 3 Flash preview
+// and the Flash-Lite models answered in about a second. Pro stays first so a
+// key with billing gets it; a free key skips it after one instant refusal.
+export const GEMINI_MODELS = [
+  'gemini-3.1-pro-preview',
+  'gemini-3.6-flash',
   'gemini-3-flash-preview',
-  'gemini-3.8-flash',
+  'gemini-flash-lite-latest',
+];
+// The checker uses a different model from the writer where it can.
+export const GEMINI_JUDGE_MODELS = [
+  'gemini-3-flash-preview',
+  'gemini-3.6-flash',
+  'gemini-3.5-flash-lite',
 ];
 /** First choices, for logs and single-model callers. */
 export const GEMINI_MODEL = GEMINI_MODELS[0];

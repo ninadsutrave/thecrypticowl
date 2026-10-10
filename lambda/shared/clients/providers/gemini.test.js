@@ -46,6 +46,18 @@ describe('callGemini model fallback', () => {
     expect(out).toEqual({ c: 3 });
   });
 
+  it('moves past a model that stays overloaded (503)', async () => {
+    const fetch = vi.fn(async url =>
+      String(url).includes('busy-m') ? fail(503, 'high demand') : ok('{"d":4}')
+    );
+    vi.stubGlobal('fetch', fetch);
+    vi.useFakeTimers();
+    const call = callGemini('hi', '', { type: 'OBJECT' }, ['busy-m', 'calm-m']);
+    await vi.runAllTimersAsync();
+    expect(await call).toEqual({ d: 4 });
+    vi.useRealTimers();
+  });
+
   it('does not fall back on other errors', async () => {
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue(fail(400, 'bad request')));
     await expect(callGemini('hi', '', null, ['m1-x', 'm2-x'])).rejects.toThrow(/400/);

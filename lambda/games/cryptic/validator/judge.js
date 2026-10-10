@@ -1,5 +1,25 @@
-import { buildJudgePrompt, JUDGE_SYSTEM, JUDGE_RESPONSE_SCHEMA } from '../constants/prompts.js';
-import { verifyMechanism, VERIFIED, REFUTED, letters } from './mechanics.js';
+import {
+  buildJudgePrompt,
+  buildLookupPrompt,
+  buildSolvePrompt,
+  JUDGE_RESPONSE_SCHEMA,
+  JUDGE_SYSTEM,
+  LOOKUP_SCHEMA,
+  LOOKUP_SYSTEM,
+  SOLVE_SCHEMA,
+  SOLVE_SYSTEM,
+  VERIFIABLE_TYPES,
+} from '../constants/prompts.js';
+import {
+  isChestnut,
+  letters,
+  needsLookup,
+  pieceGives,
+  PIECE_TYPES,
+  REFUTED,
+  VERIFIED,
+  verifyMechanism,
+} from './mechanics.js';
 
 /**
  * Quality threshold for shipping a clue. The judge must return score ≥ this AND
@@ -232,8 +252,40 @@ export async function judgeClue(clue, lexical, callJudge) {
   console.log(
     `[judge] Mechanical check (${lexical.type}): ${mechanical.status} — ${mechanical.detail}`
   );
+  if (!VERIFIABLE_TYPES.includes(lexical.type)) {
+    return reject(
+      `"${lexical.type}" wordplay can't be checked letter by letter, so it is never published.`,
+      'mechanical',
+      true
+    );
+  }
+  if (isChestnut(lexical.type, clue.fodder, lexical.answer)) {
+    return reject(
+      `${lexical.answer} from "${clue.fodder}" is a crossword chestnut every solver knows.`,
+      'mechanical',
+      true
+    );
+  }
 
-  // ── Stage 3 ────────────────────────────────────────────────────────────────
+  // ── Stage 3: blind checks ──────────────────────────────────────────────────
+  // The checker never sees the answer here, so it can't be talked into it.
+  let blind;
+  try {
+    blind = await blindChecks(clue, lexical, callJudge);
+  } catch (e) {
+    if (e?.quotaExhausted) throw e;
+    console.error('[judge] Blind check unavailable — rejecting clue (fail-safe):', e.message);
+    return {
+      ...reject(`Quality gate unavailable (blind check error: ${e.message}).`, 'unavailable'),
+      judgeUnavailable: true,
+    };
+  }
+  if (!blind.ok) {
+    console.log(`[judge] Blind check failed: ${blind.feedback}`);
+    return reject(blind.feedback, 'blind');
+  }
+
+  // ── Stage 4 ────────────────────────────────────────────────────────────────
   let judgeResult;
   try {
     judgeResult = await callJudge(
@@ -273,5 +325,71 @@ export async function judgeClue(clue, lexical, callJudge) {
     stage: 'judge',
     mechanicalStatus: mechanical.status,
     mechanicallyVerified: mechanical.status === VERIFIED,
+    blindVerified: true,
   };
+}
+
+/**
+ * Two calls to the checker, neither showing it the answer:
+ *
+ *   solve   — it must solve the clue cold. Nonsense wordplay ("Bob, a man
+ *             holding back" for BAMBOO) fails here, however confident the
+ *             writer's explanation.
+ *   lookup  — the definition (both, for a double definition) must really
+ *             mean the answer, and every synonym or abbreviation piece must
+ *             really stand for its letters.
+ */
+export async function blindChecks(clue, lexical, callJudge) {
+  const answer = letters(lexical.answer);
+  const n = answer.length;
+
+  const solved = await callJudge(buildSolvePrompt(clue.clue), SOLVE_SYSTEM, SOLVE_SCHEMA);
+  const guesses = (Array.isArray(solved?.answers) ? solved.answers : []).map(letters);
+  if (!guesses.slice(0, 3).includes(answer)) {
+    return {
+      ok: false,
+      feedback:
+        `A solver who wasn't told the answer couldn't get ${lexical.answer} from this clue ` +
+        `(it suggested ${guesses.length ? guesses.join(', ') : 'nothing'}). The wordplay or ` +
+        `definition doesn't work as written.`,
+    };
+  }
+
+  const definitions = [clue.definition];
+  if (lexical.type === 'double_definition') definitions.push(clue.indicator);
+  const pieces = PIECE_TYPES.has(lexical.type)
+    ? (Array.isArray(clue.letter_pieces) ? clue.letter_pieces : []).filter(p =>
+        needsLookup(lexical.type, p)
+      )
+    : [];
+  const items = [
+    ...definitions.map(phrase => ({ phrase: String(phrase ?? ''), length: n })),
+    ...pieces.map(p => ({ phrase: String(p.clue_words ?? ''), length: null })),
+  ];
+  const looked = await callJudge(buildLookupPrompt(items), LOOKUP_SYSTEM, LOOKUP_SCHEMA);
+  const found = Array.isArray(looked?.items) ? looked.items : [];
+  const candidatesFor = (phrase, i) => {
+    const byPhrase = found.find(f => letters(f?.phrase) === letters(phrase));
+    const item = byPhrase ?? found[i];
+    return (Array.isArray(item?.candidates) ? item.candidates : []).map(letters);
+  };
+
+  for (const [i, phrase] of definitions.entries()) {
+    if (!candidatesFor(phrase, i).includes(answer)) {
+      return {
+        ok: false,
+        feedback: `"${phrase}" doesn't clearly mean ${lexical.answer}: use a definition that a thesaurus would give for it.`,
+      };
+    }
+  }
+  for (const [j, p] of pieces.entries()) {
+    const candidates = candidatesFor(p.clue_words, definitions.length + j);
+    if (!pieceGives(lexical.type, p.clue_words, p.letters, candidates)) {
+      return {
+        ok: false,
+        feedback: `"${p.clue_words}" doesn't stand for ${letters(p.letters)} in standard crossword usage.`,
+      };
+    }
+  }
+  return { ok: true };
 }

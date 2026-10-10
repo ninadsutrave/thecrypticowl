@@ -7,6 +7,22 @@ vi.mock('./services/dbService.js', () => ({
 
 const { generateValidClue } = await import('./pipeline.js');
 const { getRecentUsage } = await import('./services/dbService.js');
+const { JUDGE_RESPONSE_SCHEMA, LOOKUP_SCHEMA, SOLVE_SCHEMA } =
+  await import('./constants/prompts.js');
+
+/** Every answer the fake planner proposes; a blind solver "gets" any of them. */
+const KNOWN = ['CANOE', 'DINGHY'];
+
+/** A checker that passes the blind solve and lookup, and reviews with `review`. */
+const judgeOf = review =>
+  vi.fn(async (prompt, system, schema) => {
+    if (schema === SOLVE_SCHEMA) {
+      return { answers: KNOWN.filter(a => prompt.includes(`(${a.length})`)) };
+    }
+    if (schema === LOOKUP_SCHEMA) return { items: [{ phrase: 'Small boat', candidates: KNOWN }] };
+    return review(prompt, system, schema);
+  });
+const reviewCalls = judge => judge.mock.calls.filter(c => c[2] === JUDGE_RESPONSE_SCHEMA);
 
 /**
  * The pipeline drives two AI calls with the same client: the lexical planner
@@ -70,7 +86,7 @@ afterEach(() => vi.restoreAllMocks());
 describe('generateValidClue', () => {
   it('returns the first clue the judge accepts', async () => {
     const ai = makeAI();
-    const judge = vi.fn(async () => verdict());
+    const judge = judgeOf(async () => verdict());
     const out = await generateValidClue(ai, judge, 'supabase');
 
     expect(out.clue.clue).toMatch(/Small boat/);
@@ -82,7 +98,7 @@ describe('generateValidClue', () => {
   it('feeds the judge’s rejection reason into the next attempt', async () => {
     const ai = makeAI();
     let call = 0;
-    const judge = vi.fn(async () =>
+    const judge = judgeOf(async () =>
       ++call === 1 ? verdict({ valid: false, feedback: 'Surface is stilted.' }) : verdict()
     );
 
@@ -95,9 +111,9 @@ describe('generateValidClue', () => {
   });
 
   it('abandons the word immediately on rejectLexical instead of retrying it', async () => {
-    const ai = makeAI({ answers: ['CANOE', 'DRAWER'] });
+    const ai = makeAI({ answers: ['CANOE', 'DINGHY'] });
     let call = 0;
-    const judge = vi.fn(async () =>
+    const judge = judgeOf(async () =>
       ++call === 1
         ? verdict({ valid: false, reject_lexical: true, feedback: 'Unclueable.' })
         : verdict()
@@ -110,9 +126,9 @@ describe('generateValidClue', () => {
   });
 
   it('feeds abandoned words back into the planner so they are not re-proposed', async () => {
-    const ai = makeAI({ answers: ['CANOE', 'DRAWER'] });
+    const ai = makeAI({ answers: ['CANOE', 'DINGHY'] });
     let call = 0;
-    const judge = vi.fn(async () =>
+    const judge = judgeOf(async () =>
       ++call === 1 ? verdict({ valid: false, reject_lexical: true, feedback: 'no' }) : verdict()
     );
 
@@ -131,13 +147,13 @@ describe('generateValidClue', () => {
       avoidAnswers: [],
       knownAnswers: new Set(['CANOE']),
     };
-    const ai = makeAI({ answers: ['CANOE', 'DRAWER'] });
-    const judge = vi.fn(async () => verdict());
+    const ai = makeAI({ answers: ['CANOE', 'DINGHY'] });
+    const judge = judgeOf(async () => verdict());
 
     const out = await generateValidClue(ai, judge, 'supabase');
     expect(out.stats.duplicateAnswers).toBe(1);
     expect(out.stats.clueGenerations).toBe(1);
-    expect(judge).toHaveBeenCalledOnce();
+    expect(reviewCalls(judge)).toHaveLength(1);
   });
 
   it('aborts after three consecutive judge outages rather than draining the budget', async () => {
@@ -152,7 +168,7 @@ describe('generateValidClue', () => {
   it('recovers from a transient judge outage', async () => {
     const ai = makeAI();
     let call = 0;
-    const judge = vi.fn(async () => {
+    const judge = judgeOf(async () => {
       if (++call === 1) throw new Error('blip');
       return verdict();
     });
@@ -174,7 +190,7 @@ describe('generateValidClue', () => {
     getRecentUsage.mockRejectedValueOnce(new Error('db down'));
     const out = await generateValidClue(
       makeAI(),
-      vi.fn(async () => verdict()),
+      judgeOf(async () => verdict()),
       'supabase'
     );
     expect(out.verdict.valid).toBe(true);
@@ -182,7 +198,7 @@ describe('generateValidClue', () => {
 
   it('reports why it gave up, with per-stage counts', async () => {
     const ai = makeAI();
-    const judge = vi.fn(async () => verdict({ valid: false, feedback: 'weak surface' }));
+    const judge = judgeOf(async () => verdict({ valid: false, feedback: 'weak surface' }));
     await expect(generateValidClue(ai, judge, 'supabase')).rejects.toThrow(
       /Failed to generate a valid clue after \d+ attempts/
     );
@@ -210,7 +226,7 @@ describe('generateValidClue', () => {
         ],
       };
     });
-    const judge = vi.fn(async () => verdict());
+    const judge = judgeOf(async () => verdict());
 
     await expect(generateValidClue(ai, judge, 'supabase')).rejects.toThrow(/Failed to generate/);
     expect(judge).not.toHaveBeenCalled();

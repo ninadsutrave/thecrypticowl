@@ -442,3 +442,147 @@ function verifyLiteral(type, clue, answer) {
       );
   }
 }
+
+// ─── CHESTNUTS ────────────────────────────────────────────────────────────────
+
+/**
+ * Letter sets every crossword solver has seen clued a hundred times. An
+ * anagram or reversal between two words of the same group is a chestnut
+ * (REWARD/DRAWER, LISTEN/SILENT), however the surface is dressed up.
+ */
+const CHESTNUT_GROUPS = [
+  ['REWARD', 'DRAWER', 'WARDER', 'REDRAW'],
+  ['LISTEN', 'SILENT', 'ENLIST', 'TINSEL', 'INLETS'],
+  ['STONE', 'TONES', 'NOTES', 'ONSET', 'SETON'],
+  ['SPOTS', 'STOPS', 'POSTS', 'POTS', 'TOPS', 'SPOT', 'STOP', 'POST', 'OPTS'],
+  ['EVIL', 'LIVE', 'VILE', 'VEIL', 'LEVI'],
+  ['DIAPER', 'REPAID', 'PAIRED'],
+  ['STRESSED', 'DESSERTS'],
+  ['DEVIL', 'LIVED'],
+  ['GOD', 'DOG'],
+  ['STAR', 'RATS', 'ARTS', 'TSAR', 'TARS'],
+  ['PART', 'TRAP', 'RAPT', 'PRAT'],
+  ['LOOP', 'POOL', 'POLO'],
+  ['STRAP', 'PARTS', 'TRAPS', 'SPRAT', 'PRATS'],
+  ['ALERT', 'ALTER', 'LATER'],
+  ['ALERTS', 'ALTERS', 'STALER', 'SLATER'],
+  ['EARTH', 'HEART', 'HATER'],
+  ['DORMITORY', 'DIRTYROOM'],
+  ['ASTRONOMER', 'MOONSTARER'],
+  ['ELBOW', 'BELOW', 'BOWEL'],
+  ['NIGHT', 'THING'],
+  ['SAVE', 'VASE'],
+  ['NAME', 'MANE', 'MEAN', 'AMEN'],
+  ['RACE', 'CARE', 'ACRE'],
+  ['TEAM', 'MEAT', 'MATE', 'TAME'],
+  ['DIARY', 'DAIRY'],
+];
+const CHESTNUT_OF = new Map(CHESTNUT_GROUPS.flatMap((g, i) => g.map(w => [w, i])));
+
+/** Whether this answer/fodder pair is a chestnut. */
+export function isChestnut(type, fodder, answer) {
+  if (type !== 'anagram' && type !== 'reversal') return false;
+  const a = CHESTNUT_OF.get(letters(answer));
+  const f = CHESTNUT_OF.get(letters(fodder));
+  return a !== undefined && a === f;
+}
+
+// ─── WHERE A PIECE'S LETTERS COME FROM ───────────────────────────────────────
+
+/** Standard British crossword abbreviations, checked without a model call. */
+export const ABBREVIATIONS = {
+  about: ['C', 'CA', 'RE'],
+  account: ['AC'],
+  american: ['A', 'AM', 'US'],
+  and: ['N'],
+  article: ['A', 'AN', 'THE'],
+  bachelor: ['B', 'BA'],
+  bishop: ['B'],
+  black: ['B'],
+  book: ['B'],
+  born: ['B', 'NEE'],
+  caught: ['C'],
+  church: ['CE', 'CH'],
+  doctor: ['DR', 'MO', 'MB', 'GP'],
+  east: ['E'],
+  english: ['E', 'ENG'],
+  european: ['E'],
+  female: ['F'],
+  fellow: ['F'],
+  first: ['I', 'A'],
+  french: ['F', 'FR'],
+  gold: ['AU', 'OR'],
+  hard: ['H'],
+  hospital: ['H'],
+  hot: ['H'],
+  husband: ['H'],
+  is: ['S'],
+  king: ['K', 'R', 'REX'],
+  large: ['L'],
+  learner: ['L'],
+  left: ['L'],
+  love: ['O'],
+  male: ['M'],
+  married: ['M'],
+  nothing: ['O', 'NIL'],
+  new: ['N'],
+  north: ['N'],
+  note: ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'TE', 'DO', 'RE', 'MI', 'FA', 'SO', 'LA'],
+  one: ['I', 'A', 'AN', 'UN'],
+  over: ['O'],
+  quiet: ['P', 'SH'],
+  queen: ['Q', 'R', 'ER', 'QU'],
+  right: ['R', 'RT'],
+  river: ['R'],
+  sailor: ['AB', 'TAR', 'SALT'],
+  small: ['S'],
+  soldier: ['GI', 'ANT'],
+  soldiers: ['RE', 'OR', 'TA'],
+  son: ['S'],
+  south: ['S'],
+  street: ['ST'],
+  the: ['T'],
+  time: ['T'],
+  very: ['V'],
+  west: ['W'],
+  with: ['W'],
+  worker: ['ANT', 'BEE', 'HAND'],
+  zero: ['O'],
+};
+
+const reverse = s => s.split('').reverse().join('');
+
+/** Removing one contiguous run of 1–2 letters from `from` leaves `to`. */
+function shortenedTo(from, to) {
+  if (from.length - to.length < 1 || from.length - to.length > 2) return false;
+  const k = from.length - to.length;
+  for (let i = 0; i + k <= from.length; i++) {
+    if (from.slice(0, i) + from.slice(i + k) === to) return true;
+  }
+  return false;
+}
+
+/**
+ * Can `words` give `given` in a clue of this type? Literally (as written,
+ * reversed, or for a deletion shortened), by a standard abbreviation, or by
+ * one of `candidates` (a blind lookup's synonyms for `words`), again
+ * reversed or shortened where the mechanism allows.
+ */
+export function pieceGives(type, words, given, candidates = []) {
+  const w = letters(words);
+  const g = letters(given);
+  if (!g) return false;
+  const options = [
+    w,
+    ...(ABBREVIATIONS[String(words).trim().toLowerCase()] ?? []),
+    ...candidates.map(letters),
+  ].filter(Boolean);
+  return options.some(
+    c => c === g || reverse(c) === g || (type === 'deletion' && shortenedTo(c, g))
+  );
+}
+
+/** A piece whose letters are only explained by a synonym, so needs a lookup. */
+export function needsLookup(type, piece) {
+  return !pieceGives(type, piece?.clue_words, piece?.letters);
+}

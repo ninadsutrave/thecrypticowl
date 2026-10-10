@@ -160,6 +160,20 @@ describe('createGameHandler', () => {
     expect(store.rows[0].payload).toEqual({ items: [1, 2] });
   });
 
+  it("re-reviews a judge's trimmed payload and never stores one that fails", async () => {
+    const { handler, store } = make({
+      maxAttempts: 2,
+      generate: async () => ({ payload: { items: [1, 2, 3] } }),
+      review: c => ({
+        ok: c.payload.items.length >= 2,
+        errors: c.payload.items.length >= 2 ? [] : ['too few items'],
+      }),
+      judge: async () => ({ ok: true, payload: { items: [1] } }),
+    });
+    await handler({ date: '2026-10-10' });
+    expect(store.rows).toHaveLength(0);
+  });
+
   it('treats a crashing judge as a rejection, not a pass', async () => {
     const { handler, store } = make({
       maxAttempts: 2,

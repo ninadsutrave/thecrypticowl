@@ -26,11 +26,18 @@ jobs:
       - name: Generate
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
           CONTACT_EMAIL: ${{ vars.CONTACT_EMAIL }}
           GAMES: ${{ inputs.games }}
         run: |
+          # Same writers and checker as production (deploy-lambda-*.yml).
           for g in $GAMES; do
+            case "$g" in
+              what-am-i) model=qwen/qwen3.8-27b ;;
+              *) model=openai/gpt-oss-120b ;;
+            esac
             echo "::group::$g"
-            node lambda/scripts/preview.mjs "$g" || echo "!! $g exited with an error"
+            AI_PROVIDER=groq JUDGE_PROVIDER=gemini GROQ_MODEL=$model \
+              node lambda/scripts/preview.mjs "$g" || echo "!! $g exited with an error"
             echo "::endgroup::"
           done

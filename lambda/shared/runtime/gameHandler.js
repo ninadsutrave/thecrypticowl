@@ -312,6 +312,18 @@ export function createGameHandler(spec, deps = {}) {
         }
       }
 
+      // A judge that rewrites the puzzle hands back something the review
+      // never saw: check it again rather than store it unreviewed.
+      if (verdict.payload) {
+        const again = spec.review({ ...candidate, payload: verdict.payload }, ctx);
+        if (!again.ok) {
+          lastRejection = `review after judge: ${again.errors.join('; ')}`;
+          console.log(`[${game}] ${date} attempt ${attempt} rejected — ${lastRejection}`);
+          feedback = again.errors.join('\n');
+          continue;
+        }
+      }
+
       return {
         ok: true,
         attempts: attempt,

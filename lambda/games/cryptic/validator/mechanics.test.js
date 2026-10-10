@@ -18,6 +18,8 @@ import {
   verifyDeletion,
   verifyDoubleDefinition,
   verifyMechanism,
+  pieceGives,
+  isChestnut,
 } from './mechanics.js';
 
 describe('helpers', () => {
@@ -400,5 +402,27 @@ describe('literal fodder must be in the clue', () => {
       'PLASTER'
     );
     expect(r.status).toBe(REFUTED);
+  });
+});
+
+describe('pieceGives and chestnuts', () => {
+  it('accepts literal, reversed, abbreviated and looked-up pieces', () => {
+    expect(pieceGives('charade', 'pig', 'PIG')).toBe(true);
+    expect(pieceGives('container', 'car', 'RAC')).toBe(true);
+    expect(pieceGives('charade', 'doctor', 'DR')).toBe(true);
+    expect(pieceGives('charade', 'long period', 'EON', ['AGE', 'EON', 'ERA'])).toBe(true);
+    expect(pieceGives('deletion', 'monster', 'GRE', ['OGRE'])).toBe(true);
+  });
+
+  it('rejects a piece nothing explains', () => {
+    expect(pieceGives('charade', 'a man', 'AM', ['HE', 'GUY'])).toBe(false);
+    expect(pieceGives('charade', 'monster', 'GRE', ['OGRE'])).toBe(false);
+  });
+
+  it('flags chestnuts only between the same letter group', () => {
+    expect(isChestnut('reversal', 'reward', 'DRAWER')).toBe(true);
+    expect(isChestnut('anagram', 'silent', 'LISTEN')).toBe(true);
+    expect(isChestnut('anagram', 'among', 'MANGO')).toBe(false);
+    expect(isChestnut('charade', 'reward', 'DRAWER')).toBe(false);
   });
 });

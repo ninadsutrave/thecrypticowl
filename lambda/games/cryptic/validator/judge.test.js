@@ -1,5 +1,21 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { judgeClue, structuralErrors, MIN_QUALITY_SCORE } from './judge.js';
+import { JUDGE_RESPONSE_SCHEMA, LOOKUP_SCHEMA, SOLVE_SCHEMA } from '../constants/prompts.js';
+
+/**
+ * A checker that solves CANOE blind and confirms "Small boat" means it, and
+ * hands the final quality review to `review`. Override `solve` or `lookup`
+ * to make a blind check fail.
+ */
+const checker = (review, { solve = ['CANOE'], lookup = ['CANOE', 'KAYAK'] } = {}) =>
+  vi.fn(async (_prompt, _system, schema) => {
+    if (schema === SOLVE_SCHEMA) return { answers: solve };
+    if (schema === LOOKUP_SCHEMA) return { items: [{ phrase: 'Small boat', candidates: lookup }] };
+    return review();
+  });
+
+/** The calls that reached the final quality review. */
+const reviewCalls = judge => judge.mock.calls.filter(c => c[2] === JUDGE_RESPONSE_SCHEMA);
 
 /** A structurally valid anagram clue whose arithmetic genuinely works. */
 const goodClue = (over = {}) => ({
@@ -28,7 +44,7 @@ const lexical = (over = {}) => ({
 });
 
 /** Judge that always approves — isolates the deterministic gates. */
-const approvingJudge = vi.fn(async () => ({
+const approvingJudge = checker(() => ({
   valid: true,
   score: 9,
   wordplay_correct: true,
@@ -249,7 +265,53 @@ describe('judgeClue', () => {
     expect(v.valid).toBe(true);
     expect(v.mechanicallyVerified).toBe(true);
     expect(v.stage).toBe('judge');
-    expect(approvingJudge).toHaveBeenCalledOnce();
+    expect(v.blindVerified).toBe(true);
+    expect(reviewCalls(approvingJudge)).toHaveLength(1);
+  });
+
+  it('rejects a clue a blind solver cannot crack, before the quality review', async () => {
+    const judge = checker(() => ({ valid: true, score: 9, wordplay_correct: true }), {
+      solve: ['KAYAK', 'SKIFF'],
+    });
+    const v = await judgeClue(goodClue(), lexical(), judge);
+    expect(v.valid).toBe(false);
+    expect(v.stage).toBe('blind');
+    expect(reviewCalls(judge)).toHaveLength(0);
+  });
+
+  it('rejects a definition that does not mean the answer', async () => {
+    const judge = checker(() => ({ valid: true, score: 9, wordplay_correct: true }), {
+      lookup: ['KAYAK', 'DINGHY'],
+    });
+    const v = await judgeClue(goodClue(), lexical(), judge);
+    expect(v.valid).toBe(false);
+    expect(v.feedback).toMatch(/doesn't clearly mean CANOE/);
+  });
+
+  it('rejects a chestnut without asking any model', async () => {
+    const v = await judgeClue(
+      goodClue({
+        clue: 'Chest of reward, back (6)',
+        definition: 'Chest',
+        indicator: 'back',
+        fodder: 'reward',
+        indicator_type: 'reversal',
+        clue_parts: [
+          { text: 'Chest', type: 'definition' },
+          { text: ' of ', type: null },
+          { text: 'reward', type: 'fodder' },
+          { text: ', ', type: null },
+          { text: 'back', type: 'indicator', indicator_subtype: 'reversal' },
+          { text: ' (6)', type: null },
+        ],
+      }),
+      lexical({ answer: 'DRAWER', type: 'reversal', definition: 'Chest' }),
+      approvingJudge
+    );
+    expect(v.valid).toBe(false);
+    expect(v.feedback).toMatch(/chestnut/);
+    expect(v.rejectLexical).toBe(true);
+    expect(approvingJudge).not.toHaveBeenCalled();
   });
 
   it('rejects on structural failure WITHOUT calling the judge', async () => {
@@ -288,16 +350,16 @@ describe('judgeClue', () => {
 
   it('tells the judge when the arithmetic is already confirmed', async () => {
     await judgeClue(goodClue(), lexical(), approvingJudge);
-    const prompt = approvingJudge.mock.calls[0][0];
+    const prompt = reviewCalls(approvingJudge)[0][0];
     expect(prompt).toMatch(/MECHANICAL CHECK — PASSED/);
     expect(prompt).toMatch(/Do NOT set wordplay_correct = false on arithmetic grounds/);
   });
 
-  it('tells the judge exactly what to check when arithmetic is inconclusive', async () => {
-    // Compound wordplay combines mechanisms, so the arithmetic is inconclusive.
-    await judgeClue(goodClue(), lexical({ type: 'compound' }), approvingJudge);
-    const prompt = approvingJudge.mock.calls[0][0];
-    expect(prompt).toMatch(/MECHANICAL CHECK — INCONCLUSIVE/);
+  it('never publishes wordplay code cannot check (compound, homophone…)', async () => {
+    const v = await judgeClue(goodClue(), lexical({ type: 'compound' }), approvingJudge);
+    expect(v.valid).toBe(false);
+    expect(v.rejectLexical).toBe(true);
+    expect(approvingJudge).not.toHaveBeenCalled();
   });
 
   it.each([
@@ -306,7 +368,7 @@ describe('judgeClue', () => {
     ['score below threshold', { score: MIN_QUALITY_SCORE - 1 }],
     ['score is not a number', { score: null }],
   ])('rejects when %s', async (_label, over) => {
-    const judge = vi.fn(async () => ({
+    const judge = checker(() => ({
       valid: true,
       score: 9,
       wordplay_correct: true,
@@ -321,7 +383,7 @@ describe('judgeClue', () => {
   });
 
   it('accepts exactly at the threshold', async () => {
-    const judge = vi.fn(async () => ({
+    const judge = checker(() => ({
       valid: true,
       score: MIN_QUALITY_SCORE,
       wordplay_correct: true,
@@ -353,7 +415,7 @@ describe('judgeClue', () => {
   });
 
   it('passes through the rejectLexical signal', async () => {
-    const judge = vi.fn(async () => ({
+    const judge = checker(() => ({
       valid: false,
       score: 2,
       wordplay_correct: false,

@@ -23,6 +23,24 @@ export const WORDPLAY_TYPES = [
   'compound',
 ];
 
+/**
+ * The mechanisms the planner may choose: the ones whose wordplay code can
+ * check letter by letter. Homophones, spoonerisms, cryptic definitions,
+ * &lits and compounds can't be verified, so they are never planned.
+ */
+export const VERIFIABLE_TYPES = [
+  'anagram',
+  'reversal',
+  'container',
+  'hidden',
+  'deletion',
+  'initial_letters',
+  'final_letters',
+  'alternating_letters',
+  'charade',
+  'double_definition',
+];
+
 // Indicator sub-type identifiers (mirror clue_indicator_types in 001_initial.sql).
 // An empty string signals "no classifiable single indicator" — valid for charade,
 // double_definition, cryptic_definition, andlit, and compound clues.
@@ -50,7 +68,7 @@ export const LEXICAL_RESPONSE_SCHEMA = {
   properties: {
     answer: { type: 'STRING' },
     definition: { type: 'STRING' },
-    type: { type: 'STRING', enum: WORDPLAY_TYPES },
+    type: { type: 'STRING', enum: VERIFIABLE_TYPES },
     difficulty: { type: 'STRING', enum: ['easy', 'medium', 'hard'] },
   },
   required: ['answer', 'definition', 'type', 'difficulty'],
@@ -135,7 +153,7 @@ Your job is to select a single English word that is:
 - Amenable to a specific cryptic mechanism that produces a fair, elegant clue
 - Varied — cryptic crosswords use the full range of mechanisms, not just anagrams
 
-Available mechanisms: ${WORDPLAY_TYPES.join(', ')}
+Available mechanisms: ${VERIFIABLE_TYPES.join(', ')}
 
 MECHANISM SELECTION GUIDANCE:
 - anagram: word has an anagram that is itself a common word (ideal) or a recognisable phrase
@@ -146,13 +164,8 @@ MECHANISM SELECTION GUIDANCE:
 - initial_letters: the answer is spelled by taking the first letter of each consecutive word in a phrase (acrostic)
 - final_letters: the answer is spelled by taking the last letter of each consecutive word in a phrase
 - alternating_letters: the answer is spelled by taking alternate letters (odd or even positions) from a word or phrase
-- spoonerism: swapping the initial sounds of two words in the fodder produces the answer (rare, advanced)
 - charade: two or more common words/abbreviations join consecutively to form the answer
-- homophone: the answer sounds like another word with a clear, unambiguous pronunciation
 - double_definition: the answer has two completely different meanings, each usable as a definition
-- cryptic_definition: the answer has a single definition phrased so cleverly or obliquely it reads like a riddle
-- andlit: the entire clue simultaneously serves as both the definition AND the wordplay (rare, advanced)
-- compound: two or more of the above mechanisms combine to produce the answer
 
 ${JSON_ONLY_RULE}`;
 
@@ -334,7 +347,7 @@ FIELD INSTRUCTIONS:
 - indicator_type: one of: anagram, reversal, container, hidden, deletion, homophone, initial_letters, final_letters, alternating_letters, spoonerism, or "none" (for charade, double_definition, cryptic_definition, andlit, or compound with no single dominant indicator)
 - fodder: the raw material being manipulated; for double_definition/cryptic_definition/andlit use empty string ""
 - wordplay_summary: one concise line explaining the wordplay (e.g. "Anagram of OCEAN = CANOE")
-- letter_pieces: REQUIRED for charade, container, reversal and deletion (empty array [] otherwise). One entry per piece of wordplay: clue_words = the exact words from the clue it comes from; letters = the letters that piece puts into the answer, after its own operation (already reversed, shortened or abbreviated). Code checks that the clue words appear in the clue and that the pieces build the answer exactly (in order for a charade; one piece wrapped around the others for a container), and rejects the clue otherwise. Examples: charade "Vehicle and favourite animal on the floor (6)" for CARPET → [{"clue_words":"Vehicle","letters":"CAR"},{"clue_words":"favourite animal","letters":"PET"}]; container "Swindle, with man inside cat (5)" for CHEAT → [{"clue_words":"cat","letters":"CAT"},{"clue_words":"man","letters":"HE"}]. Each piece must be a standard British cryptic equivalence (doctor → DR, love → O, worker → ANT/BEE, sailor → AB/TAR).
+- letter_pieces: REQUIRED for charade, container, reversal and deletion (empty array [] otherwise). One entry per piece of wordplay: clue_words = the exact words from the clue that stand for the letters (never the indicator: for "Car returned" use "Car"); letters = the letters that piece puts into the answer, after its own operation (already reversed, shortened or abbreviated). Code checks that the clue words appear in the clue and that the pieces build the answer exactly (in order for a charade; one piece wrapped around the others for a container), and rejects the clue otherwise. Examples: charade "Vehicle and favourite animal on the floor (6)" for CARPET → [{"clue_words":"Vehicle","letters":"CAR"},{"clue_words":"favourite animal","letters":"PET"}]; container "Swindle, with man inside cat (5)" for CHEAT → [{"clue_words":"cat","letters":"CAT"},{"clue_words":"man","letters":"HE"}]. Each piece must be a standard British cryptic equivalence (doctor → DR, love → O, worker → ANT/BEE, sailor → AB/TAR).
 - clue_parts: array of every segment of the clue with no gaps — segments must join to exactly reproduce the clue string (do NOT include a letter-count segment)
 - For each clue_parts item with type "indicator", ALSO set indicator_subtype to the specific sub-type (anagram/reversal/container/hidden/deletion/homophone/initial_letters/final_letters/alternating_letters/spoonerism). This is MANDATORY for compound clues that contain multiple indicators of different sub-types — each indicator part must carry its own indicator_subtype so the Hints UI can explain each trick separately. Omit indicator_subtype on non-indicator parts.`;
 
@@ -507,4 +520,53 @@ FODDER: "${clue.fodder || '(none)'}"
 WORDPLAY EXPLANATION: "${clue.wordplay_summary}"${piecesLine(clue)}${mechanicalNote}
 
 Check every criterion and return your verdict as JSON.`;
+}
+
+// ─── BLIND CHECKS ─────────────────────────────────────────────────────────────
+// Run by the checker model without ever seeing the answer, so it cannot be
+// talked into agreeing with the writer.
+
+export const SOLVE_SYSTEM = `You are an expert solver of British cryptic crosswords (Times, Guardian, Telegraph). You solve honestly: if the wordplay does not work, you do not force an answer.`;
+
+export const SOLVE_SCHEMA = {
+  type: 'OBJECT',
+  properties: {
+    answers: { type: 'ARRAY', items: { type: 'STRING' } },
+  },
+  required: ['answers'],
+};
+
+export function buildSolvePrompt(clueText) {
+  return `Solve this British cryptic clue. The number in brackets is the answer's letter count.
+
+CLUE: ${clueText}
+
+Return up to three candidate answers, best first, each of exactly that many letters. Only include an answer if both the definition and the wordplay support it. If nothing works, return an empty list.`;
+}
+
+export const LOOKUP_SYSTEM = `You are a British cryptic crossword reference: a thesaurus that also knows the standard crossword abbreviations (doctor = DR or MO or MB, sailor = AB or TAR, love = O, about = C or CA or RE, river = R, king = K or R or REX, and so on).`;
+
+export const LOOKUP_SCHEMA = {
+  type: 'OBJECT',
+  properties: {
+    items: {
+      type: 'ARRAY',
+      items: {
+        type: 'OBJECT',
+        properties: {
+          phrase: { type: 'STRING' },
+          candidates: { type: 'ARRAY', items: { type: 'STRING' } },
+        },
+        required: ['phrase', 'candidates'],
+      },
+    },
+  },
+  required: ['items'],
+};
+
+/** @param {{ phrase: string, length: number|null }[]} items */
+export function buildLookupPrompt(items) {
+  return `For each phrase, list up to 20 words or standard crossword abbreviations that it can mean or stand for in a British cryptic crossword: synonyms, examples, and abbreviations. Where a letter count is given, list only words of exactly that many letters. Return one item per phrase, in the same order, with the phrase copied exactly.
+
+${items.map((it, i) => `${i + 1}. "${it.phrase}"${it.length ? ` (${it.length} letters)` : ''}`).join('\n')}`;
 }

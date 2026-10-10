@@ -157,11 +157,14 @@ describe('writeToDB', () => {
     ],
   };
   const verdict = {
+    valid: true,
     score: 9,
     surfaceQuality: 5,
     wordplayCorrect: true,
     indicatorFair: true,
     mechanicallyVerified: true,
+    mechanicalStatus: 'verified',
+    blindVerified: true,
   };
 
   const happyScript = (over = {}) => ({
@@ -224,6 +227,19 @@ describe('writeToDB', () => {
     const res = await writeToDB(lexical, clue, verdict, 'gemini', 'supabase');
     expect(res.date).toBe(day(1));
     expect(fake.current.calls.inserts.daily_puzzles[0].date).toBe(day(1));
+  });
+
+  it.each([
+    [{ valid: false }, /did not accept/],
+    [{ wordplayCorrect: false }, /wordplay/],
+    [{ mechanicalStatus: 'refuted' }, /letters/],
+    [{ blindVerified: undefined }, /blind/],
+  ])('refuses to store a clue that missed a gate (%o)', async (over, why) => {
+    fake.current = makeFakeDb(happyScript());
+    await expect(
+      writeToDB(lexical, clue, { ...verdict, ...over }, 'gemini', 'supabase')
+    ).rejects.toThrow(why);
+    expect(fake.current.calls.inserts.clues).toBeUndefined();
   });
 
   it('skips when a puzzle already exists for the target date', async () => {

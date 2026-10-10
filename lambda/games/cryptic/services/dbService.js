@@ -134,7 +134,21 @@ export async function getRecentUsage(dbProvider) {
  * @param {string} aiProvider
  * @param {string} dbProvider
  */
+/** Why a verdict may not be published, or null when it may. */
+export function unpublishable(verdict) {
+  if (!verdict || verdict.valid !== true) return 'the checker did not accept it';
+  if (verdict.wordplayCorrect !== true) return 'the wordplay was not confirmed';
+  if (verdict.mechanicalStatus === 'refuted') return 'the letters do not add up';
+  if (verdict.blindVerified !== true) return 'it did not pass the blind solve and lookup';
+  return null;
+}
+
 export async function writeToDB(lexical, clue, verdict = {}, aiProvider, dbProvider = 'supabase') {
+  // Last line of defence: only a clue that passed every gate is stored, even
+  // if a caller forgets to check the verdict.
+  const refusal = unpublishable(verdict);
+  if (refusal) throw new Error(`Refusing to store "${lexical?.answer}": ${refusal}`);
+
   const db = getDBClient(dbProvider);
   const authorId = authorIdFor(aiProvider);
   const hints = constructHints(lexical, clue);

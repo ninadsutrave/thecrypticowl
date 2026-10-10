@@ -400,10 +400,14 @@ export function verifyPieces(type, clue, answer) {
  */
 export function verifyMechanism(type, clue, answer) {
   const literal = verifyLiteral(type, clue, answer);
-  if (literal.status === UNVERIFIABLE && PIECE_TYPES.has(type)) {
-    return verifyPieces(type, clue, answer);
-  }
-  return literal;
+  if (!PIECE_TYPES.has(type)) return literal;
+  // Literal fodder only proves anything if it is really in the clue: a
+  // "reversal" of RETSALP for PLASTER passed when nothing checked that.
+  const inClue = splitFodderParts(clue.fodder).every(part =>
+    letters(clue.clue).includes(letters(part))
+  );
+  if (literal.status === VERIFIED && inClue) return literal;
+  return verifyPieces(type, clue, answer);
 }
 
 function verifyLiteral(type, clue, answer) {

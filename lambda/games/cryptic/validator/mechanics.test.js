@@ -276,7 +276,10 @@ describe('verifyMechanism dispatch', () => {
 
   it('routes each mechanism to its verifier', () => {
     expect(verifyMechanism('anagram', clue(), 'CANOE').status).toBe(VERIFIED);
-    expect(verifyMechanism('reversal', clue({ fodder: 'REWARD' }), 'DRAWER').status).toBe(VERIFIED);
+    expect(
+      verifyMechanism('reversal', clue({ clue: 'Reward returned (6)', fodder: 'REWARD' }), 'DRAWER')
+        .status
+    ).toBe(VERIFIED);
     expect(
       verifyMechanism('hidden', clue({ clue: 'Snake in laser pentagram (7)' }), 'SERPENT').status
     ).toBe(VERIFIED);
@@ -287,13 +290,16 @@ describe('verifyMechanism dispatch', () => {
         'SPEAR'
       ).status
     ).toBe(VERIFIED);
-    expect(verifyMechanism('charade', clue({ fodder: 'CAR + PET' }), 'CARPET').status).toBe(
-      VERIFIED
-    );
-    expect(verifyMechanism('container', clue({ fodder: 'SE + CAR' }), 'SCARE').status).toBe(
-      VERIFIED
-    );
-    expect(verifyMechanism('deletion', clue({ fodder: 'BRANCH' }), 'RANCH').status).toBe(VERIFIED);
+    expect(
+      verifyMechanism('charade', clue({ clue: 'Car, pet (6)', fodder: 'CAR + PET' }), 'CARPET')
+        .status
+    ).toBe(VERIFIED);
+    expect(
+      verifyMechanism('container', clue({ clue: 'Se car (5)', fodder: 'SE + CAR' }), 'SCARE').status
+    ).toBe(VERIFIED);
+    expect(
+      verifyMechanism('deletion', clue({ clue: 'Branch (5)', fodder: 'BRANCH' }), 'RANCH').status
+    ).toBe(VERIFIED);
   });
 
   it.each(['homophone', 'spoonerism', 'cryptic_definition', 'andlit', 'compound'])(
@@ -377,7 +383,22 @@ describe('verifyPieces', () => {
   });
 
   it('still verifies literal fodder without pieces', () => {
-    const r = verifyMechanism('reversal', { clue: 'x', fodder: 'reward' }, 'DRAWER');
+    const r = verifyMechanism(
+      'reversal',
+      { clue: 'Reward returned (6)', fodder: 'reward' },
+      'DRAWER'
+    );
     expect(r.status).toBe(VERIFIED);
+  });
+});
+
+describe('literal fodder must be in the clue', () => {
+  it('refutes PLASTER from a reversal of letters the clue does not contain', () => {
+    const r = verifyMechanism(
+      'reversal',
+      { clue: 'Return large set back for bandage (7)', fodder: 'RETSALP' },
+      'PLASTER'
+    );
+    expect(r.status).toBe(REFUTED);
   });
 });

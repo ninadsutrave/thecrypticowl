@@ -32,8 +32,8 @@ export function getSlitherlinkTutorial(): TutorialStep[] {
       body: (
         <p>
           Each number says how many of its four sides the loop uses: this 3 uses three, so one side
-          is crossed out. A number turns green when it's exactly right, red if it has too many. Drag
-          through the dots to draw; tap a side to cross it out.
+          is crossed out. A number turns green when it's exactly right, red if it has too many.
+          Swipe through the dots to draw; tap between two dots to cross that side out.
         </p>
       ),
     },

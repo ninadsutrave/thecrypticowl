@@ -60,8 +60,8 @@ export function SlitherlinkGame() {
             outwards from there.
           </p>
           <p>
-            Drag through the dots to draw; drag back to undo a stretch. Tap a side to cycle line →
-            cross (a reminder it's empty) → nothing.
+            Swipe through the dots to draw; swipe back to undo a stretch. Tap between two dots to
+            cross that side out (a reminder it's empty); tap again to clear it.
           </p>
           <p>
             Keyboard: arrows move, Shift + arrow draws or erases. A hint fixes a wrong line, or
@@ -227,9 +227,10 @@ function SlitherBoard({ puzzle, api }: { puzzle: SlitherlinkPuzzle; api: PlayApi
     if (!g.dragging) {
       const edge = nearestEdge(grid, g.start.x, g.start.y);
       if (edge === null) return;
+      // A tap only crosses out (or clears a cross): lines are drawn by
+      // swiping, so a stray tap never adds one. Tapping a line crosses it.
       const next = [...g.before];
-      next[edge] = ((next[edge] + 1) % 3) as Mark;
-      if (next[edge] === LINE) grow(edge, grid.ends[edge][0]);
+      next[edge] = next[edge] === CROSS ? EMPTY : CROSS;
       finishWith(next, g.before);
       return;
     }

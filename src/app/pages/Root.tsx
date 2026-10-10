@@ -506,13 +506,16 @@ export function Root() {
           </div>
 
           <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2">
-            <NavLink
-              to="/about#suggest"
-              className="text-sm font-semibold hover:underline no-underline"
-              style={{ color: T.brand }}
-            >
-              Suggest a puzzle
-            </NavLink>
+            {/* Not on the home page: it keeps the first screen about today's puzzles. */}
+            {location.pathname !== '/' && (
+              <NavLink
+                to="/about#suggest"
+                className="text-sm font-semibold hover:underline no-underline"
+                style={{ color: T.brand }}
+              >
+                Suggest a puzzle
+              </NavLink>
+            )}
             <NavLink
               to="/privacy"
               className="text-sm font-semibold hover:underline no-underline"

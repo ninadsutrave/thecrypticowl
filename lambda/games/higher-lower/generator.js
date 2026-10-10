@@ -1,5 +1,6 @@
 import { fetchJson } from '../../shared/runtime/http.js';
-import { themeFor } from './themes.js';
+import { INDIA_THEMES, THEMES, themeFor } from './themes.js';
+import { isIndiaDay } from '../../shared/runtime/india.js';
 
 const SPARQL = 'https://query.wikidata.org/sparql';
 export const ROUNDS = 5;
@@ -105,9 +106,10 @@ export function buildChain(theme, pool, rng, pattern) {
 const dayNumber = date => Math.floor(Date.parse(`${date}T00:00:00Z`) / 86_400_000);
 
 export async function generateHigherLower(ctx, deps = {}) {
-  // The day's theme; a later attempt moves to the next one, in case a
-  // query is failing today.
-  const theme = themeFor(dayNumber(ctx.date) + Math.floor(((ctx.attempt ?? 1) - 1) / 2));
+  // Five days in eight an India theme; a later attempt moves along the
+  // rotation, in case one query is failing today.
+  const list = isIndiaDay(ctx.rng) ? INDIA_THEMES : THEMES;
+  const theme = themeFor(dayNumber(ctx.date) + Math.floor(((ctx.attempt ?? 1) - 1) / 2), list);
   const all = await (deps.fetchPool ?? fetchPool)(theme);
   const key = x => `wd:${x.id}`;
   const fresh = all.filter(x => !ctx.used.has(key(x)));

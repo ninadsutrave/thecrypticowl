@@ -200,9 +200,9 @@ npx vitest run --project lambda
 
 | Pool | Size | Lasts | Alert |
 |---|---|---|---|
-| What Am I answers (`candidates.js`) | 194 in 11 categories | ~5 months unique (smallest category) | < 3 unused in any category |
-| Cryptogram quotes (`quotes.js`) | 154 usable | ~5 months unique | < 45 unused |
-| Trivia subjects (`topics.js`) | 323 in 9 categories | ~10 months unique, then least recent first | < 30 unused |
+| What Am I answers (`candidates.js`) | 297 in 11 categories, 108 of them Indian | ~5 months unique (smallest category); Indian answers drawn 5 days in 8 until used, then the rest | < 3 unused in any category |
+| Cryptogram quotes (`quotes.js`) | 154 usable + 47 Indian (Tagore, Gandhi, Vivekananda) | ~6 months unique; Indian quotes 2 days in 10 | < 45 unused |
+| Trivia subjects (`topics.js`) | 419 in 10 categories, 96 Indian | Indian subjects 5 days in 8 (~5 months unique), the rest ~2 years | < 30 unused |
 | Lichess puzzles | Millions | — | — |
 | "On this day" | 17–28 usable events per date | Fresh for ~2–4 years per date; then at most 2 events unused for 3 years per puzzle, then older events in new mixes (never fails) | — |
 

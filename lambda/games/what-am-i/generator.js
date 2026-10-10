@@ -1,5 +1,6 @@
 import { excerpt, fetchAliases, fetchArticle } from '../../shared/sources/wikipedia.js';
-import { CATEGORIES, categoryFor } from './candidates.js';
+import { CATEGORIES, categoryFor, INDIAN } from './candidates.js';
+import { poolForDay } from '../../shared/runtime/india.js';
 import { pickFresh } from '../../shared/runtime/pool.js';
 import { buildWriterPrompt, CLUES_SCHEMA, WRITER_SYSTEM } from './prompts.js';
 
@@ -40,7 +41,10 @@ export async function generateWhatAmI(ctx, deps = {}) {
   const category = categoryFor(dayIndex(ctx.date));
   // Each answer once; if a category runs dry, the least recently used comes
   // back with fresh clues from a different stretch of its article.
-  const { item: title } = await pickFresh(CATEGORIES[category], t => `wiki:${t}`, ctx);
+  // Five days in eight, an Indian answer from the day's category.
+  const key = t => `wiki:${t}`;
+  const pool = poolForDay(CATEGORIES[category], t => INDIAN.has(t), key, ctx);
+  const { item: title } = await pickFresh(pool, key, ctx);
 
   const article = await getArticle(title);
   const aliases = await getAliases(article.wikidataId).catch(() => []);

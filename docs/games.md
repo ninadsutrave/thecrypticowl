@@ -482,6 +482,26 @@ that reason, company founding years because Wikidata's are unreliable).
 
 ---
 
+## India focus
+
+Most players are in India, so content leans Indian on a share of days
+(`lambda/shared/runtime/india.js`), drawn per game from the day's seeded
+random number, so it is reproducible:
+
+| Game | India days | What changes |
+|---|---|---|
+| What Am I | 5 in 8 | The answer comes from the day's category's Indian entries (cities, landmarks, companies, films, festivals, historical figures, food…) |
+| Trivia | 5 in 8 | The subject comes from the India list (brands, engineering, places, space, culture, food) |
+| Higher or Lower | 5 in 8 | One of five India themes: city and state populations, state areas, river lengths, peak heights |
+| Chronology | 5 in 8 | At least one event with an Indian link, when the date has one |
+| Cryptogram | 2 in 10 | An Indian quote: Tagore's *Stray Birds* and *Gitanjali*, Gandhi, Vivekananda, an Indian proverb |
+
+When the Indian side of a pool is used up, a game falls back to the rest
+rather than going without a puzzle. Sudoku, Slitherlink and Checkmate have
+no cultural content to vary.
+
+---
+
 ## Shared architecture
 
 These changes are needed regardless of which game ships first.

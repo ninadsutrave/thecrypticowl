@@ -232,6 +232,149 @@ export const CATEGORIES = {
   ],
 };
 
+/**
+ * Indian answers, merged into the categories above. India is most of the
+ * audience, so about three days in ten the day's answer comes from these
+ * (generator.js § INDIA_SHARE). The Indian entries already above count too.
+ */
+export const INDIA = {
+  City: [
+    'Mumbai',
+    'Delhi',
+    'Kolkata',
+    'Chennai',
+    'Bengaluru',
+    'Hyderabad',
+    'Jaipur',
+    'Varanasi',
+    'Agra',
+    'Amritsar',
+    'Udaipur',
+    'Kochi',
+    'Shimla',
+  ],
+  Landmark: [
+    'Qutb Minar',
+    'Gateway of India',
+    'Golden Temple',
+    'Hawa Mahal',
+    'Red Fort',
+    'India Gate',
+    'Charminar',
+    'Mysore Palace',
+    'Victoria Memorial, Kolkata',
+    'Ajanta Caves',
+    'Meenakshi Temple',
+    'Gol Gumbaz',
+  ],
+  'Company or brand': [
+    'Tata Group',
+    'Infosys',
+    'Reliance Industries',
+    'Maruti Suzuki',
+    'Royal Enfield',
+    'Wipro',
+    'Air India',
+    'Indian Railways',
+    'Mahindra & Mahindra',
+    'Bajaj Auto',
+  ],
+  'Band or musician': [
+    'Lata Mangeshkar',
+    'Kishore Kumar',
+    'Mohammed Rafi',
+    'Ravi Shankar',
+    'R. D. Burman',
+    'Bismillah Khan',
+    'Jagjit Singh',
+  ],
+  'Film or TV show': [
+    'Sholay',
+    'Mughal-e-Azam',
+    'Mother India',
+    'Lagaan',
+    '3 Idiots',
+    'Dilwale Dulhania Le Jayenge',
+    'Baahubali: The Beginning',
+    'RRR',
+    'Ramayan (1987 TV series)',
+    'Malgudi Days (TV series)',
+    'Pather Panchali',
+    'Dangal (2016 film)',
+  ],
+  'Festival or tradition': [
+    'Durga Puja',
+    'Pongal (festival)',
+    'Onam',
+    'Navaratri',
+    'Raksha Bandhan',
+    'Ganesh Chaturthi',
+    'Kumbh Mela',
+    'Vaisakhi',
+    'Makar Sankranti',
+    'Bihu',
+  ],
+  'Historical figure': [
+    'Ashoka',
+    'Akbar',
+    'Shivaji',
+    'Lakshmibai, Rani of Jhansi',
+    'Subhas Chandra Bose',
+    'Bhagat Singh',
+    'B. R. Ambedkar',
+    'Rabindranath Tagore',
+    'Swami Vivekananda',
+    'Aryabhata',
+    'C. V. Raman',
+    'Srinivasa Ramanujan',
+    'A. P. J. Abdul Kalam',
+    'Chandragupta Maurya',
+    'Vallabhbhai Patel',
+  ],
+  Animal: [
+    'Bengal tiger',
+    'Indian elephant',
+    'Indian peafowl',
+    'Asiatic lion',
+    'Indian rhinoceros',
+    'King cobra',
+    'Nilgai',
+  ],
+  'Food or drink': [
+    'Biryani',
+    'Samosa',
+    'Masala chai',
+    'Dosa (food)',
+    'Idli',
+    'Butter chicken',
+    'Gulab jamun',
+    'Jalebi',
+    'Panipuri',
+    'Vada pav',
+    'Lassi',
+    'Rasgulla',
+  ],
+  Invention: [
+    'Chaturanga',
+    'Pachisi',
+    'Shampoo',
+    'Hindu–Arabic numeral system',
+    'Unified Payments Interface',
+  ],
+};
+
+for (const [category, titles] of Object.entries(INDIA)) CATEGORIES[category].push(...titles);
+
+/** Every Indian answer, including those listed in the main categories. */
+export const INDIAN = new Set([
+  ...Object.values(INDIA).flat(),
+  'India',
+  'Taj Mahal',
+  'Diwali',
+  'Holi',
+  'Mahatma Gandhi',
+]);
+
 export const CATEGORY_ORDER = Object.keys(CATEGORIES);
 
 /** Short label for the puzzle's category line, e.g. "Film or TV show". */

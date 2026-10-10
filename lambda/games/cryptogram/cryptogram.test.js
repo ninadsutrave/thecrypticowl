@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { createRng } from '../../shared/runtime/random.js';
 import { isValidKey, makeKey, pickGivens } from './cipher.js';
-import { QUOTES } from './quotes.js';
+import { INDIAN_QUOTES, QUOTES } from './quotes.js';
 import { isSuitable, reviewCryptogram } from './reviewer.js';
 import { spec } from './index.js';
 
@@ -16,6 +16,18 @@ describe('quote pool', () => {
 
   it('has enough usable quotes for months of puzzles', () => {
     expect(QUOTES.filter(q => isSuitable(q.text)).length).toBeGreaterThanOrEqual(90);
+  });
+
+  it('has Indian quotes, all usable, attributed and distinct from the rest', () => {
+    const ids = new Set(QUOTES.map(q => q.id));
+    expect(INDIAN_QUOTES.length).toBeGreaterThanOrEqual(40);
+    for (const q of INDIAN_QUOTES) {
+      expect(q.india).toBe(true);
+      expect(isSuitable(q.text)).toBe(true);
+      expect(q.source.url).toMatch(/^https:\/\//);
+      expect(ids.has(q.id)).toBe(false);
+    }
+    expect(new Set(INDIAN_QUOTES.map(q => q.id)).size).toBe(INDIAN_QUOTES.length);
   });
 });
 

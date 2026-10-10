@@ -1,13 +1,14 @@
 import { createGameHandler } from '../../shared/runtime/gameHandler.js';
 import { pickFresh } from '../../shared/runtime/pool.js';
 import { makeKey, pickGivens } from './cipher.js';
-import { QUOTES } from './quotes.js';
+import { INDIAN_QUOTES, QUOTES } from './quotes.js';
+import { INDIA_QUOTE_SHARE, poolForDay } from '../../shared/runtime/india.js';
 import { isSuitable, reviewCryptogram } from './reviewer.js';
 
 /** Unused quotes left before the alert starts nagging. */
 const LOW_STOCK = 45;
 
-const usable = () => QUOTES.filter(q => isSuitable(q.text));
+const usable = () => [...QUOTES, ...INDIAN_QUOTES].filter(q => isSuitable(q.text));
 
 /**
  * Cryptogram: no AI. A public-domain quote from the curated pool, a fresh
@@ -19,7 +20,10 @@ export const spec = {
   label: 'Cryptogram',
   maxAttempts: 4,
   generate: async ctx => {
-    const { item: quote, reused } = await pickFresh(usable(), q => `quote:${q.id}`, ctx);
+    const key = q => `quote:${q.id}`;
+    // Two days in ten an Indian quote (Tagore, Gandhi, Vivekananda…).
+    const pool = poolForDay(usable(), q => q.india === true, key, ctx, INDIA_QUOTE_SHARE);
+    const { item: quote, reused } = await pickFresh(pool, key, ctx);
     const text = quote.text.toUpperCase();
     return {
       payload: {

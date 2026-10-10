@@ -5,6 +5,7 @@ import {
   normaliseText,
 } from '../../shared/sources/wikipedia.js';
 import { pickFresh } from '../../shared/runtime/pool.js';
+import { poolForDay } from '../../shared/runtime/india.js';
 import { buildWriterPrompt, QUESTION_SCHEMA, WRITER_SYSTEM } from './prompts.js';
 import { ALL_TOPICS } from './topics.js';
 
@@ -44,7 +45,10 @@ export async function generateTrivia(ctx, deps = {}) {
 
   // Each subject once; when the list runs dry, the least recently used
   // returns, written from a different stretch of its article.
-  const { item: pick } = await pickFresh(ALL_TOPICS, t => `wiki:${t.title}`, ctx);
+  // Five days in eight, a subject from the India list.
+  const key = t => `wiki:${t.title}`;
+  const pool = poolForDay(ALL_TOPICS, t => t.category === 'India', key, ctx);
+  const { item: pick } = await pickFresh(pool, key, ctx);
   const article = await getArticle(pick.title);
   const aliases = await getAliases(article.wikidataId).catch(() => []);
   const answer = displayName(article.title);

@@ -1,7 +1,15 @@
 import { describe, expect, it, vi } from 'vitest';
 import { createRng } from '../../shared/runtime/random.js';
 import { reviewChronology } from './reviewer.js';
-import { closePairs, dayLabel, famous, generateChronology, normaliseEntry } from './selector.js';
+import {
+  closePairs,
+  dayLabel,
+  famous,
+  generateChronology,
+  isIndian,
+  normaliseEntry,
+  pickEvents,
+} from './selector.js';
 
 const page = title => ({
   title,
@@ -160,5 +168,37 @@ describe('suitability screen', () => {
       deps
     );
     expect(c.payload.events).toHaveLength(6);
+  });
+});
+
+describe('India days', () => {
+  const ev = (year, text, kind = 'event') => ({
+    id: `${year}-x`,
+    year,
+    text,
+    title: `P${year}`,
+    kind,
+  });
+  const pool = [
+    ev(1446, 'A treaty is signed in Venice'),
+    ev(1701, 'A university is founded in Connecticut'),
+    ev(1874, 'A bridge opens in St. Louis'),
+    ev(1888, 'A tower is completed in Paris'),
+    ev(1940, 'A film premieres in New York'),
+    ev(1962, 'A satellite is launched from Florida'),
+    ev(1600, 'A trading company is chartered in London'),
+    ev(1950, 'The Constitution of India comes into force'),
+  ];
+
+  it('recognises an Indian link in the text', () => {
+    expect(isIndian(pool[7])).toBe(true);
+    expect(isIndian(pool[0])).toBe(false);
+  });
+
+  it('always includes an Indian event when asked to', () => {
+    for (let i = 0; i < 20; i++) {
+      const pick = pickEvents(pool, createRng(`india-${i}`), new Set(), { needIndia: true });
+      expect(pick.some(isIndian)).toBe(true);
+    }
   });
 });

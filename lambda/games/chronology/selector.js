@@ -1,5 +1,6 @@
 import { fetchMonthlyViews, fetchOnThisDay } from '../../shared/sources/wikipedia.js';
 import { screenEvents } from './judge.js';
+import { isIndiaDay } from '../../shared/runtime/india.js';
 
 export const EVENTS_PER_DAY = 6;
 /** Two "close" pairs make it medium: real knowledge, not "sounds medieval". */
@@ -54,6 +55,13 @@ const GIVEAWAY =
 /** Keeps the daily puzzle light — product rule, docs/games.md § Chronology. */
 const GRIM =
   /\b(?:wars?|troops|army|armies)\b|\b(kill|killed|killing|massacre|murder|bomb|bombing|terror|attack|shot|shoots|shooting|execut|genocide|war crime|suicide|dies|died|death|deaths|crash|disaster|earthquake|famine|epidemic|pandemic|hostage|assassinat|riot|lynch|slave|rape|torture|invade|invasion|battle|siege|coup|conquer|uprising|revolt|rebel|insurrection|burn|raid|explo|sink|sank|shipwreck|deport|persecut|purge|abolish)\w*/i;
+
+/** Events and people with an Indian link: most of the audience is in India. */
+export const INDIA_TERMS =
+  /\b(India|Indian|Indians|Delhi|Mumbai|Bombay|Kolkata|Calcutta|Chennai|Madras|Bengaluru|Bangalore|Hyderabad|Punjab|Bengal|Gujarat|Kerala|Maharashtra|Rajasthan|Kashmir|Goa|Assam|Bihar|Odisha|Mysore|Mughal|Maratha|Gandhi|Nehru|Bollywood|ISRO|Hindi|Tagore)\b/;
+export const isIndian = c => INDIA_TERMS.test(`${c.text} ${c.title ?? ''}`);
+/** India-linked entries kept beyond the fame cap, so India days have some to pick. */
+const INDIA_EXTRA = 8;
 
 export function dayLabel(date) {
   const [, m, d] = date.split('-').map(Number);
@@ -173,7 +181,13 @@ export function famous(candidates, views) {
       .filter(c => c.kind === kind && (views.get(c.title) ?? 0) >= FAME_FLOOR[kind])
       .sort((a, b) => (views.get(b.title) ?? 0) - (views.get(a.title) ?? 0))
       .slice(0, FAME_POOL[kind]);
-  return [...top('event'), ...top('birth')];
+  const chosen = [...top('event'), ...top('birth')];
+  const extra = candidates
+    .filter(c => isIndian(c) && !chosen.includes(c))
+    .filter(c => (views.get(c.title) ?? 0) >= FAME_FLOOR[c.kind])
+    .sort((a, b) => (views.get(b.title) ?? 0) - (views.get(a.title) ?? 0))
+    .slice(0, INDIA_EXTRA);
+  return [...chosen, ...extra];
 }
 
 /**
@@ -196,7 +210,12 @@ const keyOf = e => `event:${e.id}`;
  * Six events meeting the strictest difficulty rung the pool allows, with at
  * most `maxReused` of them from `reusable`. Throws when no set fits.
  */
-export function pickEvents(candidates, rng, used, { reusable = [], maxReused = 0 } = {}) {
+export function pickEvents(
+  candidates,
+  rng,
+  used,
+  { reusable = [], maxReused = 0, needIndia = false } = {}
+) {
   const fresh = candidates.filter(c => !used.has(keyOf(c)));
   const old = maxReused > 0 ? reusable : [];
   const pool = [...fresh, ...old];
@@ -208,6 +227,7 @@ export function pickEvents(candidates, rng, used, { reusable = [], maxReused = 0
     for (let t = 0; t < 400; t++) {
       const pick = rng.shuffle(pool).slice(0, EVENTS_PER_DAY);
       if (pick.filter(e => oldKeys.has(keyOf(e))).length > maxReused) continue;
+      if (needIndia && !pick.some(isIndian)) continue;
       if (pick.filter(e => e.kind === 'birth').length > MAX_BIRTHS) continue;
       const years = pick.map(e => e.year);
       const perCentury = new Map();
@@ -227,9 +247,9 @@ export function pickEvents(candidates, rng, used, { reusable = [], maxReused = 0
  * Fresh events if they make a set; otherwise down the reuse tiers. Returns
  * the pick and how many of its events were reused.
  */
-export async function pickWithReuse(candidates, ctx) {
+export async function pickWithReuse(candidates, ctx, { needIndia = false } = {}) {
   try {
-    return { pick: pickEvents(candidates, ctx.rng, ctx.used), reused: 0 };
+    return { pick: pickEvents(candidates, ctx.rng, ctx.used, { needIndia }), reused: 0 };
   } catch (err) {
     if (!ctx.usedSince) throw err;
     let last = err;
@@ -240,6 +260,7 @@ export async function pickWithReuse(candidates, ctx) {
         const pick = pickEvents(candidates, ctx.rng, ctx.used, {
           reusable,
           maxReused: tier.max,
+          needIndia,
         });
         const reused = pick.filter(e => ctx.used.has(keyOf(e))).length;
         return { pick, reused };
@@ -278,10 +299,19 @@ export async function generateChronology(ctx, deps = {}) {
   const pool = deps.fetchOnThisDay
     ? null
     : await sourcesFor(ctx.date, getFeed, getViews, ctx.callJudge);
-  const { pick: picked, reused } = await pickWithReuse(
-    pool ?? (await uncachedSources(ctx.date, getFeed, getViews, ctx.callJudge)),
-    ctx
-  );
+  const candidates = pool ?? (await uncachedSources(ctx.date, getFeed, getViews, ctx.callJudge));
+  // Five days in eight, at least one event with an Indian link, when the
+  // date has one that fits; otherwise any good set.
+  const wantIndia = isIndiaDay(ctx.rng) && candidates.some(isIndian);
+  let result;
+  if (wantIndia) {
+    try {
+      result = await pickWithReuse(candidates, ctx, { needIndia: true });
+    } catch {
+      result = null;
+    }
+  }
+  const { pick: picked, reused } = result ?? (await pickWithReuse(candidates, ctx));
   const events = derange(picked, ctx.rng).map(({ id, text, year, url }) => ({
     id,
     text,

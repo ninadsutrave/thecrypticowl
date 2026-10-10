@@ -1,5 +1,5 @@
 import { cleanDescription, fairPair, ROUNDS, UPS } from './generator.js';
-import { THEMES } from './themes.js';
+import { ALL_THEMES } from './themes.js';
 
 /**
  * Deterministic review: the right number of distinct, named items with real
@@ -8,7 +8,7 @@ import { THEMES } from './themes.js';
  */
 export function reviewHigherLower(p) {
   const errors = [];
-  const theme = THEMES.find(t => t.id === p?.theme);
+  const theme = ALL_THEMES.find(t => t.id === p?.theme);
   if (!theme) return { ok: false, errors: [`unknown theme ${p?.theme}`] };
   const items = p.items ?? [];
   if (items.length !== ROUNDS + 1) errors.push(`${items.length} items (want ${ROUNDS + 1})`);

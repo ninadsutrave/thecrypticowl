@@ -1,20 +1,10 @@
 import type { TutorialStep } from '../../games/TutorialFlow';
 import { Line, Pill, Stack } from '../../games/tutorialVisuals';
-import { KnowMoreLinks } from './KnowMoreLinks';
+import { Mascot } from '../../components/Mascot';
 
 const DEF = '#2563EB';
 const IND = '#7C3AED';
 const FOD = '#D97706';
-
-/** Where "Know more" leads: tabs of the Learn page. */
-const MORE = [
-  { to: '/learn#parts', label: 'The parts of a clue' },
-  { to: '/learn#wordplay', label: 'Every type of wordplay' },
-  { to: '/learn#indicators', label: 'Indicator words, by type' },
-  { to: '/learn#examples', label: 'Sample clues, worked through' },
-  { to: '/learn#cheatsheet', label: 'Cheat sheet: common substitutions' },
-  { to: '/learn#glossary', label: 'Glossary' },
-];
 
 // The worked example is the classic anagram from the Learn page, never a daily clue.
 export function getCrypticTutorial(): TutorialStep[] {
@@ -136,12 +126,18 @@ export function getCrypticTutorial(): TutorialStep[] {
       ),
     },
     {
-      title: 'Know more',
-      visual: <KnowMoreLinks items={MORE} />,
+      title: "You're all set",
+      visual: (
+        <Stack gap={8}>
+          <Mascot mood="celebrating" size={76} animate={false} />
+          <Pill color={IND}>Definition · Wordplay · Indicator · Fodder</Pill>
+        </Stack>
+      ),
       body: (
         <p>
-          That's all you need to start. When you want more, the full guide covers every kind of
-          wordplay, the common indicator words, worked examples and a glossary.
+          That's everything you need. Have a crack at today's clue: find the definition at one end,
+          let the indicator tell you what to do with the rest, and take a hint whenever you're
+          stuck.
         </p>
       ),
     },

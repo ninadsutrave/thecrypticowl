@@ -1,5 +1,6 @@
 import { useEffect, useState, type ReactNode } from 'react';
-import { ArrowLeft, ArrowRight, Play } from 'lucide-react';
+import { Link } from 'react-router';
+import { ArrowLeft, ArrowRight, BookOpen, Play } from 'lucide-react';
 import { Modal } from '../components/Modal';
 import { useDarkMode } from '../context/DarkModeContext';
 import { getTheme } from '../theme';
@@ -22,11 +23,14 @@ export function TutorialFlow({
   steps,
   open,
   onClose,
+  finalLink,
 }: {
   game: GameMeta;
   steps: TutorialStep[];
   open: boolean;
   onClose: () => void;
+  /** A third button on the last step, e.g. Know more → the full guide. */
+  finalLink?: { to: string; label: string };
 }) {
   const { isDark } = useDarkMode();
   const T = getTheme(isDark);
@@ -75,63 +79,130 @@ export function TutorialFlow({
           {step.body}
         </div>
 
-        <div className="flex items-center justify-between mt-6 gap-3">
-          <div
-            className="flex gap-1 sm:gap-1.5 min-w-0"
-            role="progressbar"
-            aria-valuemin={1}
-            aria-valuemax={steps.length}
-            aria-valuenow={index + 1}
-            aria-label={`Step ${index + 1} of ${steps.length}`}
-          >
-            {steps.map((_, i) => (
-              <span
-                key={i}
-                className="h-2 rounded-full"
-                style={{
-                  width: i === index ? 18 : 8,
-                  background: i <= index ? game.accent : T.cardBorder,
-                }}
-              />
-            ))}
-          </div>
-          <div className="flex gap-2">
-            {index > 0 ? (
+        {last && finalLink ? (
+          <div className="mt-6 space-y-3">
+            <Dots steps={steps.length} index={index} accent={game.accent} empty={T.cardBorder} />
+            <div className="grid grid-cols-3 gap-2">
               <button
                 onClick={() => setIndex(i => i - 1)}
-                className="px-3 py-2 rounded-xl border-2 text-sm font-extrabold flex items-center gap-1 whitespace-nowrap"
+                className="min-h-[42px] px-2 rounded-xl border-2 text-sm font-extrabold flex items-center justify-center gap-1 whitespace-nowrap"
                 style={{ borderColor: T.cardBorder, color: T.brandText }}
               >
-                <ArrowLeft size={14} /> Back
+                <ArrowLeft size={14} className="hidden sm:inline" /> Back
               </button>
-            ) : (
               <button
                 onClick={onClose}
-                className="px-3 py-2 rounded-xl text-sm font-extrabold"
-                style={{ color: T.textMuted }}
+                className="min-h-[42px] px-2 rounded-xl text-sm font-extrabold flex items-center justify-center gap-1.5 whitespace-nowrap"
+                style={{ background: game.accent, color: 'white' }}
+                autoFocus
               >
-                Skip
+                <Play size={14} className="hidden sm:inline" /> Let's play
               </button>
-            )}
-            <button
-              onClick={() => (last ? onClose() : setIndex(i => i + 1))}
-              className="px-4 py-2 rounded-xl text-sm font-extrabold flex items-center gap-1.5 whitespace-nowrap"
-              style={{ background: game.accent, color: 'white' }}
-              autoFocus
-            >
-              {last ? (
-                <>
-                  <Play size={14} /> Let's play
-                </>
-              ) : (
-                <>
-                  Next <ArrowRight size={14} />
-                </>
-              )}
-            </button>
+              <Link
+                to={finalLink.to}
+                onClick={onClose}
+                className="min-h-[42px] px-2 rounded-xl border-2 text-sm font-extrabold flex items-center justify-center gap-1.5 whitespace-nowrap no-underline"
+                style={{
+                  borderColor: T.brandBorder,
+                  color: T.brandText,
+                  background: T.brandSurface,
+                }}
+              >
+                <BookOpen size={14} className="hidden sm:inline" /> {finalLink.label}
+              </Link>
+            </div>
           </div>
-        </div>
+        ) : (
+          <div className="flex items-center justify-between mt-6 gap-3">
+            <div
+              className="flex gap-1 sm:gap-1.5 min-w-0"
+              role="progressbar"
+              aria-valuemin={1}
+              aria-valuemax={steps.length}
+              aria-valuenow={index + 1}
+              aria-label={`Step ${index + 1} of ${steps.length}`}
+            >
+              {steps.map((_, i) => (
+                <span
+                  key={i}
+                  className="h-2 rounded-full"
+                  style={{
+                    width: i === index ? 18 : 8,
+                    background: i <= index ? game.accent : T.cardBorder,
+                  }}
+                />
+              ))}
+            </div>
+            <div className="flex gap-2">
+              {index > 0 ? (
+                <button
+                  onClick={() => setIndex(i => i - 1)}
+                  className="px-3 py-2 rounded-xl border-2 text-sm font-extrabold flex items-center gap-1 whitespace-nowrap"
+                  style={{ borderColor: T.cardBorder, color: T.brandText }}
+                >
+                  <ArrowLeft size={14} /> Back
+                </button>
+              ) : (
+                <button
+                  onClick={onClose}
+                  className="px-3 py-2 rounded-xl text-sm font-extrabold"
+                  style={{ color: T.textMuted }}
+                >
+                  Skip
+                </button>
+              )}
+              <button
+                onClick={() => (last ? onClose() : setIndex(i => i + 1))}
+                className="px-4 py-2 rounded-xl text-sm font-extrabold flex items-center gap-1.5 whitespace-nowrap"
+                style={{ background: game.accent, color: 'white' }}
+                autoFocus
+              >
+                {last ? (
+                  <>
+                    <Play size={14} /> Let's play
+                  </>
+                ) : (
+                  <>
+                    Next <ArrowRight size={14} />
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </Modal>
+  );
+}
+
+/** Step dots: done and current in the game's colour. */
+function Dots({
+  steps,
+  index,
+  accent,
+  empty,
+}: {
+  steps: number;
+  index: number;
+  accent: string;
+  empty: string;
+}) {
+  return (
+    <div
+      className="flex justify-center gap-1.5"
+      role="progressbar"
+      aria-valuemin={1}
+      aria-valuemax={steps}
+      aria-valuenow={index + 1}
+      aria-label={`Step ${index + 1} of ${steps}`}
+    >
+      {Array.from({ length: steps }, (_, i) => (
+        <span
+          key={i}
+          className="h-2 rounded-full"
+          style={{ width: i === index ? 18 : 8, background: i <= index ? accent : empty }}
+        />
+      ))}
+    </div>
   );
 }

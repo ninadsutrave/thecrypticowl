@@ -6,7 +6,6 @@ import { Search, ChevronRight, Eye } from 'lucide-react';
 import { useDarkMode } from '../context/DarkModeContext';
 import { getTheme, type Theme } from '../theme';
 import learningData from '../data/learning_examples.json';
-import { GlossaryPanel, IndicatorsPanel } from './learn/ReferencePanels';
 
 // ─── TYPES & CONSTANTS ────────────────────────────────────────────────────────
 
@@ -505,16 +504,14 @@ function WordplayPreview({
 
 /**
  * Tabs in reading order. `index` is the panel each shows; `key` is its
- * deep link (/learn#glossary), used by the cryptic tutorial's "Know more".
+ * deep link (e.g. /learn#examples).
  */
 const TABS = [
   { key: 'intro', label: 'Intro', index: 0 },
   { key: 'parts', label: 'Parts', index: 1 },
   { key: 'wordplay', label: 'Wordplay', index: 2 },
-  { key: 'indicators', label: 'Indicators', index: 5 },
   { key: 'examples', label: 'Sample clues', index: 3 },
   { key: 'cheatsheet', label: 'Cheat sheet', index: 4 },
-  { key: 'glossary', label: 'Glossary', index: 6 },
 ];
 
 function CompoundExampleCard({
@@ -999,7 +996,7 @@ export function Learn() {
               </div>
 
               <button
-                onClick={() => openTab(5)}
+                onClick={() => openTab(3)}
                 className="w-full py-3 rounded-2xl flex items-center justify-center gap-2 transition-all hover:opacity-90"
                 style={{
                   background: 'linear-gradient(135deg, #7C3AED, #5B21B6)',
@@ -1008,7 +1005,7 @@ export function Learn() {
                   fontWeight: 800,
                 }}
               >
-                Learn the indicators <ChevronRight size={16} />
+                See sample clues <ChevronRight size={16} />
               </button>
             </div>
           )}
@@ -1143,10 +1140,6 @@ export function Learn() {
               </div>
             </div>
           )}
-
-          {/* ── Indicators and glossary ── */}
-          {activeSection === 5 && <IndicatorsPanel onNext={() => openTab(3)} />}
-          {activeSection === 6 && <GlossaryPanel />}
         </m.div>
       </AnimatePresence>
     </div>

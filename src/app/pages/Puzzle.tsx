@@ -3,6 +3,7 @@ import { m, AnimatePresence } from 'motion/react';
 import {
   ArrowLeft,
   GraduationCap,
+  BookOpen,
   Lightbulb,
   Send,
   RotateCcw,
@@ -375,24 +376,34 @@ export function Puzzle() {
       <div className="flex items-center justify-between mb-3">
         <Link
           to="/"
-          className="inline-flex items-center gap-1.5 text-sm font-bold no-underline hover:underline"
+          className="inline-flex items-center gap-1.5 text-sm font-bold no-underline hover:underline whitespace-nowrap"
           style={{ color: T.brandText }}
         >
           <ArrowLeft size={15} /> All puzzles
         </Link>
-        <button
-          onClick={openTutorial}
-          className="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 border text-sm font-bold"
-          style={{ borderColor: T.brandBorder, color: T.brandText, background: T.brandSurface }}
-        >
-          <GraduationCap size={14} /> How to play
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={openTutorial}
+            className="inline-flex items-center gap-1.5 rounded-full px-2.5 sm:px-3 py-1.5 border text-sm font-bold whitespace-nowrap"
+            style={{ borderColor: T.brandBorder, color: T.brandText, background: T.brandSurface }}
+          >
+            <GraduationCap size={14} className="hidden min-[400px]:inline" /> How to play
+          </button>
+          <Link
+            to="/learn"
+            className="inline-flex items-center gap-1.5 rounded-full px-2.5 sm:px-3 py-1.5 border text-sm font-bold no-underline whitespace-nowrap"
+            style={{ borderColor: T.cardBorder, color: T.brandText, background: T.cardBg }}
+          >
+            <BookOpen size={14} className="hidden min-[400px]:inline" /> Know more
+          </Link>
+        </div>
       </div>
       <TutorialFlow
         game={getGame('cryptic')}
         steps={CRYPTIC_TUTORIAL}
         open={tutorialOpen}
         onClose={closeTutorial}
+        finalLink={{ to: '/learn', label: 'Know more' }}
       />
       {!isCorrect ? (
         <div className="space-y-5">

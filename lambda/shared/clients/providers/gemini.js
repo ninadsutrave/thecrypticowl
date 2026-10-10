@@ -117,13 +117,17 @@ const working = new Map();
 /**
  * Errors where another model may still work: the ID is retired (404), this
  * key has no quota at all for it ("limit: 0" / "check your plan", e.g. Pro on
- * the free tier), or it is still overloaded (503) after its own retries.
+ * the free tier), its own daily free limit is used up (limits are per model),
+ * or it is still overloaded (503) after its own retries. When every model is
+ * out, the last error is thrown and the run stops as before.
  */
 const isRetired = err => {
   const m = String(err?.message);
   return (
     /Gemini API error \([^)]*\): (404|503)\b/.test(m) ||
-    /limit: 0|check your plan and billing/.test(m)
+    /limit: 0|check your plan and billing/.test(m) ||
+    // Free-tier daily limits are per model: the next model has its own.
+    /PerModel|Daily Gemini quota exhausted/.test(m)
   );
 };
 

@@ -37,7 +37,9 @@ export const INDICATOR_TYPES = [
   'final_letters',
   'alternating_letters',
   'spoonerism',
-  '',
+  // Not an empty string: current Gemini models reject "" as a schema enum
+  // value. The generator maps "none" back to "" (clueGenerator.js).
+  'none',
 ];
 
 // ─── RESPONSE SCHEMAS (Gemini JSON mode) ─────────────────────────────────────
@@ -67,7 +69,7 @@ export const CLUE_RESPONSE_SCHEMA = {
     // fodder: the raw letters or synonym being manipulated; empty string when not applicable.
     fodder: { type: 'STRING' },
     // indicator_type: the specific indicator sub-category (mirrors clue_indicator_types in DB).
-    // For compound clues this is the *primary* indicator's sub-type. Use empty string for
+    // For compound clues this is the *primary* indicator's sub-type. Use "none" for
     // charade / double_definition / cryptic_definition / andlit / no classifiable indicator.
     indicator_type: { type: 'STRING', enum: INDICATOR_TYPES },
     wordplay_summary: { type: 'STRING' },
@@ -289,10 +291,10 @@ MECHANISM-SPECIFIC RULES:
 - spoonerism: swapping the initial sounds of two fodder words produces the answer. Indicator always references Reverend Spooner or tongue-twisting (e.g. "Spooner's", "said by Spooner", "reverend's").
 - charade: parts read consecutively, often with cryptic meanings (e.g. DR = doctor, O = zero/love, RN = nurse). No single indicator — positional link words like "after", "on", "with" glue parts.
 - homophone: the answer sounds like the fodder. Indicator signals sounds-like (e.g. "we hear", "reportedly", "they say", "sounds like", "in speech", "listening to", "audibly").
-- double_definition: two definitions, one at each end, both define the answer. No indicator, no fodder. Use "indicator" field for the second definition, "fodder" field as empty string. Set indicator_type to "". In clue_parts, tag the first definition with type "definition" and the second with type "indicator" (omit indicator_subtype) — the Hints UI uses this convention to surface both halves.
-- cryptic_definition: a single witty/oblique definition that misdirects. No indicator, no fodder. Set indicator_type to "".
-- andlit: the entire clue is simultaneously wordplay and definition (often uses "!" in surface). Advanced — use sparingly. Set indicator_type to "".
-- compound: two or more mechanisms combined; each part must work independently. Set indicator_type to the sub-type of the PRIMARY indicator (or "" if no single indicator dominates).
+- double_definition: two definitions, one at each end, both define the answer. No indicator, no fodder. Use "indicator" field for the second definition, "fodder" field as empty string. Set indicator_type to "none". In clue_parts, tag the first definition with type "definition" and the second with type "indicator" (omit indicator_subtype) — the Hints UI uses this convention to surface both halves.
+- cryptic_definition: a single witty/oblique definition that misdirects. No indicator, no fodder. Set indicator_type to "none".
+- andlit: the entire clue is simultaneously wordplay and definition (often uses "!" in surface). Advanced — use sparingly. Set indicator_type to "none".
+- compound: two or more mechanisms combined; each part must work independently. Set indicator_type to the sub-type of the PRIMARY indicator (or "none" if no single indicator dominates).
 
 ${CLUE_EXAMPLES}
 
@@ -315,7 +317,7 @@ FIELD INSTRUCTIONS:
 - clue: the pure clue sentence, NO trailing letter count
 - definition: the exact portion of the clue that is the definition
 - indicator: the signal word/phrase; for double_definition use the second definition; for cryptic_definition/andlit use empty string ""
-- indicator_type: one of: anagram, reversal, container, hidden, deletion, homophone, initial_letters, final_letters, alternating_letters, spoonerism, or "" (for charade, double_definition, cryptic_definition, andlit, or compound with no single dominant indicator)
+- indicator_type: one of: anagram, reversal, container, hidden, deletion, homophone, initial_letters, final_letters, alternating_letters, spoonerism, or "none" (for charade, double_definition, cryptic_definition, andlit, or compound with no single dominant indicator)
 - fodder: the raw material being manipulated; for double_definition/cryptic_definition/andlit use empty string ""
 - wordplay_summary: one concise line explaining the wordplay (e.g. "Anagram of OCEAN = CANOE")
 - clue_parts: array of every segment of the clue with no gaps — segments must join to exactly reproduce the clue string (do NOT include a letter-count segment)

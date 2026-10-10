@@ -22,6 +22,9 @@ export async function generateClue(lexical, callAI, feedback = null) {
   );
 
   const result = await callAI(prompt, CLUE_GENERATOR_SYSTEM, CLUE_RESPONSE_SCHEMA);
+  // The schema says "none" where there is no indicator type (Gemini rejects
+  // an empty enum value); everything downstream expects "".
+  if (result && result.indicator_type === 'none') result.indicator_type = '';
 
   // Append the letter count ourselves — it's deducible from the answer length,
   // so we don't burn a model token on it, and we guarantee correctness.

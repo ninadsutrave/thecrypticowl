@@ -58,6 +58,28 @@ describe('callGemini model fallback', () => {
     vi.useRealTimers();
   });
 
+  it('moves past a model whose own daily free limit is used up', async () => {
+    const daily = JSON.stringify({
+      error: {
+        code: 429,
+        details: [
+          {
+            '@type': 'type.googleapis.com/google.rpc.QuotaFailure',
+            violations: [{ quotaId: 'GenerateRequestsPerDayPerProjectPerModel-FreeTier' }],
+          },
+        ],
+        message: 'Quota exceeded',
+      },
+    });
+    const fetch = vi.fn(async url =>
+      String(url).includes('spent-m') ? fail(429, daily) : ok('{"e":5}')
+    );
+    vi.stubGlobal('fetch', fetch);
+    expect(await callGemini('hi', '', { type: 'OBJECT' }, ['spent-m', 'fresh-m'])).toEqual({
+      e: 5,
+    });
+  });
+
   it('does not fall back on other errors', async () => {
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue(fail(400, 'bad request')));
     await expect(callGemini('hi', '', null, ['m1-x', 'm2-x'])).rejects.toThrow(/400/);

@@ -28,7 +28,8 @@ export function reviewCryptogram(candidate) {
     if (!counts.has(g)) errors.push(`given letter ${g} is not in the text`);
     if (g === top) errors.push('the commonest letter must not be given');
   }
-  if ((p.given ?? []).length !== 4) errors.push('gives exactly four letters');
+  if ((p.given ?? []).length !== 3) errors.push('gives exactly three letters');
+  if ((p.given ?? []).some(g => g === 'E' || g === 'T')) errors.push('E and T are never given');
   if (!p.author || !p.source?.url) errors.push('missing attribution');
   return {
     ok: errors.length === 0,

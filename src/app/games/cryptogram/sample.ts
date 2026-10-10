@@ -14,7 +14,7 @@ export interface CryptogramPuzzle {
 
 /**
  * Practice quote, shown when today's generated one is unavailable. Key and
- * the four given letters from the Lambda's own cipher (seed
+ * the three given letters from the Lambda's own cipher (seed
  * "cryptogram-sample").
  */
 export const SAMPLE_CRYPTOGRAM: CryptogramPuzzle = {
@@ -22,5 +22,5 @@ export const SAMPLE_CRYPTOGRAM: CryptogramPuzzle = {
   author: 'Rabindranath Tagore',
   source: { label: 'Stray Birds (1916)', url: 'https://www.gutenberg.org/ebooks/6524' },
   key: 'LPKMWGUFZHXQJSVACBTOYRDNIE',
-  given: ['U', 'O', 'T', 'H'],
+  given: ['U', 'O', 'H'],
 };

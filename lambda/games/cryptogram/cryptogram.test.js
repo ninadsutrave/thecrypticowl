@@ -36,11 +36,15 @@ describe('cipher', () => {
     for (let s = 0; s < 20; s++) expect(isValidKey(makeKey(createRng(s)))).toBe(true);
   });
 
-  it('gives four letters, never the commonest', () => {
+  it('gives three letters, never the commonest, E or T', () => {
     const text = 'EARLY TO BED AND EARLY TO RISE, MAKES A MAN HEALTHY, WEALTHY, AND WISE.';
-    const given = pickGivens(text, createRng(1));
-    expect(given).toHaveLength(4);
-    expect(given).not.toContain('A');
+    for (let seed = 1; seed <= 20; seed++) {
+      const given = pickGivens(text, createRng(seed));
+      expect(given).toHaveLength(3);
+      expect(given).not.toContain('A');
+      expect(given).not.toContain('E');
+      expect(given).not.toContain('T');
+    }
   });
 });
 

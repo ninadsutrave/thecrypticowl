@@ -1,5 +1,5 @@
-/** Lichess rating band that reads as medium for a general audience. */
-export const RATING_BAND = [1300, 1800];
+/** Rating band for medium-hard: a real think for club-level players. */
+export const RATING_BAND = [1600, 2100];
 /** A puzzle this many people have played has had its flaws reported. */
 const MIN_PLAYS = 500;
 

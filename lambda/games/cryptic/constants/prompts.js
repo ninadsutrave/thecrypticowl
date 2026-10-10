@@ -165,6 +165,7 @@ Requirements:
 - No proper nouns, acronyms, or technical jargon
 - The chosen mechanism must work cleanly for this word
 - Avoid words with ambiguous spelling (use standard UK English)
+- Aim for MEDIUM difficulty: an everyday word, but not the obvious one for its mechanism. Never a well-worn crossword chestnut (e.g. REWARD/DRAWER, STONE/TONES, LISTEN/SILENT, SPOTS/STOPS, EVIL/LIVE, DIAPER/REPAID): a regular solver should have to work for it.
 
 Return a JSON object with:
 - answer: the word in UPPERCASE

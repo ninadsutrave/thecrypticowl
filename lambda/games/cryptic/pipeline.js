@@ -105,6 +105,14 @@ export async function generateValidClue(callAI, callJudge, dbProvider) {
       continue;
     }
 
+    // ── Difficulty screen (free): the target is medium, so an easy pick (very
+    // common word, simple mechanism) is swapped for another word at once.
+    if (lexical.difficulty === 'easy') {
+      console.log(`  "${lexical.answer}" was rated easy — selecting a medium word.`);
+      exhaustedAnswers.push(lexical.answer);
+      continue;
+    }
+
     // ── Answer-uniqueness screen (free — no AI call) ───────────────────────
     // `clues` has a UNIQUE index on (answer, answer_pattern), so a repeat
     // answer is not merely repetitive: it is an insert that fails at the very

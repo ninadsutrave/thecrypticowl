@@ -55,7 +55,7 @@ export const SAMPLE_SUDOKU: SudokuPuzzle = {
   size: 6,
   boxRows: 2,
   boxCols: 3,
-  givens: { 2: 1, 7: 3, 11: 6, 24: 4, 30: 3 },
+  givens: { 2: 1, 7: 3, 24: 4, 30: 3 },
   solution: '621453534216163524245631412365356142',
   cages: [
     { sum: 14, cells: [8, 9, 14, 15] },

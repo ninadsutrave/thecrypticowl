@@ -2,9 +2,14 @@ import { isCorrectGuess } from '../../shared/runtime/match.js';
 import { buildSolverPrompt, SOLVE_SCHEMA, SOLVER_SYSTEM } from './prompts.js';
 
 /** The opening the judge sees first: the first two sentences, as a question. */
+/**
+ * The question minus its last stretch: the first three sentences (the whole
+ * question bar the closing fact and the ask). A solver must not get it from
+ * this, so the answer only clicks at the very end (medium, not easy).
+ */
 export function opening(question) {
   const sentences = question.split(/(?<=[.!?])\s+/);
-  return `${sentences.slice(0, 2).join(' ')} What is it?`;
+  return `${sentences.slice(0, 3).join(' ')} What is it?`;
 }
 
 /**

@@ -9,11 +9,15 @@ import { fetchJson } from '../../shared/runtime/http.js';
 
 const API = 'https://lichess.org/api/puzzle';
 
-/** Mate lengths, weighted toward the middle of the 3–5 range. */
+/**
+ * Mate lengths for medium-hard: 4 to 6 moves. The puzzle API has themes up
+ * to mateIn5; longer mates only come from the general "mate" theme, so a
+ * mate in 6 is drawn from there and anything shorter is rejected in review.
+ */
 const ANGLES = [
-  ['mateIn3', 0.6],
-  ['mateIn4', 0.3],
-  ['mateIn5', 0.1],
+  ['mateIn4', 0.5],
+  ['mateIn5', 0.35],
+  ['mate', 0.15],
 ];
 
 export function pickAngle(rng) {
@@ -21,7 +25,7 @@ export function pickAngle(rng) {
   for (const [angle, w] of ANGLES) {
     if ((r -= w) <= 0) return angle;
   }
-  return 'mateIn3';
+  return 'mateIn4';
 }
 
 export async function fetchPuzzle(angle, { fetcher = fetchJson } = {}) {

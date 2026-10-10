@@ -31,8 +31,13 @@ export function letterCounts(text) {
  * the commonest letter (usually E) would make it easy; a letter that appears
  * once barely helps.
  */
-export function pickGivens(text, rng, count = 4) {
-  const ranked = [...letterCounts(text)].sort((a, b) => b[1] - a[1]);
+/** Letters that crack a quote on their own (THE, -ED, -ER…): never given. */
+const GIVEAWAYS = new Set(['E', 'T']);
+
+export function pickGivens(text, rng, count = 3) {
+  const ranked = [...letterCounts(text)]
+    .sort((a, b) => b[1] - a[1])
+    .filter(([c]) => !GIVEAWAYS.has(c));
   const middle = ranked
     .slice(2)
     .filter(([, n]) => n >= 2 && n <= 4)

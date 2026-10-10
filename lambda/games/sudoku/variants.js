@@ -23,14 +23,16 @@ export const WEEKLY_ROTATION = [
 ];
 
 export const VARIANT_CONFIG = {
-  // Raised by three each: players found the first calibration too hard.
-  diagonal: { extraGivens: 5 },
-  kropki: { extraGivens: 5 },
-  thermo: { extraGivens: 4 },
-  arrow: { extraGivens: 4 },
-  sandwich: { extraGivens: 5 },
-  jigsaw: { extraGivens: 5 },
-  killer: { extraGivens: 4 },
+  // Calibrated to about 4/10 (easy-medium): raised by three after the first
+  // calibration played too hard, then trimmed by one (two for the easier
+  // Jigsaw and Diagonal) when that played at 3/10.
+  diagonal: { extraGivens: 3 },
+  kropki: { extraGivens: 4 },
+  thermo: { extraGivens: 3 },
+  arrow: { extraGivens: 3 },
+  sandwich: { extraGivens: 4 },
+  jigsaw: { extraGivens: 3 },
+  killer: { extraGivens: 3 },
 };
 
 /** Review bands for a medium 6×6 puzzle. */

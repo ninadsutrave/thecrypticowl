@@ -19,7 +19,12 @@ function makeAI({ answers = ['CANOE'], clue = null } = {}) {
   return vi.fn(async (_prompt, _system, schema) => {
     if (schema?.properties?.answer) {
       lastAnswer = queue.length > 1 ? queue.shift() : queue[0];
-      return { answer: lastAnswer, definition: 'Small boat', type: 'anagram', difficulty: 'easy' };
+      return {
+        answer: lastAnswer,
+        definition: 'Small boat',
+        type: 'anagram',
+        difficulty: 'medium',
+      };
     }
     // Fodder is the answer's letters reversed, and it appears in the clue, so
     // the strict anagram check passes for any answer.

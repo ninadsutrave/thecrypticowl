@@ -4,9 +4,12 @@ import { judgeChess } from './judge.js';
 import { toPuzzle } from './lichess.js';
 import { reviewChess } from './reviewer.js';
 
-const api = JSON.parse(
-  readFileSync(new URL('./fixtures/lichess-J588J.json', import.meta.url), 'utf8')
-);
+const fixture = name =>
+  JSON.parse(readFileSync(new URL(`./fixtures/${name}`, import.meta.url), 'utf8'));
+/** A mate in 3 (rated 1380): conversion tests, and too short for medium-hard. */
+const api = fixture('lichess-J588J.json');
+/** A mate in 4 (Sbhxq): the length the game now wants. */
+const mate4 = fixture('lichess-mate4.json');
 
 describe('Lichess conversion', () => {
   it('rebuilds the position before the setup move and the full UCI line', () => {
@@ -19,7 +22,11 @@ describe('Lichess conversion', () => {
 });
 
 describe('reviewer', () => {
-  const p = toPuzzle(api);
+  const p = toPuzzle(mate4);
+
+  it('rejects a mate in 3 as too short for medium-hard (4–6)', () => {
+    expect(reviewChess(toPuzzle(api)).errors.join(' ')).toMatch(/outside 4–6/);
+  });
 
   it('accepts a legal line that ends in mate', () => {
     expect(reviewChess(p)).toMatchObject({ ok: true, errors: [] });
@@ -37,10 +44,17 @@ describe('reviewer', () => {
 });
 
 describe('judge', () => {
-  const { plays, ...payload } = toPuzzle(api);
+  const { plays, ...base } = toPuzzle(mate4);
+  const payload = { ...base, source: { ...base.source, rating: 1800 } };
 
-  it('accepts a well-played medium puzzle', () => {
+  it('accepts a well-played medium-hard puzzle', () => {
     expect(judgeChess({ payload, plays }).ok).toBe(true);
+  });
+
+  it('rejects one rated below medium-hard', () => {
+    expect(
+      judgeChess({ payload: { ...payload, source: { ...payload.source, rating: 1400 } }, plays }).ok
+    ).toBe(false);
   });
 
   it('rejects one outside the rating band or barely played', () => {

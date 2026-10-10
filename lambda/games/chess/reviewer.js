@@ -1,6 +1,7 @@
 import { Chess } from 'chess.js';
 
-export const MATE_RANGE = [3, 5];
+/** Medium-hard: mate in 4 to 6. */
+export const MATE_RANGE = [4, 6];
 
 function play(game, uci) {
   return game.move({ from: uci.slice(0, 2), to: uci.slice(2, 4), promotion: uci[4] });

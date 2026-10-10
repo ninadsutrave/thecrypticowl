@@ -11,16 +11,14 @@ export interface ChessPuzzle {
 }
 
 /**
- * Placeholder until the Lichess import ships: Lichess puzzle J588J (CC0),
- * rated 1380 — medium for a general audience.
- * After 25.Qxb7: 25…Qg5+ 26.f4 Qxf4+ 27.Rd2 Re1#.
- *
- * Re-checked with chess.js: the line ends in mate, and the starting position
+ * Practice puzzle, shown when today's generated one is unavailable: a mate
+ * in 4 (puzzle Sbhxq, 4,000+ plays), in the 4–6 range the daily ones use.
+ * Checked by the Lambda's reviewer: the line ends in mate, and the position
  * has no mate in one or two.
  */
 export const SAMPLE_CHESS: ChessPuzzle = {
-  fen: '4r1k1/1pp2ppp/p7/q7/8/B4Q2/bPP2PPP/2KR1B1R w - - 9 25',
-  moves: ['f3b7', 'a5g5', 'f2f4', 'g5f4', 'd1d2', 'e8e1'],
-  mateIn: 3,
-  source: { id: 'J588J', rating: 1380, url: 'https://lichess.org/training/J588J' },
+  fen: '5r1k/4R1p1/Q3R2p/8/5pqP/6P1/4PPK1/1r6 w - - 0 37',
+  moves: ['e6g6', 'f4f3', 'g2h2', 'b1h1', 'h2h1', 'g4h3', 'h1g1', 'h3g2'],
+  mateIn: 4,
+  source: { id: 'Sbhxq', rating: 1489, url: 'https://lichess.org/training/Sbhxq' },
 };

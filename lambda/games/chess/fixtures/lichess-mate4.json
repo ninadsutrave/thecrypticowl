@@ -1,0 +1,21 @@
+{
+  "game": {
+    "id": "fW7lWriD",
+    "perf": { "key": "blitz", "name": "Blitz" },
+    "rated": true,
+    "players": [
+      { "name": "jannow65", "id": "jannow65", "color": "white", "rating": 1633 },
+      { "name": "dannmalzu", "id": "dannmalzu", "color": "black", "rating": 1661 }
+    ],
+    "pgn": "c4 e5 g3 Bc5 Bg2 d6 Nc3 a6 a3 Nf6 b4 Ba7 Bb2 c6 Nf3 Be6 d3 O-O O-O e4 Nxe4 Nxe4 dxe4 Bxc4 Bd4 c5 Bc3 Nc6 e5 d5 Nd2 d4 Nxc4 dxc3 bxc5 Bxc5 Bxc6 bxc6 Nd6 f6 Qb3+ Kh8 Qxc3 Bxd6 exd6 Qxd6 Rfd1 Qc7 Rac1 Qe7 Qxc6 Qxa3 Rd3 Qe7 Kf1 h6 Rd7 Qe5 Qb7 f5 Re7 Qf6 Rc6 Qg5 h4 Qg4 Rce6 Rab8 Qxa6 Rb1+ Kg2 f4 Rg6",
+    "clock": "5+0"
+  },
+  "puzzle": {
+    "id": "Sbhxq",
+    "rating": 1489,
+    "plays": 4284,
+    "solution": ["f4f3", "g2h2", "b1h1", "h2h1", "g4h3", "h1g1", "h3g2"],
+    "themes": ["veryLong", "endgame", "attraction", "sacrifice", "mateIn4"],
+    "initialPly": 72
+  }
+}

@@ -111,7 +111,7 @@ describe('judge', () => {
   });
 
   it('shows the opening as a question of its own', () => {
-    expect(opening('One. Two. Three. Name it.')).toBe('One. Two. What is it?');
+    expect(opening('One. Two. Three. Four. Name it.')).toBe('One. Two. Three. What is it?');
   });
 
   it('passes a question solved only in full, at medium; rejects hard', async () => {

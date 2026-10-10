@@ -8,7 +8,7 @@ import { GAMES, getGame, type GameId, type GameMeta } from '../games/registry';
 import { GameIcon } from '../games/GameIcon';
 import { getArchivePlays, type ArchivePlay } from '../games/archive';
 import { localDateKey } from '../games/solveRecords';
-import { SignInPrompt } from '../components/SignInPrompt';
+import { SignInGate } from '../components/SignInGate';
 import { Mascot } from '../components/Mascot';
 import { fetchGameArchiveDates, fetchPuzzleArchive } from '../../lib/supabase';
 
@@ -92,7 +92,13 @@ export function Archive() {
   const months = useMemo(() => byMonth(days ?? []), [days]);
   const played = (days ?? []).filter(d => plays[`${game.id}:${d.date}`]).length;
 
-  if (!isSignedIn) return <SignInPrompt />;
+  if (!isSignedIn)
+    return (
+      <SignInGate
+        title="Sign in to open the archive"
+        subtitle="Every past puzzle is waiting. Sign in with Google to play any day you missed."
+      />
+    );
 
   const pick = (id: GameId) => setSearchParams({ game: id }, { replace: true });
 

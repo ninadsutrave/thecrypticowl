@@ -20,7 +20,7 @@ export function Privacy() {
     {
       title: 'Play History',
       content:
-        'For each daily puzzle you finish we record the date, the game, whether you solved it, how long it took, and how many hints and mistakes you used. This powers your Stats page, streaks and personal bests. It is kept on your device, and when you are signed in it is also saved to your account so it follows you between devices. We never sell it or use it for advertising.',
+        'For each daily puzzle you finish we record the date, the game, whether you solved it, how long it took, and how many hints and mistakes you used. This powers your Progress page, streaks and personal bests. It is kept on your device, and when you are signed in it is also saved to your account so it follows you between devices. We never sell it or use it for advertising.',
     },
     {
       title: 'Puzzle Suggestions',

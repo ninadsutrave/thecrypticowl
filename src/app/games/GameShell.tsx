@@ -41,7 +41,7 @@ import { getAllPlays } from './solveRecords';
 import { shareOrCopy } from '../pages/puzzle/shareResult';
 import { GameIcon } from './GameIcon';
 import { archiveDateFrom, archivePath, longDate, recordArchivePlay } from './archive';
-import { SignInPrompt } from '../components/SignInPrompt';
+import { SignInGate } from '../components/SignInGate';
 
 export interface GameResult {
   outcome: SolveOutcome;
@@ -150,7 +150,13 @@ export function GameShell({
     setRound(r => r + 1);
   };
 
-  if (archiveDate && !isSignedIn) return <SignInPrompt />;
+  if (archiveDate && !isSignedIn)
+    return (
+      <SignInGate
+        title="Sign in to open the archive"
+        subtitle="Every past puzzle is waiting. Sign in with Google to play any day you missed."
+      />
+    );
 
   return (
     <div className="max-w-2xl mx-auto px-4 pb-20 pt-6" style={{ fontFamily: FONT_BODY }}>

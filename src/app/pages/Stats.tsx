@@ -10,6 +10,7 @@ import { formatClock, getAllPlays, localDateKey, type PlayRecord } from '../game
 import { calendarWeeks, computeHistoryStats } from '../games/historyStats';
 import { syncPlayHistory } from '../games/playHistory';
 import { GameIcon } from '../games/GameIcon';
+import { SignInGate } from '../components/SignInGate';
 
 const FONT_HEADING = "'Outfit', sans-serif";
 const WEEKS = 18;
@@ -51,13 +52,13 @@ function hoursMinutes(seconds: number) {
 export function Stats() {
   const { isDark } = useDarkMode();
   const T = getTheme(isDark);
-  const { user, isSignedIn, signIn } = useAuth();
+  const { user, isSignedIn } = useAuth();
   const [plays, setPlays] = useState<PlayRecord[]>(() => getAllPlays());
   const [filter, setFilter] = useState<GameId | 'all'>('all');
   const [shown, setShown] = useState(PAGE);
 
   useEffect(() => {
-    document.title = 'My Stats · The Cryptic Owl';
+    document.title = 'My Progress · The Cryptic Owl';
   }, []);
 
   // Pull plays made on other devices before showing the full picture.
@@ -77,6 +78,16 @@ export function Stats() {
   const stats = useMemo(() => computeHistoryStats(plays), [plays]);
   const visible = plays.filter(p => filter === 'all' || p.game === filter);
 
+  // Members only: signed-out visitors see what an account gets them.
+  if (!isSignedIn) {
+    return (
+      <SignInGate
+        title="Sign in to see your progress"
+        subtitle="Your finishes, best times and streaks, on every device. Sign in with Google to see them."
+      />
+    );
+  }
+
   return (
     <div className="max-w-4xl mx-auto px-4 pb-20 pt-8">
       <header className="mb-6 flex flex-wrap items-end justify-between gap-3">
@@ -88,24 +99,10 @@ export function Stats() {
               color: T.heading,
             }}
           >
-            Your puzzle history
+            Your progress
           </h1>
           <p style={{ color: T.textMuted, fontWeight: 700, fontSize: '0.9rem' }}>
-            {isSignedIn ? (
-              'Saved to your account, across all your devices.'
-            ) : (
-              <>
-                Saved on this device only.{' '}
-                <button
-                  onClick={signIn}
-                  className="underline font-extrabold"
-                  style={{ color: T.brandText }}
-                >
-                  Sign in
-                </button>{' '}
-                to keep it everywhere.
-              </>
-            )}
+            Saved to your account, across all your devices.
           </p>
         </div>
         <Link

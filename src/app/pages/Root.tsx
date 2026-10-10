@@ -64,7 +64,7 @@ export function Root() {
   const { refresh: refreshStreak } = useStreak();
   // Days in a row with any puzzle finished: the same streak as the home page.
   const [streak, setStreak] = useState(() => currentStreak());
-  const { user, isSignedIn, signIn, signOut } = useAuth();
+  const { user, isSignedIn, signOut } = useAuth();
   const location = useLocation();
   const isOnline = useOnlineStatus();
   // The dedicated offline screen owns /offline; everywhere else it takes over
@@ -113,8 +113,9 @@ export function Root() {
     { to: '/', label: 'Puzzles', icon: LayoutGrid, requiresAuth: false },
     // The cryptic tutorial lives on the cryptic card and puzzle page, not
     // here: every other game has its own walkthrough. One stats destination
-    // too: the cryptic XP page is linked from it.
-    { to: '/stats', label: 'Stats', icon: BarChart3, requiresAuth: false },
+    // too: the cryptic XP page is linked from it. Progress and Archive need
+    // an account (lock icon), and open on the sign-in page when signed out.
+    { to: '/stats', label: 'Progress', icon: BarChart3, requiresAuth: true },
     { to: '/archive', label: 'Archive', icon: CalendarDays, requiresAuth: true },
     { to: '/about', label: 'About', icon: Info, requiresAuth: false },
   ];
@@ -271,7 +272,7 @@ export function Root() {
                             fontFamily: "'Nunito', sans-serif",
                           }}
                         >
-                          <Trophy size={14} /> My Progress
+                          <Trophy size={14} /> Profile & XP
                         </NavLink>
                         <button
                           onClick={() => {
@@ -294,20 +295,22 @@ export function Root() {
                   </AnimatePresence>
                 </div>
               ) : (
-                <m.button
-                  onClick={signIn}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-bold border"
-                  style={{
-                    background: T.brandSurface,
-                    borderColor: T.brandBorder,
-                    color: T.brandText,
-                    fontFamily: "'Nunito', sans-serif",
-                  }}
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                >
-                  Sign in
-                </m.button>
+                // The sign-in page lists what an account gets you, then signs in.
+                <NavLink to="/history" className="no-underline">
+                  <m.div
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-bold border"
+                    style={{
+                      background: T.brandSurface,
+                      borderColor: T.brandBorder,
+                      color: T.brandText,
+                      fontFamily: "'Nunito', sans-serif",
+                    }}
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                  >
+                    Sign in
+                  </m.div>
+                </NavLink>
               )}
             </div>
 
@@ -446,12 +449,10 @@ export function Root() {
                       </button>
                     </div>
                   ) : (
-                    <button
-                      onClick={() => {
-                        setMenuOpen(false);
-                        void signIn();
-                      }}
-                      className="w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-bold transition-all text-left"
+                    <NavLink
+                      to="/history"
+                      onClick={() => setMenuOpen(false)}
+                      className="w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-bold transition-all text-left no-underline"
                       style={{
                         background: T.brandSurface,
                         color: T.brandText,
@@ -460,7 +461,7 @@ export function Root() {
                     >
                       <Lock size={18} />
                       Sign in with Google
-                    </button>
+                    </NavLink>
                   )}
                 </m.div>
               </div>

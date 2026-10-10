@@ -33,7 +33,7 @@ import { hasSeenTutorial, markTutorialSeen } from '../games/tutorialSeen';
 import { getCrypticTutorial } from './puzzle/crypticTutorial';
 import { archivePath, recordArchivePlay } from '../games/archive';
 import { localDateKey } from '../games/solveRecords';
-import { SignInPrompt } from '../components/SignInPrompt';
+import { SignInGate } from '../components/SignInGate';
 
 const CRYPTIC_TUTORIAL = getCrypticTutorial();
 
@@ -268,7 +268,13 @@ export function Puzzle() {
   }, [notFound]);
 
   // Past clues are the archive: members only.
-  if (isArchive && !isSignedIn) return <SignInPrompt />;
+  if (isArchive && !isSignedIn)
+    return (
+      <SignInGate
+        title="Sign in to open the archive"
+        subtitle="Every past puzzle is waiting. Sign in with Google to play any day you missed."
+      />
+    );
 
   // Loading state for archive puzzles
   if (notFound) {

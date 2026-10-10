@@ -174,7 +174,7 @@ export function About() {
         <SuggestForm />
       </section>
 
-      <p
+      <div
         className="mt-12 flex flex-wrap items-center justify-center gap-x-1 text-sm"
         style={{ color: T.textMuted, fontWeight: 600 }}
       >
@@ -192,7 +192,7 @@ export function About() {
         <span className="inline-flex" aria-hidden>
           <Mascot size={22} animate={false} />
         </span>
-      </p>
+      </div>
     </div>
   );
 }

@@ -1,23 +1,21 @@
 import { useState, useEffect, useCallback, lazy, Suspense } from 'react';
 import { m, AnimatePresence } from 'motion/react';
 import {
-  Trophy,
   Zap,
   Lock,
-  Calendar,
+  CalendarDays,
   Puzzle as PuzzleIcon,
   ChevronRight,
-  BookOpen,
   RefreshCw,
   LogOut,
-  Send,
 } from 'lucide-react';
 import { useDarkMode } from '../context/DarkModeContext';
 import { getTheme } from '../theme';
 import { useAuth } from '../context/AuthContext';
 import { useStreak, getLevelTitle } from '../hooks/useStreak';
 import { Mascot } from '../components/Mascot';
-import { useNavigate } from 'react-router';
+import { Link } from 'react-router';
+import { GoogleIcon } from '../components/GoogleIcon';
 const TrendChart = lazy(() => import('./history/TrendChart'));
 
 /** Placeholder that reserves the chart's exact height, so nothing shifts. */
@@ -33,36 +31,9 @@ function ChartSkeleton({ height, isDark }: { height: number; isDark: boolean }) 
 import {
   fetchSolveHistory,
   fetchUserStats,
-  fetchPuzzleArchive,
   type DbSolveRecord,
-  type DbDailyPuzzle,
   isSupabaseConfigured,
 } from '../../lib/supabase';
-
-// ─── GOOGLE ICON ──────────────────────────────────────────────────────────────
-
-function GoogleIcon() {
-  return (
-    <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden>
-      <path
-        fill="#4285F4"
-        d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
-      />
-      <path
-        fill="#34A853"
-        d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
-      />
-      <path
-        fill="#FBBC05"
-        d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
-      />
-      <path
-        fill="#EA4335"
-        d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
-      />
-    </svg>
-  );
-}
 
 // ─── SIGN-IN GATE ─────────────────────────────────────────────────────────────
 
@@ -71,10 +42,9 @@ function SignInGate({ isDark }: { isDark: boolean }) {
   const { signIn } = useAuth();
 
   const features = [
-    { icon: '📅', label: 'Browse the full puzzle archive' },
+    { icon: '📅', label: 'Play any past puzzle from the archive' },
     { icon: '📊', label: 'Track your solve history & stats' },
     { icon: '🔥', label: 'Keep your streak across devices' },
-    { icon: '🦉', label: 'Submit your own clues for review!' },
   ];
 
   return (
@@ -381,67 +351,6 @@ function SolveRow({
         )}
       </div>
     </m.div>
-  );
-}
-
-// ─── ARCHIVE ROW ──────────────────────────────────────────────────────────────
-
-function ArchiveRow({
-  puzzle,
-  isDark,
-  index,
-}: {
-  puzzle: DbDailyPuzzle;
-  isDark: boolean;
-  index: number;
-}) {
-  const T = getTheme(isDark);
-  const navigate = useNavigate();
-  const dateStr = new Date(puzzle.date).toLocaleDateString('en-US', {
-    weekday: 'short',
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric',
-  });
-
-  return (
-    <m.button
-      className="w-full flex items-center justify-between px-4 py-3 rounded-2xl border text-left"
-      style={{ background: T.cardBg, borderColor: T.cardBorder }}
-      onClick={() => navigate(`/puzzle/${puzzle.number}`)}
-      whileHover={{ y: -1, scale: 1.01 }}
-      whileTap={{ scale: 0.98 }}
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: index * 0.07 }}
-    >
-      <div className="flex items-center gap-3">
-        <div
-          className="flex items-center justify-center w-9 h-9 rounded-xl"
-          style={{ background: T.brandSurface }}
-        >
-          <Calendar size={16} style={{ color: T.brandText }} />
-        </div>
-        <div>
-          <div style={{ fontWeight: 700, color: T.text, fontSize: '0.9rem' }}>
-            Puzzle #{puzzle.number}
-            {puzzle.primary_type && (
-              <span
-                className="ml-2 px-2 py-0.5 rounded-full text-xs"
-                style={{
-                  background: isDark ? '#1A1035' : '#F5F0FF',
-                  color: T.brandText,
-                }}
-              >
-                {puzzle.primary_type}
-              </span>
-            )}
-          </div>
-          <div style={{ fontSize: '0.75rem', color: T.textMuted }}>{dateStr}</div>
-        </div>
-      </div>
-      <ChevronRight size={18} style={{ color: T.textFaint }} />
-    </m.button>
   );
 }
 
@@ -761,11 +670,9 @@ export function Progress() {
   const { user, signOut, isSignedIn, loading: authLoading } = useAuth();
   const localStreak = useStreak();
   const levelTitle = getLevelTitle(localStreak.level);
-  const navigate = useNavigate();
 
   // Remote data state
   const [solveHistory, setSolveHistory] = useState<DbSolveRecord[]>([]);
-  const [archive, setArchive] = useState<DbDailyPuzzle[]>([]);
   const [remoteStats, setRemoteStats] = useState<{
     xp: number;
     totalSolved: number;
@@ -780,13 +687,11 @@ export function Progress() {
     setLoading(true);
     setError(false);
     try {
-      const [history, stats, puzzles] = await Promise.all([
+      const [history, stats] = await Promise.all([
         fetchSolveHistory(user.id),
         fetchUserStats(user.id),
-        fetchPuzzleArchive(),
       ]);
       setSolveHistory(history);
-      setArchive(puzzles);
       if (stats) {
         setRemoteStats({
           xp: stats.xp,
@@ -1020,32 +925,32 @@ export function Progress() {
           <SolveInsights solveHistory={solveHistory} isDark={isDark} />
         )}
 
-        {/* ── Submit a Clue ────────────────────────────────────────── */}
+        {/* ── Puzzle archive ───────────────────────────────────────── */}
         <m.div
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.18, duration: 0.4 }}
           className="mb-6"
         >
-          <div
-            className="rounded-3xl border p-5 relative overflow-hidden group cursor-pointer"
+          <Link
+            to="/archive"
+            className="block rounded-3xl border p-5 relative overflow-hidden group no-underline"
             style={{
               background: isDark
                 ? 'linear-gradient(135deg, #1A1035 0%, #261845 100%)'
                 : 'linear-gradient(135deg, #F5F3FF 0%, #EDE9FE 100%)',
               borderColor: T.brandBorder,
             }}
-            onClick={() => navigate('/submit')}
           >
-            <div className="relative z-10 flex items-center justify-between">
-              <div className="flex items-center gap-4">
+            <div className="relative z-10 flex items-center justify-between gap-3">
+              <div className="flex items-center gap-4 min-w-0">
                 <div
-                  className="w-12 h-12 rounded-2xl flex items-center justify-center"
+                  className="w-12 h-12 shrink-0 rounded-2xl flex items-center justify-center"
                   style={{ background: isDark ? '#2D1B69' : 'white' }}
                 >
-                  <Send size={22} style={{ color: '#7C3AED' }} />
+                  <CalendarDays size={22} style={{ color: '#7C3AED' }} />
                 </div>
-                <div>
+                <div className="min-w-0">
                   <h3
                     style={{
                       fontFamily: "'Outfit', sans-serif",
@@ -1054,24 +959,22 @@ export function Progress() {
                       margin: 0,
                     }}
                   >
-                    Submit a Clue
+                    Puzzle archive
                   </h3>
                   <p style={{ color: T.textMuted, fontSize: '0.85rem', margin: 0 }}>
-                    Contribute your own cryptic clues to the community!
+                    Missed a day? Play any past puzzle, for every game.
                   </p>
                 </div>
               </div>
-              <ChevronRight size={20} style={{ color: T.textFaint }} />
+              <ChevronRight size={20} style={{ color: T.textFaint }} className="shrink-0" />
             </div>
-
-            {/* Decorative owl wing */}
             <div
               className="absolute -right-4 -bottom-4 opacity-10 transition-transform group-hover:scale-110 group-hover:-rotate-12"
-              style={{ color: '#7C3AED' }}
+              aria-hidden
             >
               <Mascot mood="celebrating" size={100} />
             </div>
-          </div>
+          </Link>
         </m.div>
 
         {/* ── Solve history ────────────────────────────────────────── */}
@@ -1123,76 +1026,6 @@ export function Progress() {
               ))}
             </div>
           )}
-        </m.div>
-
-        {/* ── Puzzle archive ───────────────────────────────────────── */}
-        <m.div
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3, duration: 0.4 }}
-        >
-          <div className="flex items-center justify-between mb-3">
-            <h3
-              style={{
-                fontFamily: "'Outfit', sans-serif",
-                fontSize: '1.1rem',
-                color: T.brandStrong,
-              }}
-            >
-              Puzzle Archive
-            </h3>
-            <span
-              className="px-2 py-0.5 rounded-full text-xs font-bold"
-              style={{
-                background: T.brandSurface,
-                color: isDark ? '#9381CC' : '#6D28D9',
-              }}
-            >
-              {archive.length} puzzle{archive.length !== 1 ? 's' : ''}
-            </span>
-          </div>
-
-          {loading ? (
-            <div
-              className="rounded-2xl border h-16 animate-pulse"
-              style={{ background: T.cardBg, borderColor: T.cardBorder }}
-            />
-          ) : archive.length === 0 ? (
-            <div
-              className="rounded-2xl border border-dashed p-5 text-center"
-              style={{
-                borderColor: T.brandBorder,
-                background: isDark ? '#100820' : '#FAFAFF',
-              }}
-            >
-              <Trophy size={20} style={{ color: T.brandBorder, margin: '0 auto 0.5rem' }} />
-              <p style={{ color: T.textFaint, fontSize: '0.83rem', margin: 0 }}>
-                Archive is empty — puzzles will appear here after they're published.
-              </p>
-            </div>
-          ) : (
-            <div className="flex flex-col gap-2">
-              {archive.map((puzzle, i) => (
-                <ArchiveRow key={puzzle.id} puzzle={puzzle} isDark={isDark} index={i} />
-              ))}
-            </div>
-          )}
-
-          <m.div
-            className="rounded-2xl border border-dashed p-5 text-center mt-3"
-            style={{
-              borderColor: T.brandBorder,
-              background: isDark ? '#100820' : '#FAFAFF',
-            }}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.5 }}
-          >
-            <BookOpen size={20} style={{ color: T.brandBorder, margin: '0 auto 0.5rem' }} />
-            <p style={{ color: T.textFaint, fontSize: '0.83rem', margin: 0 }}>
-              More puzzles added daily — check back tomorrow!
-            </p>
-          </m.div>
         </m.div>
       </div>
     </div>

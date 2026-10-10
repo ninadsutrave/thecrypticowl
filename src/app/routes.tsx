@@ -92,12 +92,12 @@ export const router = createBrowserRouter([
         lazy: async () => ({ Component: (await import('./pages/History')).Progress }),
       },
       {
-        path: 'privacy',
-        lazy: async () => ({ Component: (await import('./pages/Privacy')).Privacy }),
+        path: 'archive',
+        lazy: async () => ({ Component: (await import('./pages/Archive')).Archive }),
       },
       {
-        path: 'submit',
-        lazy: async () => ({ Component: (await import('./pages/SubmitClue')).SubmitClue }),
+        path: 'privacy',
+        lazy: async () => ({ Component: (await import('./pages/Privacy')).Privacy }),
       },
       {
         path: 'offline',

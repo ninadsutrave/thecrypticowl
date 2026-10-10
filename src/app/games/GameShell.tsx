@@ -4,6 +4,7 @@ import { m, AnimatePresence } from 'motion/react';
 import {
   ArrowLeft,
   ArrowRight,
+  CalendarDays,
   Check,
   ChevronDown,
   Flame,
@@ -39,6 +40,8 @@ import { computeHistoryStats } from './historyStats';
 import { getAllPlays } from './solveRecords';
 import { shareOrCopy } from '../pages/puzzle/shareResult';
 import { GameIcon } from './GameIcon';
+import { archiveDateFrom, archivePath, longDate, recordArchivePlay } from './archive';
+import { SignInPrompt } from '../components/SignInPrompt';
 
 export interface GameResult {
   outcome: SolveOutcome;
@@ -108,9 +111,15 @@ export function GameShell({
 }: GameShellProps) {
   const game = getGame(gameId);
   const [searchParams, setSearchParams] = useSearchParams();
+  // A past day from the archive (`?date=`): members only, never recorded as
+  // today's solve, and always opens on a fresh board.
+  const archiveDate = archiveDateFrom(searchParams);
+  const { isSignedIn } = useAuth();
   // Read once: a puzzle finished on an earlier visit opens on its summary,
   // while one finished just now stays on its board with the result below.
-  const [record] = useState<SolveRecord | null>(() => (practice ? null : getSolveRecord(gameId)));
+  const [record] = useState<SolveRecord | null>(() =>
+    practice || archiveDate ? null : getSolveRecord(gameId)
+  );
   const [replaying, setReplaying] = useState(false);
   const [round, setRound] = useState(0);
   // Opens itself on a first visit (before the clock starts), and on demand
@@ -140,6 +149,8 @@ export function GameShell({
     setRound(r => r + 1);
   };
 
+  if (archiveDate && !isSignedIn) return <SignInPrompt />;
+
   return (
     <div className="max-w-2xl mx-auto px-4 pb-20 pt-6" style={{ fontFamily: FONT_BODY }}>
       {record && !replaying ? (
@@ -163,12 +174,13 @@ export function GameShell({
         </>
       ) : (
         <GameSession
-          key={round}
+          key={`${archiveDate}-${round}`}
           game={game}
           subtitle={subtitle}
           rules={rules}
           rulesOpenByDefault={rulesOpenByDefault}
-          replaying={replaying || practice}
+          replaying={replaying || practice || archiveDate !== null}
+          archiveDate={archiveDate}
           puzzleId={puzzleId}
           practicePuzzle={practice}
           paused={tutorialOpen}
@@ -191,6 +203,7 @@ function GameSession({
   rules,
   rulesOpenByDefault,
   replaying,
+  archiveDate,
   puzzleId,
   practicePuzzle,
   paused,
@@ -205,6 +218,7 @@ function GameSession({
   rules: ReactNode;
   rulesOpenByDefault?: boolean;
   replaying: boolean;
+  archiveDate: string | null;
   puzzleId: string;
   practicePuzzle: boolean;
   paused: boolean;
@@ -240,13 +254,16 @@ function GameSession({
           recordPlay(game.id, play, user?.id);
           clearProgress(progressSlot);
         }
+        if (archiveDate && !practicePuzzle) {
+          recordArchivePlay(game.id, archiveDate, { outcome, seconds });
+        }
         setResult(finished);
         if (outcome === 'solved') {
           confetti({ particleCount: 90, spread: 70, origin: { y: 0.7 } });
         }
       },
     }),
-    [result, timer, progressSlot, game.id, user?.id]
+    [result, timer, progressSlot, game.id, user?.id, archiveDate, practicePuzzle]
   );
 
   return (
@@ -257,7 +274,8 @@ function GameSession({
         T={T}
         clock={timer.seconds}
         frozen={timer.stopped}
-        practice={replaying && !practicePuzzle}
+        practice={replaying && !practicePuzzle && !archiveDate}
+        archiveDate={archiveDate}
         onTutorial={onTutorial}
       />
       {practicePuzzle && (
@@ -266,8 +284,9 @@ function GameSession({
           style={{ background: T.fodderBg, borderColor: T.streakBorder, color: T.text }}
           role="status"
         >
-          Today's puzzle isn't available right now, so here's a practice one. It won't count towards
-          your history.
+          {archiveDate
+            ? "This day's puzzle couldn't be loaded, so here's a practice one instead."
+            : "Today's puzzle isn't available right now, so here's a practice one. It won't count towards your history."}
         </p>
       )}
       <RulesPanel T={T} isDark={isDark} defaultOpen={rulesOpenByDefault}>
@@ -282,6 +301,7 @@ function GameSession({
             T={T}
             isDark={isDark}
             practice={replaying}
+            archive={archiveDate !== null && !practicePuzzle}
             onReplay={onReplay}
           />
         )}
@@ -297,6 +317,7 @@ function GameHeader({
   clock,
   frozen,
   practice,
+  archiveDate,
   onTutorial,
 }: {
   game: GameMeta;
@@ -305,17 +326,18 @@ function GameHeader({
   clock: number;
   frozen?: boolean;
   practice?: boolean;
+  archiveDate?: string | null;
   onTutorial: () => void;
 }) {
   return (
     <header className="mb-4">
       <div className="flex items-center justify-between mb-3">
         <Link
-          to="/"
-          className="inline-flex items-center gap-1.5 text-sm font-bold no-underline hover:underline min-h-[40px] -my-2"
+          to={archiveDate ? archivePath(game.id) : '/'}
+          className="inline-flex items-center gap-1.5 text-sm font-bold no-underline hover:underline min-h-[40px] -my-2 whitespace-nowrap"
           style={{ color: T.brandText }}
         >
-          <ArrowLeft size={15} /> All puzzles
+          <ArrowLeft size={15} /> {archiveDate ? 'Archive' : 'All puzzles'}
         </Link>
         <div className="flex items-center gap-2">
           <button
@@ -357,10 +379,22 @@ function GameHeader({
             {game.name}
           </h1>
           <p style={{ color: T.textMuted, fontWeight: 700, fontSize: '0.8rem', margin: 0 }}>
-            {[subtitle, todayLabel(), practice ? 'Practice replay' : null]
+            {[
+              subtitle,
+              archiveDate ? longDate(archiveDate) : todayLabel(),
+              practice ? 'Practice replay' : null,
+            ]
               .filter(Boolean)
               .join(' · ')}
           </p>
+          {archiveDate && (
+            <span
+              className="mt-1 inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-extrabold"
+              style={{ background: T.brandSurface, color: T.brandText }}
+            >
+              <CalendarDays size={12} aria-hidden /> From the archive
+            </span>
+          )}
         </div>
       </div>
     </header>
@@ -434,6 +468,7 @@ function ResultCard({
   isDark,
   alreadyDone,
   practice,
+  archive,
   onReplay,
 }: {
   game: GameMeta;
@@ -442,10 +477,12 @@ function ResultCard({
   isDark: boolean;
   alreadyDone?: boolean;
   practice?: boolean;
+  /** A past day from the archive: back to the archive, not on to today's games. */
+  archive?: boolean;
   onReplay: () => void;
 }) {
   const copy = OUTCOME_COPY[record.outcome];
-  const next = nextUnfinished(game.id);
+  const next = archive ? null : nextUnfinished(game.id);
   // This game's own history: best time and day streak, read after the
   // finish was recorded so today counts.
   const mine = useMemo(() => {
@@ -492,7 +529,11 @@ function ResultCard({
         {alreadyDone ? "You've played today's puzzle" : copy.title}
       </p>
       <p style={{ color: T.textMuted, fontWeight: 700, fontSize: '0.85rem' }}>
-        {practice ? 'Practice runs are not recorded. ' : ''}
+        {archive
+          ? 'Archive puzzles don’t count towards streaks.'
+          : practice
+            ? 'Practice runs are not recorded. '
+            : ''}
         {alreadyDone ? copy.bubble : null}
       </p>
       {isBest && (
@@ -556,7 +597,15 @@ function ResultCard({
       )}
 
       <div className="flex flex-col sm:flex-row gap-2 justify-center">
-        {next ? (
+        {archive ? (
+          <Link
+            to={archivePath(game.id)}
+            className="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-2xl font-extrabold no-underline"
+            style={{ background: 'linear-gradient(135deg, #7C3AED, #5B21B6)', color: T.onBrand }}
+          >
+            <CalendarDays size={16} /> More from the archive
+          </Link>
+        ) : next ? (
           <Link
             to={next.path}
             className="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-2xl font-extrabold no-underline"

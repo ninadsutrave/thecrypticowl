@@ -4,6 +4,7 @@ import {
   X,
   LayoutGrid,
   BarChart3,
+  CalendarDays,
   Info,
   Sun,
   Moon,
@@ -112,8 +113,9 @@ export function Root() {
     { to: '/', label: 'Puzzles', icon: LayoutGrid, requiresAuth: false },
     // The cryptic tutorial lives on the cryptic card and puzzle page, not
     // here: every other game has its own walkthrough. One stats destination
-    // too: the cryptic XP/archive page is linked from it.
+    // too: the cryptic XP page is linked from it.
     { to: '/stats', label: 'Stats', icon: BarChart3, requiresAuth: false },
+    { to: '/archive', label: 'Archive', icon: CalendarDays, requiresAuth: true },
     { to: '/about', label: 'About', icon: Info, requiresAuth: false },
   ];
 

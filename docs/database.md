@@ -58,7 +58,7 @@ erDiagram
 | `game_puzzles` | One row per (game, puzzle date) for every game but cryptic: the frontend-ready payload, its source keys and the review record. Written by the per-game Lambdas; see [lambdas.md](./lambdas.md). |
 | `game_plays` | One row per (user, game, puzzle date): the first finish of every daily game, with time, hints, mistakes and result. Written by the browser; see `src/app/games/playHistory.ts`. |
 | `clue_reactions` | Per-user 👍/👎 on a clue. |
-| `clue_submissions` | Community-submitted clues awaiting review. |
+| `clue_submissions` | Community-submitted clues. The site no longer has a submit form; kept for existing rows. |
 | `app_likes` | Anonymous global appreciation counter. |
 | `clue_wordplay_types`, `clue_indicator_types` | Lookup tables — TEXT, not enums, so adding a value is an `INSERT` rather than an `ALTER TYPE`. |
 

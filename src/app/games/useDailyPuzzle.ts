@@ -1,18 +1,21 @@
 import { useEffect, useState } from 'react';
+import { useSearchParams } from 'react-router';
 import { fetchGamePuzzle } from '../../lib/supabase';
 import { StoreKeys, prunePuzzleCache, readJSON, writeJSON } from '../lib/localStore';
 import type { GameId } from './registry';
 import { localDateKey } from './solveRecords';
+import { archiveDateFrom } from './archive';
 
 export interface DailyPuzzle<T> {
   puzzle: T | null;
-  /** True when today's generated puzzle was unavailable and the sample is shown. */
+  /** True when the generated puzzle was unavailable and the sample is shown. */
   isPractice: boolean;
   loading: boolean;
 }
 
 /**
- * Today's generated puzzle for a game, for the player's local date.
+ * The day's generated puzzle for a game: today's for the player's local
+ * date, or a past day's when the URL carries `?date=` (the archive).
  *
  * Paints instantly from the device cache when today's puzzle was fetched
  * before. Otherwise asks Supabase; on no row, a network failure or a payload
@@ -27,17 +30,25 @@ export function useDailyPuzzle<T>(
   sample: T,
   parse: (raw: unknown) => T | null
 ): DailyPuzzle<T> {
-  const [date] = useState(localDateKey);
+  const [searchParams] = useSearchParams();
+  const [today] = useState(localDateKey);
+  const archiveDate = archiveDateFrom(searchParams, today);
+  const date = archiveDate ?? today;
   const cacheKey = StoreKeys.gamePuzzle(date, game);
-  const [state, setState] = useState<DailyPuzzle<T>>(() => {
-    const cached = parse(readJSON<unknown>(cacheKey, null));
+  const initial = (): DailyPuzzle<T> & { date: string } => {
+    // Archive days are fetched fresh: the cache only keeps the last few days.
+    const cached = archiveDate ? null : parse(readJSON<unknown>(cacheKey, null));
     return cached
-      ? { puzzle: cached, isPractice: false, loading: false }
-      : { puzzle: null, isPractice: false, loading: true };
-  });
+      ? { date, puzzle: cached, isPractice: false, loading: false }
+      : { date, puzzle: null, isPractice: false, loading: true };
+  };
+  const [state, setState] = useState(initial);
+  // Another archive day opened on the same page: start over for it.
+  const current = state.date === date ? state : initial();
+  if (current !== state) setState(current);
 
   useEffect(() => {
-    if (!state.loading) return;
+    if (!current.loading) return;
     let cancelled = false;
     prunePuzzleCache();
     fetchGamePuzzle(game, date)
@@ -45,21 +56,21 @@ export function useDailyPuzzle<T>(
         if (cancelled) return;
         const parsed = parse(raw);
         if (parsed) {
-          writeJSON(cacheKey, raw);
-          setState({ puzzle: parsed, isPractice: false, loading: false });
+          if (!archiveDate) writeJSON(cacheKey, raw);
+          setState({ date, puzzle: parsed, isPractice: false, loading: false });
         } else {
-          setState({ puzzle: sample, isPractice: true, loading: false });
+          setState({ date, puzzle: sample, isPractice: true, loading: false });
         }
       })
       .catch(() => {
-        if (!cancelled) setState({ puzzle: sample, isPractice: true, loading: false });
+        if (!cancelled) setState({ date, puzzle: sample, isPractice: true, loading: false });
       });
     return () => {
       cancelled = true;
     };
     // `parse` and `sample` are module-level constants for every game.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [game, date, cacheKey, state.loading]);
+  }, [game, date, cacheKey, current.loading]);
 
-  return state;
+  return { puzzle: current.puzzle, isPractice: current.isPractice, loading: current.loading };
 }

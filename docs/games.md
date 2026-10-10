@@ -521,8 +521,11 @@ These changes are needed regardless of which game ships first.
   Separate functions, schedules, deploys and alerts, so one game failing
   never blocks another. Details in [lambdas.md](./lambdas.md).
 - **Frontend:** a home page listing today's games with their completion state.
-  Routes `/sudoku`, `/cryptic`, `/what-am-i`, `/trivia`, `/chronology`,
-  `/chess`, `/cryptogram`, each with its own `/<game>/archive`.
+  One route per game (`/sudoku`, `/cryptic`, …). Past days live in the
+  members-only archive at `/archive?game=<id>`: each tile opens
+  `/<game>?date=YYYY-MM-DD` (cryptic: `/puzzle/<number>`). Signed-out visitors
+  get a sign-in prompt on all of these; archive plays are marked done on the
+  device and never count towards streaks or stats.
 - **One difficulty:** every game targets medium, about 5–6 minutes. See
   [Difficulty, time and hints](#difficulty-time-and-hints-all-games).
 - **Shareable results:** a spoiler-free emoji grid per game (e.g. 🟥🟥🟩⬜⬜ for

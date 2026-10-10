@@ -113,7 +113,7 @@ export function Stats() {
           className="shrink-0 inline-flex items-center gap-1 rounded-full border px-3 py-1.5 text-xs font-extrabold no-underline"
           style={{ borderColor: T.brandBorder, color: T.brandText, background: T.brandSurface }}
         >
-          Cryptic XP & archive →
+          Cryptic XP →
         </Link>
       </header>
 

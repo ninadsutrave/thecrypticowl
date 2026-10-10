@@ -31,6 +31,8 @@ import { TutorialFlow } from '../games/TutorialFlow';
 import { getGame } from '../games/registry';
 import { hasSeenTutorial, markTutorialSeen } from '../games/tutorialSeen';
 import { getCrypticTutorial } from './puzzle/crypticTutorial';
+import { archivePath, recordArchivePlay } from '../games/archive';
+import { SignInPrompt } from '../components/SignInPrompt';
 
 const CRYPTIC_TUTORIAL = getCrypticTutorial();
 
@@ -186,7 +188,7 @@ export function Puzzle() {
   const inputRef = useRef<HTMLInputElement>(null);
   const { isDark } = useDarkMode();
   const T = getTheme(isDark);
-  const { user } = useAuth();
+  const { user, isSignedIn } = useAuth();
   const alreadySolved = isArchive ? false : hasSolvedToday();
   // The date this puzzle was published, not the date you are reading it.
   // /puzzle/12 was captioned with today because activePuzzle.date — which is
@@ -204,7 +206,17 @@ export function Puzzle() {
   // Today's solve feeds the home grid's "done" badge and time. Archive and
   // fallback puzzles aren't today's, and a replay never overwrites the first.
   useEffect(() => {
-    if (!isCorrect || isArchive || !activePuzzle || activePuzzle.isFallback) return;
+    if (!isCorrect || !activePuzzle || activePuzzle.isFallback) return;
+    if (isArchive) {
+      // A past clue: marked done in the archive, never today's solve.
+      if (activePuzzle.date) {
+        recordArchivePlay('cryptic', activePuzzle.date, {
+          outcome: wasRevealed ? 'revealed' : 'solved',
+          seconds: Math.max(1, solveTime),
+        });
+      }
+      return;
+    }
     recordPlay(
       'cryptic',
       {
@@ -249,6 +261,9 @@ export function Puzzle() {
       document.head.removeChild(meta);
     };
   }, [notFound]);
+
+  // Past clues are the archive: members only.
+  if (isArchive && !isSignedIn) return <SignInPrompt />;
 
   // Loading state for archive puzzles
   if (notFound) {
@@ -375,11 +390,11 @@ export function Puzzle() {
     <div className="max-w-2xl mx-auto px-4 pb-20 pt-6">
       <div className="flex items-center justify-between mb-3">
         <Link
-          to="/"
+          to={isArchive ? archivePath('cryptic') : '/'}
           className="inline-flex items-center gap-1.5 text-sm font-bold no-underline hover:underline whitespace-nowrap"
           style={{ color: T.brandText }}
         >
-          <ArrowLeft size={15} /> All puzzles
+          <ArrowLeft size={15} /> {isArchive ? 'Archive' : 'All puzzles'}
         </Link>
         <div className="flex items-center gap-2">
           <button

@@ -262,30 +262,6 @@ export interface DbClueSolveStats {
   like_pct: number | null;
 }
 
-/** Row from the `clue_submissions` table. */
-export interface DbClueSubmission {
-  id: string;
-  user_id: string;
-  clue_text: string;
-  answer: string;
-  answer_pattern: string;
-  primary_type: ClueWordplayType;
-  definition_text: string;
-  wordplay_summary: string;
-  fodder: string | null;
-  indicator: string | null;
-  explanation: string;
-
-  // Contributor info
-  author_name: string;
-  author_email: string;
-  author_social: string | null;
-
-  status: 'pending' | 'approved' | 'rejected';
-  admin_notes: string | null;
-  created_at: string;
-}
-
 // ─── DAILY PUZZLES ────────────────────────────────────────────────────────────
 
 /**
@@ -629,6 +605,31 @@ async function fetchGamePuzzleUncapped(game: string, isoDate: string): Promise<u
   return data?.payload ?? null;
 }
 
+/**
+ * Dates with a generated puzzle for a game, before `beforeIso`, newest
+ * first: the archive's list for that game. Empty on failure.
+ */
+export function fetchGameArchiveDates(game: string, beforeIso: string): Promise<string[]> {
+  return withTimeout(fetchGameArchiveDatesUncapped(game, beforeIso), [], 'fetchGameArchiveDates');
+}
+
+async function fetchGameArchiveDatesUncapped(game: string, beforeIso: string): Promise<string[]> {
+  if (!isSupabaseConfigured) return [];
+  const supabase = await getSupabaseClient();
+  const { data, error } = await supabase
+    .from('game_puzzles')
+    .select('puzzle_date')
+    .eq('game', game)
+    .lt('puzzle_date', beforeIso)
+    .order('puzzle_date', { ascending: false })
+    .limit(400);
+  if (error) {
+    console.warn('[supabase] fetchGameArchiveDates:', error.message);
+    return [];
+  }
+  return (data ?? []).map(r => r.puzzle_date as string);
+}
+
 // ─── GAME PLAY HISTORY (all games) ────────────────────────────────────────────
 
 /** A row of `game_plays` (migration 003). */
@@ -755,40 +756,4 @@ export async function submitPuzzleSuggestion(idea: string, name?: string): Promi
     return false;
   }
   return true;
-}
-
-// ─── CLUE SUBMISSIONS ────────────────────────────────────────────────────────
-
-/** Submit a new clue for review. */
-export async function submitClue(
-  userId: string,
-  clue: Omit<DbClueSubmission, 'id' | 'user_id' | 'status' | 'admin_notes' | 'created_at'>
-): Promise<boolean> {
-  const supabase = await getSupabaseClient();
-  if (!isSupabaseConfigured) return false;
-  const { error } = await supabase.from('clue_submissions').insert({
-    user_id: userId,
-    ...clue,
-  });
-  if (error) {
-    console.warn('[supabase] submitClue:', error.message);
-    return false;
-  }
-  return true;
-}
-
-/** Fetch all submissions for a specific user. */
-export async function fetchUserSubmissions(userId: string): Promise<DbClueSubmission[]> {
-  const supabase = await getSupabaseClient();
-  if (!isSupabaseConfigured) return [];
-  const { data, error } = await supabase
-    .from('clue_submissions')
-    .select('*')
-    .eq('user_id', userId)
-    .order('created_at', { ascending: false });
-  if (error) {
-    console.warn('[supabase] fetchUserSubmissions:', error.message);
-    return [];
-  }
-  return (data ?? []) as DbClueSubmission[];
 }

@@ -37,6 +37,8 @@ export const StoreKeys = {
   tutorialsSeen: `${PREFIX}tutorials-seen`,
   /** When this device last sent a puzzle suggestion (cooldown). */
   suggestionAt: `${PREFIX}suggestion-at`,
+  /** Past puzzles finished from the archive, keyed `game:date`. */
+  archivePlays: `${PREFIX}archive-plays`,
   /** Chess board colours: a device preference. */
   chessBoard: `${PREFIX}chess-board`,
 } as const;

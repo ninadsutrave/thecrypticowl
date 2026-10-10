@@ -192,6 +192,9 @@ export function cleanDescription(text) {
     .trim();
   // Words left hanging by a removed number: "since", "from … to", "born".
   while (DANGLING.test(out)) out = out.replace(DANGLING, '').trim();
+  // …and at the start, by a removed ranking clause ("…city in Brazil and
+  // capital of São Paulo" → "and capital of São Paulo").
+  out = out.replace(/^(?:and|or|but|as well as)\s+/i, '');
   if (!out || out.length > 90) return '';
   return out[0].toUpperCase() + out.slice(1);
 }

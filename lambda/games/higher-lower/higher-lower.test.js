@@ -83,6 +83,9 @@ describe('cleanDescription', () => {
     expect(cleanDescription('2012 single by Maroon 5 featuring Wiz Khalifa')).toBe(
       'Single by Maroon 5 featuring Wiz Khalifa'
     );
+    expect(cleanDescription('largest city in Brazil and capital of the State of São Paulo')).toBe(
+      'Capital of the State of São Paulo'
+    );
   });
 });
 

@@ -114,8 +114,14 @@ class GeminiQuotaExhaustedError extends Error {
 /** The model that answered last time, per list: skip retired IDs after the first call. */
 const working = new Map();
 
-/** Google's reply when a model ID has been retired or never existed. */
-const isRetired = err => /Gemini API error \([^)]*\): 404\b/.test(String(err?.message));
+/**
+ * Errors where another model may still work: the ID is retired (404), or
+ * this key has no quota at all for it ("limit: 0", e.g. a Pro preview on the
+ * free tier). A daily cap running out is not one of these: it stops the run.
+ */
+const isRetired = err =>
+  /Gemini API error \([^)]*\): 404\b/.test(String(err?.message)) ||
+  /limit: 0/.test(String(err?.message));
 
 /**
  * Calls the first available model in `models` (a list, or one ID). A 404 for
@@ -145,7 +151,7 @@ export async function callGemini(
       return out;
     } catch (err) {
       if (!isRetired(err)) throw err;
-      console.warn(`[gemini] ${model} is not available; trying the next model`);
+      console.warn(`[gemini] ${model} is unavailable to this key; trying the next model`);
       lastErr = err;
     }
   }

@@ -23,6 +23,17 @@ export function MiniLoop({
   const T = getTheme(isDark);
   const grid = makeGrid(rows, cols);
   const px = (v: number) => M + v * S;
+  const drawn = new Set(lines);
+  const crossed = new Set(crosses);
+  // Same colours as the game: green when exactly surrounded (a 0 once its
+  // sides are all crossed out), red when over.
+  const tint = (i: number, k: number) => {
+    const n = grid.cellEdges[i].filter(e => drawn.has(e)).length;
+    const met = n === k && (k > 0 || grid.cellEdges[i].every(e => crossed.has(e)));
+    if (n > k) return '#EF4444';
+    if (met) return isDark ? '#34D399' : '#059669';
+    return T.heading;
+  };
   return (
     <svg
       viewBox={`0 0 ${cols * S + 2 * M} ${rows * S + 2 * M}`}
@@ -38,7 +49,7 @@ export function MiniLoop({
             y={px(Math.floor(i / cols)) + S / 2}
             textAnchor="middle"
             dominantBaseline="central"
-            style={{ fontFamily: "'Outfit', sans-serif", fontSize: 17, fill: T.heading }}
+            style={{ fontFamily: "'Outfit', sans-serif", fontSize: 17, fill: tint(i, Number(ch)) }}
           >
             {ch}
           </text>

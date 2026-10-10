@@ -7,6 +7,7 @@ import { GameLoading } from '../GameLoading';
 import { useDailyPuzzle } from '../useDailyPuzzle';
 import { useGameState } from '../useGameState';
 import {
+  CROSS,
   dotDegrees,
   edgeBetween,
   EMPTY,
@@ -48,7 +49,12 @@ export function SlitherlinkGame() {
           <p>
             Draw <strong>one closed loop</strong> along the dotted lines. It never crosses or
             touches itself, and every number says how many of its cell's four sides the loop uses.
-            Cells without numbers can have any count.
+            Cells without numbers can have any count. A number turns green once it has exactly the
+            right lines, and red if it has too many.
+          </p>
+          <p>
+            Where to start: every puzzle has at least one 0. None of its sides is on the loop, so
+            cross them all out and work outwards from there.
           </p>
           <p>
             Drag through the dots to draw; drag back to undo a stretch. Tap a side to cycle line →
@@ -297,12 +303,16 @@ function SlitherBoard({ puzzle, api }: { puzzle: SlitherlinkPuzzle; api: PlayApi
         role="img"
         aria-label={`${puzzle.rows} by ${puzzle.cols} slitherlink. ${shown.filter(m => m === LINE).length} lines drawn. Arrows move, Shift and an arrow draws.`}
       >
-        {/* Numbers: red when over, faded once exactly met. */}
+        {/* Numbers: green once exactly surrounded, red when over. */}
         {[...puzzle.clues].map((ch, i) => {
           if (ch === '.') return null;
           const r = Math.floor(i / puzzle.cols);
           const c = i % puzzle.cols;
           const n = lineCount(grid, shown, i);
+          // A 0 counts as done once its four sides are crossed out, not at the start.
+          const met =
+            n === Number(ch) &&
+            (Number(ch) > 0 || grid.cellEdges[i].every(e => shown[e] === CROSS));
           const k = Number(ch);
           return (
             <text
@@ -314,8 +324,9 @@ function SlitherBoard({ puzzle, api }: { puzzle: SlitherlinkPuzzle; api: PlayApi
               style={{
                 fontFamily: "'Outfit', sans-serif",
                 fontSize: 19,
-                fill: n > k ? '#EF4444' : T.heading,
-                opacity: n === k ? 0.4 : 1,
+                // Green once exactly surrounded, red when over, else plain.
+                fill: n > k ? '#EF4444' : met ? (isDark ? '#34D399' : '#059669') : T.heading,
+                transition: 'fill 150ms',
               }}
             >
               {ch}

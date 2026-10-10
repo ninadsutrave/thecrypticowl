@@ -18,6 +18,6 @@ export interface SlitherlinkPuzzle {
 export const SAMPLE_SLITHERLINK: SlitherlinkPuzzle = {
   rows: 6,
   cols: 6,
-  clues: '3222..22213.22..3.1.113.2112........',
+  clues: '3..22..2.13.2..2301.11..2112........',
   solution: '111100111010110010001010000110110000001000100010000010101011100100001010010000011000',
 };

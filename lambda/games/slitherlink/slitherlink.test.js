@@ -47,9 +47,15 @@ describe('a generated slitherlink', () => {
     expect(judgeSlitherlink(p).ok).toBe(true);
   });
 
-  it('generates reliably', () => {
-    for (let i = 0; i < 5; i++)
-      expect(() => generateSlitherlink(createRng(`s-${i}`))).not.toThrow();
+  it('generates reliably, always with a 0 to start from', () => {
+    for (let i = 0; i < 8; i++) {
+      expect(generateSlitherlink(createRng(`s-${i}`)).clues).toContain('0');
+    }
+  });
+
+  it('rejects a puzzle with no 0', () => {
+    const noZero = p.clues.replace(/0/g, '.');
+    expect(reviewSlitherlink({ ...p, clues: noZero }).errors.join(' ')).toMatch(/no 0/);
   });
 
   it('rejects a wrong clue or a broken loop', () => {

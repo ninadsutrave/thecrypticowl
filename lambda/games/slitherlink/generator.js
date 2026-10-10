@@ -128,12 +128,15 @@ export function generateSlitherlink(rng) {
     const on = makeLoop(grid, rng);
     const clues = cellCounts(grid, on);
     // Zeros are the most generous clues, so they go first: a medium puzzle
-    // keeps only the ones it needs.
+    // keeps only the ones it needs, and always at least one, so every
+    // puzzle has an obvious place to start.
     const order = rng
       .shuffle(clues.map((_, k) => k))
       .sort((x, y) => (clues[x] === 0 ? 0 : 1) - (clues[y] === 0 ? 0 : 1));
+    if (!clues.includes(0)) continue; // the loop touches every cell: no 0 to give
     for (const i of order) {
       const keep = clues[i];
+      if (keep === 0 && clues.filter(k => k === 0).length === 1) continue;
       clues[i] = null;
       const r = solve(grid, clues, { limit: 2, maxNodes: MEDIUM.maxNodes * 10 });
       if (r.exhausted || r.count !== 1 || r.nodes > MEDIUM.maxNodes) clues[i] = keep;

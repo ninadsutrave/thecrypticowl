@@ -24,6 +24,7 @@ export function reviewSlitherlink(p) {
     if (ch !== '.' && Number(ch) !== counts[i])
       errors.push(`cell ${i} says ${ch}, loop gives ${counts[i]}`);
   });
+  if (!clues.includes('0')) errors.push('no 0 clue: every puzzle needs a place to start');
   const clued = [...clues].filter(ch => ch !== '.').length;
   if (clued < rows * cols * 0.25) errors.push(`only ${clued} clues`);
   return { ok: errors.length === 0, errors, checks: { clues: clued } };

@@ -237,7 +237,7 @@ function ChronologyBoard({ puzzle, api }: { puzzle: ChronologyPuzzle; api: PlayA
         })}
       </ol>
 
-      <div className="text-xs font-extrabold" style={{ color: T.textMuted }}>
+      <div className="mt-2 text-xs font-extrabold" style={{ color: T.textMuted }}>
         LATEST ↓
       </div>
 

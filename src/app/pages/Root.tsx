@@ -86,7 +86,7 @@ export function Root() {
   // pages' own (passive) title effects, so pages that set one still win and
   // pages that don't no longer inherit the previous page's title.
   useLayoutEffect(() => {
-    document.title = 'The Cryptic Owl · Daily Puzzles';
+    document.title = 'The Cryptic Owl · Free daily puzzles: sudoku, cryptic clues & more';
   }, [location.pathname]);
 
   // Close mobile menu, avatar dropdown, and refresh streak on route change

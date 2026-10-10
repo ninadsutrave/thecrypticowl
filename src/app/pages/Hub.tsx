@@ -60,7 +60,7 @@ export function Hub() {
   });
 
   useEffect(() => {
-    document.title = 'The Cryptic Owl · Daily Puzzles';
+    document.title = 'The Cryptic Owl · Free daily puzzles: sudoku, cryptic clues & more';
   }, []);
 
   const bubble =

@@ -29,7 +29,21 @@
       name="twitter:description"
       content="Nine fresh puzzles every day: sudoku variants, cryptic clues, trivia, chess and more."
     />
-    <title>The Cryptic Owl · Daily Puzzles</title>
+    <title>The Cryptic Owl · Free daily puzzles: sudoku, cryptic clues & more</title>
+    <link rel="canonical" href="https://www.thecrypticowl.com/" />
+    <meta property="og:site_name" content="The Cryptic Owl" />
+    <!-- Crawlable summary per page (scripts/prerender-seo.mjs), hidden from
+         view: React replaces it with the real page on load. -->
+    <style>
+      .seo-summary {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+        clip: rect(0 0 0 0);
+        white-space: nowrap;
+      }
+    </style>
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
 
     <!-- Preconnect Supabase: the Puzzle page fetches today's clue from here

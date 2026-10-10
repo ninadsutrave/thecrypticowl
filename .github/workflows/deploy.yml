@@ -114,13 +114,32 @@ jobs:
             --cache-control "public,max-age=31536000" \
             --content-type "font/woff2"
 
+      # The route pages (scripts/prerender-seo.mjs) live at extensionless keys
+      # ("sudoku"), so they're excluded here: --delete would otherwise remove
+      # them, since no local file has that name.
       - name: Sync root → S3 (no cache)
         run: |
+          EXCLUDES=()
+          for f in dist/_routes/*.html; do EXCLUDES+=(--exclude "$(basename "$f" .html)"); done
           aws s3 sync dist "s3://${{ secrets.S3_BUCKET_NAME }}" \
             --exclude "assets/*" \
             --exclude "fonts/*" \
+            --exclude "_routes/*" \
+            "${EXCLUDES[@]}" \
             --cache-control "no-cache,no-store,must-revalidate" \
             --delete
+
+      # Each public route gets its own HTML (title, description, canonical,
+      # structured data) at the key CloudFront asks S3 for: /sudoku → "sudoku".
+      # Routes without one still fall back to index.html as before.
+      - name: Upload route pages → S3 (no cache)
+        run: |
+          for f in dist/_routes/*.html; do
+            aws s3 cp "$f" "s3://${{ secrets.S3_BUCKET_NAME }}/$(basename "$f" .html)" \
+              --content-type "text/html; charset=utf-8" \
+              --cache-control "no-cache,no-store,must-revalidate" \
+              --only-show-errors
+          done
 
       # Only now remove assets no release references any more.
       # Old chunks stay for 14 days: a tab opened before this deploy still
@@ -160,9 +179,11 @@ jobs:
         run: |
           set -euo pipefail
           export AWS_PAGER=""
+          ROUTES=()
+          for f in dist/_routes/*.html; do ROUTES+=("/$(basename "$f" .html)"); done
           ID=$(aws cloudfront create-invalidation \
             --distribution-id "${{ secrets.CLOUDFRONT_DISTRIBUTION_ID }}" \
-            --paths "/index.html" "/" "/sitemap.xml" "/robots.txt" "/llms.txt" \
+            --paths "/index.html" "/" "/sitemap.xml" "/robots.txt" "/llms.txt" "${ROUTES[@]}" \
             --query 'Invalidation.Id' --output text)
           echo "Invalidation $ID created; waiting for it to complete…"
           aws cloudfront wait invalidation-completed \
@@ -185,4 +206,8 @@ jobs:
           home=$(curl -sS --max-time 20 "$URL/")
           grep -q 'The Cryptic Owl' <<<"$home" \
             || { echo "::error::Homepage did not contain the expected markup."; exit 1; }
+          # A route serves its own page, not the shared shell.
+          sudoku=$(curl -sS --max-time 20 "$URL/sudoku")
+          grep -q 'rel="canonical" href="https://www.thecrypticowl.com/sudoku"' <<<"$sudoku" \
+            || { echo "::error::/sudoku is not serving its own page."; exit 1; }
           echo "Smoke test passed."

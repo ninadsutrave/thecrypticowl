@@ -142,7 +142,7 @@ export function GameShell({
   const T = getTheme(isDark);
 
   useEffect(() => {
-    document.title = `${game.name} · The Cryptic Owl`;
+    document.title = `${game.name} · Free daily puzzle · The Cryptic Owl`;
   }, [game.name]);
 
   const startReplay = () => {

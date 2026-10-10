@@ -664,7 +664,7 @@ export function Learn() {
   const currentWordplay = learningData.wordplayTypes.find(t => t.id === activeWordplayTab);
 
   useEffect(() => {
-    document.title = 'Cryptic Tutorial · The Cryptic Owl';
+    document.title = 'How to solve cryptic crosswords · The Cryptic Owl';
   }, []);
 
   return (

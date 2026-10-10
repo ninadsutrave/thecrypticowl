@@ -35,7 +35,7 @@ export function Privacy() {
     {
       title: 'How Puzzles Are Made',
       content:
-        'The daily puzzles are generated on our servers ahead of time, using public sources such as Wikipedia, Wikidata, and the Lichess puzzle database, with help from an AI model for some games. Your browser only talks to our own site and database while you play: none of these sources receive any information about you. Our fonts are also served from our own site rather than a third-party font service.',
+        'The daily puzzles are generated on our servers ahead of time, using public sources such as Wikipedia, Wikidata and open puzzle collections, with help from an AI model for some games. Your browser only talks to our own site and database while you play: none of these sources receive any information about you. Our fonts are also served from our own site rather than a third-party font service.',
     },
     {
       title: 'Cookies & Authentication',

@@ -1,4 +1,7 @@
 User-agent: *
 Allow: /
+Disallow: /history
+Disallow: /stats
+Disallow: /archive
 
-Sitemap: https://thecrypticowl.com/sitemap.xml
+Sitemap: https://www.thecrypticowl.com/sitemap.xml

@@ -1,0 +1,115 @@
+{
+  "site": "https://www.thecrypticowl.com",
+  "name": "The Cryptic Owl",
+  "home": {
+    "path": "/",
+    "title": "The Cryptic Owl · Free daily puzzles: sudoku, cryptic clues & more",
+    "description": "Nine free puzzles every day: variant sudoku, a British cryptic crossword clue, trivia, chronology, a chess checkmate, a cryptogram, Slitherlink, Higher or Lower and a guess-who riddle. New at midnight, a few minutes each.",
+    "heading": "The Cryptic Owl: nine free puzzles, every day",
+    "body": "A fresh set of brain-teasers every morning. One of each puzzle, new at midnight your time, most taking a few minutes. Free to play, no account needed; sign in to keep your streak and play past puzzles."
+  },
+  "pages": [
+    {
+      "path": "/sudoku",
+      "game": "sudoku",
+      "name": "Variant Sudoku",
+      "title": "Variant Sudoku · Free daily puzzle · The Cryptic Owl",
+      "description": "A free daily 6×6 sudoku with a twist: a new extra rule each day, from Kropki dots and thermometers to Killer cages, sandwiches and jigsaw regions.",
+      "heading": "Variant Sudoku: a daily sudoku with a twist",
+      "body": "Fill the 6×6 grid so every row, column and box holds 1 to 6, then follow the day's extra rule: Diagonal, Kropki, Thermo, Arrow, Sandwich, Jigsaw or Killer."
+    },
+    {
+      "path": "/trivia",
+      "game": "trivia",
+      "name": "Trivia",
+      "title": "Trivia · Free daily puzzle · The Cryptic Owl",
+      "description": "One trivia question a day, told as a short story. Connect the clues and type the answer: no multiple choice. Includes questions on India, science, history, sport and culture.",
+      "heading": "Trivia: one story question a day",
+      "body": "Read the short story, connect its clues, and type the answer. No options to pick from; a letter-pattern hint if you need it."
+    },
+    {
+      "path": "/what-am-i",
+      "game": "what-am-i",
+      "name": "What Am I Talking About?",
+      "title": "What Am I Talking About? · Free daily puzzle · The Cryptic Owl",
+      "description": "Guess the country, celebrity, band, brand or festival from five clues that go from vague to obvious. The fewer clues you need, the better your score.",
+      "heading": "What Am I Talking About? Guess it in as few clues as you can",
+      "body": "Five clues, each more revealing than the last. Name the hidden subject in as few as you can."
+    },
+    {
+      "path": "/chess",
+      "game": "chess",
+      "name": "Checkmate",
+      "title": "Checkmate · Free daily puzzle · The Cryptic Owl",
+      "description": "A daily chess puzzle: find the forced checkmate in three to five moves. Real game positions, playable on any phone.",
+      "heading": "Checkmate: a daily mate-in-three-to-five chess puzzle",
+      "body": "Find the forced mate. Every move has to be the best one; the board tells you when it's checkmate."
+    },
+    {
+      "path": "/chronology",
+      "game": "chronology",
+      "name": "Chronology",
+      "title": "Chronology · Free daily puzzle · The Cryptic Owl",
+      "description": "Six moments in history that all happened on today's date. Put them in order, earliest first: a daily history puzzle with Indian and world events.",
+      "heading": "Chronology: put today's moments in history in order",
+      "body": "Six events that happened on this date in different years. Drag them into order, earliest first."
+    },
+    {
+      "path": "/cryptic",
+      "game": "cryptic",
+      "name": "British Style Cryptics",
+      "title": "British Style Cryptics · Free daily puzzle · The Cryptic Owl",
+      "description": "One British cryptic crossword clue a day, with step-by-step hints that teach definitions, indicators, anagrams and every kind of wordplay. Great for learning cryptics.",
+      "heading": "British Style Cryptics: a daily cryptic crossword clue",
+      "body": "One British cryptic crossword clue. The definition is at one end; the rest is wordplay. Hints walk you through it step by step."
+    },
+    {
+      "path": "/higher-lower",
+      "game": "higher-lower",
+      "name": "Higher or Lower",
+      "title": "Higher or Lower · Free daily puzzle · The Cryptic Owl",
+      "description": "Five close calls on a daily theme: Grammy wins, box office, Instagram followers, city populations, mountain heights, cricket centuries and more. Higher or lower?",
+      "heading": "Higher or Lower: five close calls on a daily theme",
+      "body": "Each round shows one thing with its number and a new one with it hidden. Is the new one higher or lower? A new theme every day."
+    },
+    {
+      "path": "/slitherlink",
+      "game": "slitherlink",
+      "name": "Slitherlink",
+      "title": "Slitherlink · Free daily puzzle · The Cryptic Owl",
+      "description": "A free daily Slitherlink logic puzzle: draw one loop along the dotted lines so every number counts the sides it touches. Always a 0 beside a 3 to start from.",
+      "heading": "Slitherlink: draw one loop round the numbers",
+      "body": "Join the dots into a single closed loop. Each number says how many of its four sides the loop uses."
+    },
+    {
+      "path": "/cryptogram",
+      "game": "cryptogram",
+      "name": "Cryptogram",
+      "title": "Cryptogram · Free daily puzzle · The Cryptic Owl",
+      "description": "A daily cryptogram: a famous quote, proverb or saying in disguise, every letter swapped for another. Crack the code letter by letter.",
+      "heading": "Cryptogram: crack a famous saying in disguise",
+      "body": "Every letter has been swapped for another. Work out the substitution and reveal the quote."
+    },
+    {
+      "path": "/learn",
+      "title": "How to solve cryptic crosswords · The Cryptic Owl",
+      "description": "A friendly guide to British cryptic crossword clues: definitions, indicators, fodder, anagrams, hidden words, containers, homophones and more, with sample clues and a cheat sheet.",
+      "heading": "How to solve cryptic crossword clues",
+      "body": "Every cryptic clue has two halves: a plain definition and a piece of wordplay that builds the same answer. Learn the parts, the wordplay types and the indicators that signal them."
+    },
+    {
+      "path": "/about",
+      "title": "About · The Cryptic Owl",
+      "description": "The Cryptic Owl is a free daily puzzle site: nine fresh puzzles every day, for the commute, a coffee break or a sharp start to the day. Suggest a puzzle you'd like to see.",
+      "heading": "About The Cryptic Owl",
+      "body": "Fun puzzles every day, whether you're on the way to the office or after a sharp start to the day. Made by Ninad Sutrave and Ollie the owl."
+    },
+    {
+      "path": "/privacy",
+      "title": "Privacy · The Cryptic Owl",
+      "description": "How The Cryptic Owl handles your data: what is stored, why, and your choices, including cookies and analytics.",
+      "heading": "Privacy policy",
+      "body": "What The Cryptic Owl stores, why, and the choices you have."
+    }
+  ]
+}

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { ExternalLink, Lightbulb, RotateCcw } from 'lucide-react';
+import { Lightbulb, RotateCcw } from 'lucide-react';
 import { Chess, type Square } from 'chess.js';
 import { useDarkMode } from '../../context/DarkModeContext';
 import { getTheme } from '../../theme';
@@ -37,19 +37,6 @@ export function ChessGame() {
             Play any legal move: the computer defends as well as it can. Any checkmate within{' '}
             {puzzle.mateIn} moves counts. If you run out of moves without mate, try again or see the
             solution. Stuck? A hint shows you the next move of the main line.
-          </p>
-          <p>
-            Puzzle{' '}
-            <a
-              href={puzzle.source.url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="font-bold underline"
-            >
-              #{puzzle.source.id} <ExternalLink size={11} className="inline" />
-            </a>{' '}
-            from the Lichess puzzle database (CC0), rated {puzzle.source.rating}. Drag a piece, or
-            tap it and then a highlighted square.
           </p>
           <p className="text-xs">Chess pieces: Chessnut by Alexis Luengas, Apache License 2.0.</p>
         </>

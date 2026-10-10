@@ -1,4 +1,4 @@
-name: Benchmark · cryptic models
+name: Benchmark · AI models
 
 # Manual: gives every model we have a key for the same letter quiz and the
 # same cryptic clue tasks, checks the results in code and prints a summary.
@@ -7,6 +7,9 @@ name: Benchmark · cryptic models
 on:
   workflow_dispatch:
     inputs:
+      game:
+        description: 'cryptic, or puzzles (Trivia and What Am I)'
+        default: 'cryptic'
       gemini_models:
         description: 'Gemini models (blank = default list)'
         default: ''
@@ -32,4 +35,7 @@ jobs:
           OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
           MISTRAL_API_KEY: ${{ secrets.MISTRAL_API_KEY }}
           BENCH_GEMINI_MODELS: ${{ inputs.gemini_models }}
-        run: node lambda/scripts/bench-cryptic.mjs
+          GAME: ${{ inputs.game }}
+        run: |
+          if [ "$GAME" = "cryptic" ]; then node lambda/scripts/bench-cryptic.mjs
+          else node lambda/scripts/bench-puzzles.mjs; fi

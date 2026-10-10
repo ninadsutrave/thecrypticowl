@@ -139,29 +139,27 @@ export async function writeToDB(lexical, clue, verdict = {}, aiProvider, dbProvi
   const authorId = authorIdFor(aiProvider);
   const hints = constructHints(lexical, clue);
 
-  // ── 1. Target date: max(today, latest + 1) ─────────────────────────────────
-  // "today" means a missed run (quota, outage) fills the current day forward
-  // rather than leaving a gap. "latest + 1" means a second invocation on the
-  // same day schedules tomorrow instead of colliding. Together: always a
-  // unique, non-past date adjacent to the archive.
+  // ── 1. Target date: the earliest free day from today on ────────────────────
+  // A missed run (quota, outage) or a clue deleted for quality leaves a gap;
+  // filling the earliest one first means players never meet an empty day,
+  // and a second invocation still moves on to the next free date.
   const todayStr = new Date().toISOString().split('T')[0];
 
-  const { data: latestRows } = await db
+  const { data: upcomingRows } = await db
     .from('daily_puzzles')
     .select('date')
-    .order('date', { ascending: false })
-    .limit(1);
+    .gte('date', todayStr)
+    .order('date', { ascending: true })
+    .limit(400);
 
-  const latestDate = latestRows?.[0]?.date ?? null;
-  let targetDate = todayStr;
-  if (latestDate) {
-    const next = new Date(`${latestDate}T00:00:00Z`);
-    next.setUTCDate(next.getUTCDate() + 1);
-    const nextStr = next.toISOString().split('T')[0];
-    if (nextStr > targetDate) targetDate = nextStr;
+  const taken = new Set((Array.isArray(upcomingRows) ? upcomingRows : []).map(r => r.date));
+  const cursor = new Date(`${todayStr}T00:00:00Z`);
+  while (taken.has(cursor.toISOString().split('T')[0])) {
+    cursor.setUTCDate(cursor.getUTCDate() + 1);
   }
+  const targetDate = cursor.toISOString().split('T')[0];
   console.log(
-    `[dbService] Target date: ${targetDate} (today=${todayStr}, latest_in_db=${latestDate ?? 'none'})`
+    `[dbService] Target date: ${targetDate} (today=${todayStr}, upcoming_in_db=${taken.size})`
   );
 
   // ── 2. Idempotency guard ───────────────────────────────────────────────────

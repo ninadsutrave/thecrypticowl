@@ -207,6 +207,25 @@ describe('writeToDB', () => {
     }
   });
 
+  it('fills the earliest free day before scheduling past the latest one', async () => {
+    const day = n => {
+      const d = new Date();
+      d.setUTCDate(d.getUTCDate() + n);
+      return d.toISOString().split('T')[0];
+    };
+    fake.current = makeFakeDb(
+      happyScript({
+        'daily_puzzles.select': state =>
+          state.eq
+            ? { data: [], error: null }
+            : { data: [{ date: day(0) }, { date: day(3) }], error: null },
+      })
+    );
+    const res = await writeToDB(lexical, clue, verdict, 'gemini', 'supabase');
+    expect(res.date).toBe(day(1));
+    expect(fake.current.calls.inserts.daily_puzzles[0].date).toBe(day(1));
+  });
+
   it('skips when a puzzle already exists for the target date', async () => {
     fake.current = makeFakeDb(
       happyScript({ 'daily_puzzles.select': { data: [{ id: 'existing' }], error: null } })

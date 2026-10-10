@@ -29,8 +29,8 @@ const ACCENT = '#6366F1';
 /** SVG units: one cell, and the margin around the dots. */
 const S = 40;
 const M = 14;
-/** How close (in cells) the finger must come to a dot for the pen to reach it. */
-const SNAP = 0.25;
+/** How close (in cells) the finger must come to a dot for the pen to reach it: 80% of the way. */
+const SNAP = 0.2;
 
 export function SlitherlinkGame() {
   const { puzzle, isPractice, loading } = useDailyPuzzle(
@@ -173,7 +173,7 @@ function SlitherBoard({ puzzle, api }: { puzzle: SlitherlinkPuzzle; api: PlayApi
     if (!g.dragging && Math.hypot(p.x - g.start.x, p.y - g.start.y) > 0.25) g.dragging = true;
     if (!g.dragging) return;
     // The pen moves to a dot only once the finger reaches it (within
-    // SNAP of it), never just past half way: until then the live segment
+    // SNAP of it, 80% of the way), never just past half way: until then the live segment
     // follows the finger along the line. A fast swipe can jump several dots
     // at once: walk there link by link, along the axis the finger has
     // travelled further, so the line never has gaps.

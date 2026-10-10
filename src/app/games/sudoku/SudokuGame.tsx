@@ -95,26 +95,35 @@ function SudokuBoard({ puzzle, api }: { puzzle: SudokuPuzzle; api: PlayApi }) {
 
   const enter = useCallback(
     (digit: number) => {
-      if (selected === null || locked(selected)) return;
+      if (api.finished) return;
+      // No cell chosen (or a fixed one): the number goes into the first empty
+      // box, which becomes the selection.
+      const cell =
+        selected !== null && !locked(selected)
+          ? selected
+          : values.findIndex((v, k) => v === 0 && !locked(k));
+      if (cell < 0) return;
+      if (cell !== selected) setSelected(cell);
       if (noteMode && digit > 0) {
-        if (values[selected]) return;
-        setNotes(ns => ns.map((m, i) => (i === selected ? m ^ (1 << digit) : m)));
+        if (values[cell]) return;
+        setNotes(ns => ns.map((m, i) => (i === cell ? m ^ (1 << digit) : m)));
         return;
       }
-      const placed = values[selected] === digit ? 0 : digit;
-      const next = values.map((v, i) => (i === selected ? placed : v));
+      const placed = values[cell] === digit ? 0 : digit;
+      const next = values.map((v, i) => (i === cell ? placed : v));
       setValues(next);
       // Placing a digit clears it from the notes of every cell it now rules out.
       setNotes(ns =>
         ns.map((m, i) =>
-          i === selected ? 0 : placed && sharesHouse(i, selected, puzzle) ? m & ~(1 << placed) : m
+          i === cell ? 0 : placed && sharesHouse(i, cell, puzzle) ? m & ~(1 << placed) : m
         )
       );
-      const wrongNow = placed > 0 && String(placed) !== puzzle.solution[selected];
+      const wrongNow = placed > 0 && String(placed) !== puzzle.solution[cell];
       if (wrongNow) setMistakes(m => m + 1);
       finishIfSolved(next, revealed.length, mistakes + (wrongNow ? 1 : 0));
     },
     [
+      api.finished,
       selected,
       locked,
       noteMode,

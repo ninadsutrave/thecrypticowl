@@ -20,12 +20,14 @@ jobs:
           set -uo pipefail
           [ -n "$GEMINI_API_KEY" ] || { echo "::error::GEMINI_API_KEY is not set"; exit 1; }
           for m in gemini-3.1-pro-preview gemini-pro-latest gemini-flash-latest gemini-3-flash-preview gemini-3.8-flash gemini-3.6-flash gemini-3.5-flash-lite gemini-flash-lite-latest; do
-            code=$(curl -s -o out.json -w '%{http_code}' --max-time 60 \
+            start=$(date +%s)
+            code=$(curl -s -o out.json -w '%{http_code}' --max-time 150 \
               -H "x-goog-api-key: $GEMINI_API_KEY" -H 'Content-Type: application/json' \
               "https://generativelanguage.googleapis.com/v1beta/models/$m:generateContent" \
-              -d '{"contents":[{"parts":[{"text":"Reply with the single word: ok"}]}]}')
+              -d '{"contents":[{"parts":[{"text":"Reply with the single word: ok"}]}]}' || echo timeout)
+            secs=$(( $(date +%s) - start ))
             reason=$(jq -r '.error.message // (.candidates[0].content.parts[0].text // "")' out.json 2>/dev/null | tr '\n' ' ' | cut -c1-140)
-            echo "$m → $code  $reason"
+            echo "$m → $code in ${secs}s  $reason"
             sleep 4
           done
           rm -f out.json

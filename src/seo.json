@@ -41,8 +41,8 @@
       "game": "chess",
       "name": "Checkmate",
       "title": "Checkmate · Free daily puzzle · The Cryptic Owl",
-      "description": "A daily chess puzzle: find the forced checkmate in three to five moves. Real game positions, playable on any phone.",
-      "heading": "Checkmate: a daily mate-in-three-to-five chess puzzle",
+      "description": "A daily chess puzzle: find the checkmate from a real game position. Every move has to be the best one, whatever your opponent replies. Playable on any phone.",
+      "heading": "Checkmate: a daily chess puzzle",
       "body": "Find the forced mate. Every move has to be the best one; the board tells you when it's checkmate."
     },
     {

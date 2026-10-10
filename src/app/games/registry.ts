@@ -70,7 +70,7 @@ export const GAMES: readonly GameMeta[] = [
     name: 'Checkmate',
     path: '/chess',
     emoji: '♞',
-    blurb: 'Find the forced mate in three to five moves. Every move has to be the best one.',
+    blurb: 'Find the checkmate from a real game position. Every move has to be the best one.',
     accent: '#64748B',
     accentStrong: '#334155',
     accentOnDark: '#CBD5E1',

@@ -231,8 +231,10 @@ function GameCard({
           <BookOpen size={13} aria-hidden />{' '}
           {game.tutorialPath ? 'New to cryptics? Tutorial' : 'How to play'}
         </Link>
+        {/* Decorative, and click-through: on hover its nudge (a transform)
+            lifts it above the card's link, where it would swallow clicks. */}
         <span
-          className="inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-sm font-extrabold transition-transform group-hover:translate-x-0.5"
+          className="pointer-events-none inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-sm font-extrabold transition-transform group-hover:translate-x-0.5"
           style={
             done
               ? { color: ink, background: 'transparent', border: `1.5px solid ${ink}` }

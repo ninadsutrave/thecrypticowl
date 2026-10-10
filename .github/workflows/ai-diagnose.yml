@@ -1,0 +1,31 @@
+name: Diagnose · AI models
+
+# Manual check of which Gemini models this repo's key can actually use.
+# Sends one tiny request to each candidate and prints only the HTTP status
+# and Google's short reason — never the key.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  gemini:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Try each model
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        run: |
+          set -uo pipefail
+          [ -n "$GEMINI_API_KEY" ] || { echo "::error::GEMINI_API_KEY is not set"; exit 1; }
+          for m in gemini-3.1-pro-preview gemini-pro-latest gemini-flash-latest gemini-3-flash-preview gemini-3.8-flash gemini-3.6-flash gemini-3.5-flash-lite gemini-flash-lite-latest; do
+            code=$(curl -s -o out.json -w '%{http_code}' --max-time 60 \
+              -H "x-goog-api-key: $GEMINI_API_KEY" -H 'Content-Type: application/json' \
+              "https://generativelanguage.googleapis.com/v1beta/models/$m:generateContent" \
+              -d '{"contents":[{"parts":[{"text":"Reply with the single word: ok"}]}]}')
+            reason=$(jq -r '.error.message // (.candidates[0].content.parts[0].text // "")' out.json 2>/dev/null | tr '\n' ' ' | cut -c1-140)
+            echo "$m → $code  $reason"
+            sleep 4
+          done
+          rm -f out.json

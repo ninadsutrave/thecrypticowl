@@ -1,6 +1,14 @@
 import { useEffect, useRef } from 'react';
 import { Link, useLocation } from 'react-router';
-import { Coffee, Lightbulb, Presentation, Sparkles, TrainFront, UserRound } from 'lucide-react';
+import {
+  Coffee,
+  Gift,
+  Lightbulb,
+  Presentation,
+  Sparkles,
+  TrainFront,
+  UserRound,
+} from 'lucide-react';
 import { Mascot } from '../components/Mascot';
 import { useDarkMode } from '../context/DarkModeContext';
 import { getTheme } from '../theme';
@@ -42,9 +50,14 @@ export function About() {
       text: 'Every puzzle has a nudge or two, and a quick walkthrough for anything new.',
     },
     {
+      Icon: Gift,
+      title: 'Free',
+      text: 'Every puzzle, every day, free. No sign-up needed: just open one and play.',
+    },
+    {
       Icon: UserRound,
-      title: 'Free, no sign-up',
-      text: 'Play straight away. Sign in only if you want your streak and history on every device.',
+      title: 'Sign in to track your progress',
+      text: 'Keep your streak and play history on every device, and go back to solve past puzzles.',
     },
   ];
 
@@ -124,7 +137,7 @@ export function About() {
         <h2 id="how" style={h2}>
           How it works
         </h2>
-        <div className="mt-4 grid gap-3 sm:grid-cols-3">
+        <div className="mt-4 grid gap-3 sm:grid-cols-2">
           {promises.map(({ Icon, title, text }) => (
             <div
               key={title}

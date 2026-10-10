@@ -123,11 +123,38 @@ jobs:
             --delete
 
       # Only now remove assets no release references any more.
-      - name: Prune superseded assets
+      # Old chunks stay for 14 days: a tab opened before this deploy still
+      # asks for the build it loaded, and deleting those files at once broke
+      # it ("Failed to fetch dynamically imported module").
+      - name: Prune assets superseded more than 14 days ago
         run: |
-          aws s3 sync dist/assets "s3://${{ secrets.S3_BUCKET_NAME }}/assets" \
-            --cache-control "public,max-age=31536000,immutable" \
-            --delete
+          set -euo pipefail
+          export AWS_PAGER=""
+          BUCKET="${{ secrets.S3_BUCKET_NAME }}"
+          ls dist/assets > current.txt
+          aws s3api list-objects-v2 --bucket "$BUCKET" --prefix assets/ \
+            --query 'Contents[].[Key,LastModified]' --output text > all.txt
+          python3 - <<'PY'
+          import datetime
+          keep = set(open('current.txt').read().split())
+          cutoff = datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(days=14)
+          stale = []
+          for line in open('all.txt'):
+              parts = line.split()
+              if len(parts) < 2 or '/' not in parts[0]:
+                  continue
+              key, modified = parts[0], parts[1]
+              if key.split('/', 1)[1] in keep:
+                  continue
+              if datetime.datetime.fromisoformat(modified.replace('Z', '+00:00')) < cutoff:
+                  stale.append(key)
+          open('stale.txt', 'w').write('\n'.join(stale))
+          print(f'{len(stale)} assets older than 14 days and no longer used')
+          PY
+          while read -r key; do
+            [ -n "$key" ] && aws s3 rm "s3://$BUCKET/$key" --only-show-errors
+          done < stale.txt
+          rm -f current.txt all.txt stale.txt
 
       - name: Invalidate CloudFront
         run: |

@@ -1,6 +1,7 @@
 import { createBrowserRouter, redirect } from 'react-router';
 import { Root } from './pages/Root';
 import { Hub } from './pages/Hub';
+import { RouteError } from './pages/RouteError';
 
 const cryptic = async () => ({ Component: (await import('./pages/Puzzle')).Puzzle });
 
@@ -12,6 +13,7 @@ export const router = createBrowserRouter([
   {
     path: '/',
     Component: Root,
+    ErrorBoundary: RouteError,
     children: [
       { index: true, Component: Hub },
       { path: 'cryptic', lazy: cryptic },

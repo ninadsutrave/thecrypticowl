@@ -14,47 +14,48 @@ export interface ChronologyPuzzle {
 }
 
 /**
- * Placeholder until the daily feed import ships. All six happened on
- * 9 October. Two close pairs (1874/1888, 1940/1962) keep it at medium.
+ * Practice set, shown when today's generated one is unavailable: six things
+ * that happened on 15 August, Indian and world, well spread in time.
  */
 export const SAMPLE_CHRONOLOGY: ChronologyPuzzle = {
-  day: '9 October',
+  day: '15 August',
+  // Shown in this order; none starts in its right place.
   events: [
     {
-      id: 'lennon',
-      text: 'John Lennon is born in Liverpool',
-      year: 1940,
-      url: 'https://en.wikipedia.org/wiki/John_Lennon',
+      id: 'independence',
+      text: 'India becomes independent from British rule',
+      year: 1947,
+      url: 'https://en.wikipedia.org/wiki/Independence_Day_(India)',
     },
     {
-      id: 'upu',
-      text: 'The Treaty of Bern founds what is now the Universal Postal Union',
-      year: 1874,
-      url: 'https://en.wikipedia.org/wiki/Universal_Postal_Union',
+      id: 'sholay',
+      text: 'Sholay, starring Amitabh Bachchan and Dharmendra, opens in cinemas',
+      year: 1975,
+      url: 'https://en.wikipedia.org/wiki/Sholay',
     },
     {
-      id: 'uganda',
-      text: 'Uganda becomes independent from the United Kingdom',
-      year: 1962,
-      url: 'https://en.wikipedia.org/wiki/Uganda',
+      id: 'napoleon',
+      text: 'Napoleon Bonaparte is born in Corsica',
+      year: 1769,
+      url: 'https://en.wikipedia.org/wiki/Napoleon',
     },
     {
-      id: 'hangul',
-      text: "King Sejong's new Korean alphabet, Hangul, is published",
-      year: 1446,
-      url: 'https://en.wikipedia.org/wiki/Hangul',
+      id: 'woodstock',
+      text: 'The Woodstock music festival begins in New York State',
+      year: 1969,
+      url: 'https://en.wikipedia.org/wiki/Woodstock',
     },
     {
-      id: 'monument',
-      text: 'The Washington Monument opens to the public',
-      year: 1888,
-      url: 'https://en.wikipedia.org/wiki/Washington_Monument',
+      id: 'aurobindo',
+      text: 'Sri Aurobindo is born in Calcutta',
+      year: 1872,
+      url: 'https://en.wikipedia.org/wiki/Sri_Aurobindo',
     },
     {
-      id: 'yale',
-      text: 'The Collegiate School, later Yale University, receives its charter',
-      year: 1701,
-      url: 'https://en.wikipedia.org/wiki/Yale_University',
+      id: 'panama',
+      text: 'The Panama Canal opens to shipping',
+      year: 1914,
+      url: 'https://en.wikipedia.org/wiki/Panama_Canal',
     },
   ],
 };

@@ -8,17 +8,17 @@ export interface WhatAmIPuzzle {
   source: { label: string; url: string };
 }
 
-/** Placeholder until the daily generator ships. Facts checked against Wikipedia. */
+/** Practice riddle, shown when today's generated one is unavailable. */
 export const SAMPLE_WHAT_AM_I: WhatAmIPuzzle = {
-  category: 'Country',
-  answer: 'Iceland',
-  accepted: ['Iceland', 'Republic of Iceland'],
+  category: 'Festival',
+  answer: 'Holi',
+  accepted: ['Holi', 'Holi festival', 'Phagwah'],
   clues: [
-    'My language has changed so little that people can still read sagas written here around 800 years ago.',
-    'My parliament was founded in 930 and is often called one of the oldest still running.',
-    'I sit on the seam between the North American and Eurasian tectonic plates.',
-    'In 2010 one of my volcanoes grounded flights right across Europe.',
-    'I share my name with a British frozen-food supermarket chain.',
+    'I arrive on the full moon of the Hindu month of Phalguna.',
+    'The night before me, bonfires are lit to remember how Prahlad escaped Holika.',
+    'In Barsana and Nandgaon, women playfully chase men with sticks during my celebrations.',
+    'I mark the end of winter and the welcome of spring across India and Nepal.',
+    'People celebrate me by throwing coloured powder and water at each other: I am the festival of colours.',
   ],
-  source: { label: 'Iceland on Wikipedia', url: 'https://en.wikipedia.org/wiki/Iceland' },
+  source: { label: 'Holi on Wikipedia', url: 'https://en.wikipedia.org/wiki/Holi' },
 };

@@ -14,7 +14,7 @@ import { getTriviaTutorial } from './tutorial';
 import { describePattern, triviaGrid } from './logic';
 import { LetterPattern } from './LetterPattern';
 
-const MAX_GUESSES = 3;
+const MAX_GUESSES = 4;
 
 export function TriviaGame() {
   const { puzzle, isPractice, loading } = useDailyPuzzle('trivia', SAMPLE_TRIVIA, parseTrivia);

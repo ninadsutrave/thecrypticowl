@@ -12,17 +12,14 @@ export interface TriviaPuzzle {
 
 /**
  * Practice question, shown when today's generated one is unavailable.
- * Every fact is from the linked Wikipedia article.
+ * Hand-written in the house style; facts from the Amul article.
  */
 export const SAMPLE_TRIVIA: TriviaPuzzle = {
   category: 'Brands & products',
   question:
-    'In 1982 an American engineer who had worked on NASA’s Galileo mission to Jupiter was tinkering at home with a heat pump that used water instead of chemical refrigerants. When he tested a homemade nozzle in his bathroom, a powerful jet of water shot right across the room. Realising he had made something more fun than a heat pump, he spent years refining it before a toy company took it on. Launched in 1990 as the Power Drencher, it was renamed a year later. Name it.',
-  answer: 'Super Soaker',
-  accepted: ['Super Soaker', 'Supersoaker'],
-  fact: 'Its inventor, Lonnie Johnson, holds more than 100 patents, and the toy has sold over a billion dollars’ worth.',
-  source: {
-    label: 'Super Soaker on Wikipedia',
-    url: 'https://en.wikipedia.org/wiki/Super_Soaker',
-  },
+    'In 1946 dairy farmers in Gujarat’s Kaira district, tired of selling their milk cheaply to a single private dairy, formed a cooperative of their own on Sardar Patel’s advice. A young engineer posted to the town of Anand in 1949 stayed on to run it, and later led the programme that made India the world’s largest milk producer. Since 1966 its butter has been sold by a little girl in a polka-dot dress who comments on the news from billboards. Name the brand.',
+  answer: 'Amul',
+  accepted: ['Amul', 'Amul Dairy'],
+  fact: 'The name comes from the Sanskrit amulya, “priceless”, and the engineer, Verghese Kurien, is remembered as the father of India’s White Revolution.',
+  source: { label: 'Amul on Wikipedia', url: 'https://en.wikipedia.org/wiki/Amul' },
 };

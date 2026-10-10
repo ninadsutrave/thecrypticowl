@@ -17,9 +17,10 @@ export const SIZE = 6;
 export const MEDIUM = {
   /** Share of cells inside the loop: enough for a long, winding outline. */
   fill: [0.42, 0.6],
-  maxNodes: 12,
+  // Eased after play-testing: less guessing, more numbers to work from.
+  maxNodes: 6,
   /** Clued cells: fewer is harder. */
-  minClues: 11,
+  minClues: 15,
 };
 
 /** Cell (r, c) inside the blob? Outside the grid counts as outside. */

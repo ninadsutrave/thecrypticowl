@@ -13,16 +13,14 @@ export interface CryptogramPuzzle {
 }
 
 /**
- * Placeholder until the curated quote pool ships. Public domain: Benjamin
- * Franklin, Poor Richard's Almanack (1735).
+ * Practice quote, shown when today's generated one is unavailable. Key and
+ * the four given letters from the Lambda's own cipher (seed
+ * "cryptogram-sample").
  */
 export const SAMPLE_CRYPTOGRAM: CryptogramPuzzle = {
-  text: 'EARLY TO BED AND EARLY TO RISE, MAKES A MAN HEALTHY, WEALTHY, AND WISE.',
-  author: 'Benjamin Franklin',
-  source: {
-    label: "Poor Richard's Almanack, 1735",
-    url: 'https://en.wikipedia.org/wiki/Poor_Richard%27s_Almanack',
-  },
-  key: 'LEKFHORGBSWCUZJAVYIXMPTQND',
-  given: ['W', 'K'],
+  text: 'IF YOU SHED TEARS WHEN YOU MISS THE SUN, YOU ALSO MISS THE STARS.',
+  author: 'Rabindranath Tagore',
+  source: { label: 'Stray Birds (1916)', url: 'https://www.gutenberg.org/ebooks/6524' },
+  key: 'LPKMWGUFZHXQJSVACBTOYRDNIE',
+  given: ['U', 'O', 'T', 'H'],
 };

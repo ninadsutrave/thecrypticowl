@@ -31,7 +31,7 @@ export function letterCounts(text) {
  * the commonest letter (usually E) would make it easy; a letter that appears
  * once barely helps.
  */
-export function pickGivens(text, rng, count = 2) {
+export function pickGivens(text, rng, count = 4) {
   const ranked = [...letterCounts(text)].sort((a, b) => b[1] - a[1]);
   const middle = ranked
     .slice(2)

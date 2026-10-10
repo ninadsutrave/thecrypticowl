@@ -114,10 +114,15 @@ describe('judge', () => {
     expect(opening('One. Two. Three. Name it.')).toBe('One. Two. What is it?');
   });
 
-  it('passes a question solved only in full, at medium or hard', async () => {
-    const v = await judgeTrivia(candidate(), ctxWith(reply('Wi-Fi'), reply('Bluetooth', 'hard')));
+  it('passes a question solved only in full, at medium; rejects hard', async () => {
+    const v = await judgeTrivia(candidate(), ctxWith(reply('Wi-Fi'), reply('Bluetooth', 'medium')));
     expect(v.ok).toBe(true);
-    expect(v.score).toBe(2);
+    const hard = await judgeTrivia(
+      candidate(),
+      ctxWith(reply('Wi-Fi'), reply('Bluetooth', 'hard'))
+    );
+    expect(hard.ok).toBe(false);
+    expect(hard.feedback).toMatch(/aim for medium/);
   });
 
   it('rejects an opening that already gives it away', async () => {

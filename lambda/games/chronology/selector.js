@@ -2,7 +2,6 @@ import { fetchMonthlyViews, fetchOnThisDay } from '../../shared/sources/wikipedi
 import { screenEvents } from './judge.js';
 
 export const EVENTS_PER_DAY = 6;
-/** Two "close" pairs make it medium: real knowledge, not "sounds medieval". */
 const MIN_SPAN_YEARS = 150;
 /** Births are the feed's longest list; capped so famous events lead. */
 const MAX_BIRTHS = 2;
@@ -19,18 +18,18 @@ const FAME_POOL = { event: 20, birth: 8 };
 const FAME_FLOOR = { event: 1_000, birth: 20_000 };
 
 /**
- * What makes a set medium: close pairs force real knowledge rather than
- * "that sounds medieval". Tried strictest first; a date whose feed can't
- * meet one rung falls to the next rather than failing the day.
+ * Difficulty: close pairs (two events within 25 years) are what make a set
+ * hard, so they're a ceiling, not a floor (eased after play-testing).
+ * Tried strictest first: prefer none; a date whose feed can't manage that
+ * allows one, then two, rather than failing the day.
  */
 export const DIFFICULTY_LADDER = [
-  { pairs: 2, within: 25 },
-  { pairs: 2, within: 40 },
-  { pairs: 1, within: 25 },
-  { pairs: 1, within: 40 },
+  { maxPairs: 0, within: 25 },
+  { maxPairs: 1, within: 25 },
+  { maxPairs: 2, within: 25 },
 ];
-/** The loosest rung — the reviewer's floor. */
-export const MIN_CLOSE_PAIRS = { pairs: 1, within: 40 };
+/** The reviewer's floor: no longer requires any close pair. */
+export const MIN_CLOSE_PAIRS = { pairs: 0, within: 25 };
 
 const MONTHS = [
   'January',
@@ -239,10 +238,10 @@ export function pickEvents(
       if ([...perCentury.values()].some(n => n > MAX_PER_CENTURY)) continue;
       if (new Set(years).size !== years.length) continue;
       const span = Math.max(...years) - Math.min(...years);
-      if (span >= MIN_SPAN_YEARS && closePairs(years, rung.within) >= rung.pairs) return pick;
+      if (span >= MIN_SPAN_YEARS && closePairs(years, rung.within) <= rung.maxPairs) return pick;
     }
   }
-  throw new Error('no set of events with a close pair and a wide span in this feed');
+  throw new Error('no set of well-spread events with a wide span in this feed');
 }
 
 /**

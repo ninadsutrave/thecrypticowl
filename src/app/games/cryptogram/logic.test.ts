@@ -11,7 +11,7 @@ describe('the sample puzzle', () => {
 
   it('enciphers letters only, keeping spaces and punctuation', () => {
     expect(encode(text, key)).toBe(
-      'HLYCN XJ EHF LZF HLYCN XJ YBIH, ULWHI L ULZ GHLCXGN, THLCXGN, LZF TBIH.'
+      'ZG IVY TFWM OWLBT DFWS IVY JZTT OFW TYS, IVY LQTV JZTT OFW TOLBT.'
     );
   });
 });
@@ -46,12 +46,12 @@ describe('pickHint', () => {
   const cipher = encode(text, key);
 
   it('reveals the selected letter while it is still wrong', () => {
-    expect(pickHint({}, solution, cipher, 'X')).toBe('X');
+    expect(pickHint({}, solution, cipher, 'Z')).toBe('Z');
   });
 
   it('otherwise reveals the most frequent unsolved letter', () => {
-    // H (plain E) and L (plain A) are the commonest; either is a fair hint.
-    expect(['H', 'L']).toContain(pickHint({}, solution, cipher, null));
+    // T (plain S) is by far the commonest.
+    expect(pickHint({}, solution, cipher, null)).toBe('T');
   });
 
   it('returns null once everything is solved', () => {

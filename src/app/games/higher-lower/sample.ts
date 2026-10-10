@@ -35,58 +35,59 @@ export interface HigherLowerPuzzle {
 
 /**
  * Practice puzzle, shown when today's generated one is unavailable. Built by
- * the Lambda's own generator from a Wikidata snapshot of famous stadiums (seed
- * "higher-lower-sample"), so it follows the same rules as every daily one.
+ * the Lambda's own generator from Wikipedia's list of international cricket
+ * centuries (seed "higher-lower-sample-8"), so it follows the same rules as
+ * every daily one.
  */
 export const SAMPLE_HIGHER_LOWER: HigherLowerPuzzle = {
-  theme: 'stadium-capacity',
-  title: 'Which stadium holds more people?',
-  noun: 'capacity',
+  theme: 'cricket-centuries',
+  title: 'Who has scored more international hundreds?',
+  noun: 'international centuries',
   higher: 'More',
   lower: 'Fewer',
   format: 'count',
   items: [
     {
-      id: 'Q19520501',
-      name: 'SoFi Stadium',
-      description: 'Stadium in Inglewood, California',
-      value: 70240,
-      url: 'https://www.wikidata.org/wiki/Q19520501',
+      id: 'Rohit Sharma',
+      name: 'Rohit Sharma',
+      description: 'Indian cricketer',
+      value: 52,
+      url: 'https://en.wikipedia.org/wiki/Rohit_Sharma',
     },
     {
-      id: 'Q33993',
-      name: 'Ak Bars Arena',
-      description: 'Football stadium in Kazan, Russia',
-      value: 45105,
-      url: 'https://www.wikidata.org/wiki/Q33993',
+      id: 'Virat Kohli',
+      name: 'Virat Kohli',
+      description: 'Indian cricketer',
+      value: 86,
+      url: 'https://en.wikipedia.org/wiki/Virat_Kohli',
     },
     {
-      id: 'Q150933',
-      name: 'Volksparkstadion',
-      description: 'Football stadium in Hamburg, Germany',
-      value: 57000,
-      url: 'https://www.wikidata.org/wiki/Q150933',
+      id: 'Adam Gilchrist',
+      name: 'Adam Gilchrist',
+      description: 'Australian cricketer',
+      value: 33,
+      url: 'https://en.wikipedia.org/wiki/Adam_Gilchrist',
     },
     {
-      id: 'Q133525',
-      name: 'Beijing National Stadium',
-      description: 'Stadium at Beijing, China',
-      value: 80000,
-      url: 'https://www.wikidata.org/wiki/Q133525',
+      id: 'Steve Smith (cricketer)',
+      name: 'Steve Smith',
+      description: 'Australian cricketer',
+      value: 49,
+      url: 'https://en.wikipedia.org/wiki/Steve_Smith_(cricketer)',
     },
     {
-      id: 'Q150961',
-      name: 'Arena AufSchalke',
-      description: 'Football stadium in Gelsenkirchen, North Rhine-Westphalia, Germany',
-      value: 62271,
-      url: 'https://www.wikidata.org/wiki/Q150961',
+      id: 'Joe Root',
+      name: 'Joe Root',
+      description: 'English cricketer',
+      value: 61,
+      url: 'https://en.wikipedia.org/wiki/Joe_Root',
     },
     {
-      id: 'Q4366184',
-      name: 'Volgograd Arena',
-      description: 'Stadium in Volgograd, Russia',
-      value: 45568,
-      url: 'https://www.wikidata.org/wiki/Q4366184',
+      id: 'Don Bradman',
+      name: 'Don Bradman',
+      description: 'Australian cricketer',
+      value: 29,
+      url: 'https://en.wikipedia.org/wiki/Don_Bradman',
     },
   ],
 };

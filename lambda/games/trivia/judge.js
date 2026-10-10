@@ -13,7 +13,7 @@ export function opening(question) {
  *
  *   the opening alone → must NOT already name it (otherwise too easy)
  *   the full question → MUST name it first (solvable, one clear answer),
- *                       rated medium or hard, and fair
+ *                       rated medium, and fair
  */
 export async function judgeTrivia(candidate, ctx) {
   const { category, question, accepted } = candidate.payload;
@@ -54,6 +54,13 @@ export async function judgeTrivia(candidate, ctx) {
       feedback: 'Rated easy: most people would get it at once. Use less famous facts about it.',
     };
   }
+  if (full.difficulty === 'hard') {
+    return {
+      ok: false,
+      feedback:
+        'Rated hard: aim for medium. Make the last sentence point to something most people know.',
+    };
+  }
   if (full.difficulty === 'obscure') {
     return {
       ok: false,
@@ -64,6 +71,6 @@ export async function judgeTrivia(candidate, ctx) {
   return {
     ok: true,
     feedback: `opening alone didn't give it away; solved in full; rated ${full.difficulty}`,
-    score: full.difficulty === 'hard' ? 2 : 1,
+    score: 1,
   };
 }

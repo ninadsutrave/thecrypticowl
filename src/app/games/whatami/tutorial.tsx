@@ -3,14 +3,16 @@ import { Line, Pill, Stack } from '../tutorialVisuals';
 
 const ACCENT = '#F97316';
 
-// Example answer: The Beatles. Never today's answer.
+// Example answer: A. R. Rahman. Never today's answer.
 export function getWhatAmITutorial(): TutorialStep[] {
   return [
     {
       title: 'Five clues, hardest first',
       visual: (
         <Stack gap={6}>
-          <Line tone="focus">1 · Four of us cut our teeth playing clubs in Hamburg. · 5 pts</Line>
+          <Line tone="focus">
+            1 · I wrote advertising jingles before my first film score. · 5 pts
+          </Line>
           <Line tone="muted">🔒 Clue 2 · 4 pts</Line>
           <Line tone="muted">🔒 Clue 3 · 3 pts</Line>
         </Stack>
@@ -26,8 +28,8 @@ export function getWhatAmITutorial(): TutorialStep[] {
       title: 'Guess early, score more',
       visual: (
         <Stack gap={6}>
-          <Line tone="bad">✗ “Rolling Stones” → clue 2 opens</Line>
-          <Line tone="good">✓ “the beatles” · 4 points</Line>
+          <Line tone="bad">✗ “Ilaiyaraaja” → clue 2 opens</Line>
+          <Line tone="good">✓ “a r rahman” · 4 points</Line>
         </Stack>
       ),
       body: (
@@ -44,7 +46,7 @@ export function getWhatAmITutorial(): TutorialStep[] {
       title: 'One hint',
       visual: (
         <Stack>
-          <Line tone="focus">💡 Starts with “T” · 3 words: 3, 7</Line>
+          <Line tone="focus">💡 Starts with “A” · 3 words: 1, 1, 6</Line>
           <Pill color={ACCENT}>Costs 1 point</Pill>
         </Stack>
       ),

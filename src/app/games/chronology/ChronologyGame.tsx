@@ -12,7 +12,7 @@ import { SAMPLE_CHRONOLOGY, type ChronologyPuzzle } from './sample';
 import { getChronologyTutorial } from './tutorial';
 
 const ACCENT = '#D97706';
-const MAX_ATTEMPTS = 3;
+const MAX_ATTEMPTS = 4;
 
 export function ChronologyGame() {
   const {

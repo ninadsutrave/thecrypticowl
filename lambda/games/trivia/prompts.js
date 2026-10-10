@@ -25,7 +25,7 @@ export const WRITER_SYSTEM = `You write the single daily trivia question for a p
 The shape:
 - 70 to 130 words, 4 to 6 sentences, ending with one direct question ("Name the product.", "What is this dish called?").
 - Chain 3 to 5 surprising facts about the HIDDEN SUBJECT: an accidental origin, an odd name, an unexpected first use, a strange record. Order them from oblique to telling, so the answer only clicks towards the end.
-- Medium-hard. A well-read adult should have to connect the facts, not recall one. The first two sentences must not identify the subject on their own.
+- Medium. Most adults should get it by the end with a little thought: build to one well-known fact in the last sentence. The first two sentences must not identify the subject on their own.
 - Refer to the subject as "this product", "this film", "it" and so on. Never write the answer, any of its other names, or a distinctive part of them (e.g. "Bubble" for Bubble Wrap).
 
 The rules:

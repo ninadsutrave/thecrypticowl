@@ -52,14 +52,14 @@ describe('selection', () => {
   };
   const views = new Map(years.map(y => [`P${y}`, 50_000]));
 
-  it('picks six famous events with two close pairs, none starting in place', async () => {
+  it('picks six famous events, at most one close pair, none starting in place', async () => {
     const c = await generateChronology(
       { date: '2026-10-09', rng: createRng(1), used: new Set() },
       { fetchOnThisDay: async () => feed, fetchMonthlyViews: async () => views }
     );
     expect(c.payload.day).toBe('9 October');
     expect(c.payload.events).toHaveLength(6);
-    expect(closePairs(c.payload.events.map(e => e.year))).toBeGreaterThanOrEqual(2);
+    expect(closePairs(c.payload.events.map(e => e.year))).toBeLessThanOrEqual(1);
     expect(reviewChronology(c)).toMatchObject({ ok: true });
     expect(c.payload.events[0]).not.toHaveProperty('title');
   });

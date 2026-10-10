@@ -37,6 +37,15 @@ puzzle and falls back to a labelled practice one only if it's missing. See
 
 ## Difficulty, time and hints (all games)
 
+**Eased after play-testing (October 2026), all but Checkmate and Cryptics:**
+Sudoku gets three more starting numbers per variant; Slitherlink more clues
+and less search; Cryptogram four given letters (was two); Chronology prefers
+events far apart in time (close pairs are now a ceiling) and allows four
+checks; Higher or Lower pairs sit further apart (`EASE` in its generator);
+Trivia aims at medium and rejects "hard", with four guesses; What Am I
+should be gettable by clue 3.
+
+
 - **Medium, every day.** Each puzzle should take a typical solver **about
   5–6 minutes**. There is no easy-Monday → hard-Sunday curve; the Sudoku
   variant rotates by weekday, its difficulty does not.
@@ -210,12 +219,12 @@ controversies. Both the generator prompt and the judge enforce this.
 options to pick from. Modelled on quiz-night questions: 70–130 words chaining
 3–5 surprising facts about one subject (an accidental origin, an odd name, an
 unexpected first use) from oblique to telling, ending with a direct question
-("Name the product."). Medium-hard: the solver has to connect the facts, not
+("Name the product."). Medium: most adults get it by the end with a little thought, not
 recall one.
 
 **Gameplay**
 
-- Read the story, type the answer. Three guesses; small typos are forgiven
+- Read the story, type the answer. Four guesses; small typos are forgiven
   (the same matching as What Am I).
 - One hint: the answer's first letter and the length of each word, drawn as
   letter slots.

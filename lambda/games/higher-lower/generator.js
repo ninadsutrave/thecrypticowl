@@ -200,9 +200,20 @@ const DANGLING = /[\s,]+(?:born|since|from|until|to|and|in|between|circa|c\.|–
 
 /** Whether b is a fair next step from a: clearly different, not wildly so. */
 export function fairPair(theme, a, b) {
-  const { minRatio, maxRatio } = theme.close;
+  const { minRatio, maxRatio } = eased(theme.close);
   const ratio = Math.max(a.value, b.value) / Math.min(a.value, b.value);
   return ratio >= minRatio && ratio <= maxRatio;
+}
+
+/**
+ * Pairs a notch further apart than each theme's calibration, which players
+ * found too close: the gap above 1 grows by half (1.12× → 1.18×), and the
+ * upper bound by a fifth so a chain can still be built.
+ */
+export const EASE = 1.5;
+function eased({ minRatio, maxRatio }) {
+  const min = 1 + (minRatio - 1) * EASE;
+  return { minRatio: min, maxRatio: Math.max(maxRatio * 1.2, min * 1.3) };
 }
 
 /** How many answers may go up: 2–3 of five, so neither call dominates. */

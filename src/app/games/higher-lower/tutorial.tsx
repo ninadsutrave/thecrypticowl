@@ -4,15 +4,15 @@ import type { HigherLowerPuzzle } from './sample';
 
 const ACCENT = '#0F766E';
 
-// A worked example (mountains), never a day's actual chain.
+// A worked example (Himalayan peaks), never a day's actual chain.
 export function getHigherLowerTutorial(puzzle: HigherLowerPuzzle): TutorialStep[] {
   return [
     {
       title: 'One question, five rounds',
       visual: (
         <Stack gap={6}>
-          <Line>Mont Blanc · 4,806 m</Line>
-          <Line tone="focus">Mount Kilimanjaro · ?</Line>
+          <Line>Kangchenjunga · 8,586 m</Line>
+          <Line tone="focus">Nanda Devi · ?</Line>
         </Stack>
       ),
       body: (
@@ -27,10 +27,10 @@ export function getHigherLowerTutorial(puzzle: HigherLowerPuzzle): TutorialStep[
       visual: (
         <Stack gap={6}>
           <div className="flex gap-1.5">
-            <Pill color={ACCENT}>▲ Higher</Pill>
-            <Pill color="#64748B">▼ Lower</Pill>
+            <Pill color="#64748B">▲ Higher</Pill>
+            <Pill color={ACCENT}>▼ Lower</Pill>
           </div>
-          <Line tone="good">Mount Kilimanjaro · 5,895 m ✓</Line>
+          <Line tone="good">Nanda Devi · 7,816 m ✓</Line>
         </Stack>
       ),
       body: (
@@ -42,7 +42,7 @@ export function getHigherLowerTutorial(puzzle: HigherLowerPuzzle): TutorialStep[
     },
     {
       title: 'One hint: a ballpark',
-      visual: <Line tone="focus">💡 Mount Kilimanjaro: about 6,000 m</Line>,
+      visual: <Line tone="focus">💡 Nanda Devi: about 8,000 m</Line>,
       body: (
         <p>
           Unsure? Once per game, the hint gives the hidden number to one figure. It's noted in your

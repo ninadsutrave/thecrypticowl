@@ -30,10 +30,10 @@ describe('findConflicts', () => {
   });
 
   it('flags a cage whose digits overshoot its sum', () => {
-    // Cage {1, 7} sums to 5.
+    // Cage {12, 18} sums to 3.
     const values = Array(36).fill(0);
-    values[1] = 6;
-    expect(findConflicts(values, SAMPLE_SUDOKU).has(1)).toBe(true);
+    values[12] = 6;
+    expect(findConflicts(values, SAMPLE_SUDOKU).has(12)).toBe(true);
   });
 
   it('ignores empty cells', () => {

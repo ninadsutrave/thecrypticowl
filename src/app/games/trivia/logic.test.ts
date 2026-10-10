@@ -23,11 +23,11 @@ describe('triviaGrid', () => {
 describe('the sample', () => {
   it('parses, and accepts its answer with a typo', () => {
     expect(parseTrivia(SAMPLE_TRIVIA)).not.toBeNull();
-    expect(isCorrectGuess('super soker', SAMPLE_TRIVIA.accepted)).toBe(true);
-    expect(isCorrectGuess('water pistol', SAMPLE_TRIVIA.accepted)).toBe(false);
+    expect(isCorrectGuess('amul diary', SAMPLE_TRIVIA.accepted)).toBe(true);
+    expect(isCorrectGuess('mother dairy', SAMPLE_TRIVIA.accepted)).toBe(false);
   });
 
   it('never names its own answer in the question', () => {
-    expect(SAMPLE_TRIVIA.question.toLowerCase()).not.toContain('soaker');
+    expect(SAMPLE_TRIVIA.question.toLowerCase()).not.toContain('amul');
   });
 });

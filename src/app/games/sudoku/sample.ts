@@ -46,33 +46,29 @@ export interface SudokuPuzzle {
 }
 
 /**
- * Placeholder until the daily generator ships. A 6×6 Killer: a 9×9 Killer
- * takes most solvers well past the 5–6 minute medium target.
- *
- * Machine-checked: a solver finds exactly one solution with these cages
- * and the two givens.
+ * Practice puzzle, shown when today's generated one is unavailable: a 6×6
+ * Killer made by the Lambda's own generator (seed "sudoku-sample-0") at the
+ * eased difficulty, so it plays like a daily one. Unique by the solver.
  */
 export const SAMPLE_SUDOKU: SudokuPuzzle = {
   variant: 'killer',
   size: 6,
   boxRows: 2,
   boxCols: 3,
-  givens: { 5: 1, 17: 6 },
-  solution: '345621216354154236623145462513531462',
+  givens: { 2: 1, 7: 3, 11: 6, 24: 4, 30: 3 },
+  solution: '621453534216163524245631412365356142',
   cages: [
-    { sum: 6, cells: [0, 6, 12] },
-    { sum: 5, cells: [1, 7] },
-    { sum: 14, cells: [2, 8, 9] },
-    { sum: 14, cells: [3, 4, 5, 10] },
-    { sum: 15, cells: [11, 15, 16, 17] },
-    { sum: 9, cells: [13, 14] },
-    { sum: 10, cells: [18, 24] },
-    { sum: 5, cells: [19, 20] },
-    { sum: 5, cells: [21, 22] },
-    { sum: 9, cells: [23, 28, 29] },
-    { sum: 14, cells: [25, 30, 31] },
-    { sum: 3, cells: [26, 32] },
-    { sum: 9, cells: [27, 33] },
-    { sum: 8, cells: [34, 35] },
+    { sum: 14, cells: [8, 9, 14, 15] },
+    { sum: 11, cells: [10, 11, 17] },
+    { sum: 11, cells: [32, 33, 34] },
+    { sum: 11, cells: [13, 19, 25] },
+    { sum: 17, cells: [0, 1, 2, 6, 7] },
+    { sum: 7, cells: [29, 35] },
+    { sum: 6, cells: [16, 22, 23] },
+    { sum: 12, cells: [24, 30, 31] },
+    { sum: 13, cells: [20, 21, 26] },
+    { sum: 12, cells: [3, 4, 5] },
+    { sum: 9, cells: [27, 28] },
+    { sum: 3, cells: [12, 18] },
   ],
 };

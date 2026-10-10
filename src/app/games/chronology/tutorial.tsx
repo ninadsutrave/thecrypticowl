@@ -10,9 +10,9 @@ export function getChronologyTutorial(count: number): TutorialStep[] {
       title: 'Same date, different years',
       visual: (
         <Stack gap={6}>
-          <Line>The Titanic sets sail</Line>
-          <Line>The first Moon landing</Line>
-          <Line>The Berlin Wall falls</Line>
+          <Line>Gandhi's Salt March begins</Line>
+          <Line>India wins its first Cricket World Cup</Line>
+          <Line>Chandrayaan-3 lands on the Moon</Line>
         </Stack>
       ),
       body: (
@@ -26,15 +26,15 @@ export function getChronologyTutorial(count: number): TutorialStep[] {
       title: 'Earliest at the top',
       visual: (
         <Stack gap={6}>
-          <Line>↑↓ The Titanic sets sail</Line>
-          <Line tone="focus">↑↓ The first Moon landing</Line>
-          <Line>↑↓ The Berlin Wall falls</Line>
+          <Line>↑↓ Gandhi's Salt March begins</Line>
+          <Line tone="focus">↑↓ India wins its first Cricket World Cup</Line>
+          <Line>↑↓ Chandrayaan-3 lands on the Moon</Line>
         </Stack>
       ),
       body: <p>Use the arrows on each event to move it up or down. Earliest goes at the top.</p>,
     },
     {
-      title: 'Three checks',
+      title: 'Four checks',
       visual: (
         <Stack gap={4}>
           <Cells items={['', '', '']} tones={['bad', 'good', 'bad']} size={26} />
@@ -45,13 +45,15 @@ export function getChronologyTutorial(count: number): TutorialStep[] {
       body: (
         <p>
           Press Check when you're happy. Events in the right place lock in green; the rest stay
-          movable. You have three checks to get them all.
+          movable. You have four checks to get them all.
         </p>
       ),
     },
     {
       title: 'One hint',
-      visual: <Line tone="focus">💡 “The first Moon landing” happened in 1969.</Line>,
+      visual: (
+        <Line tone="focus">💡 “India wins its first Cricket World Cup” happened in 1983.</Line>
+      ),
       body: (
         <p>
           Once per puzzle you can reveal the year of the event at the top of your list. One fixed

@@ -23,13 +23,14 @@ export const WEEKLY_ROTATION = [
 ];
 
 export const VARIANT_CONFIG = {
-  diagonal: { extraGivens: 2 },
-  kropki: { extraGivens: 2 },
-  thermo: { extraGivens: 1 },
-  arrow: { extraGivens: 1 },
-  sandwich: { extraGivens: 2 },
-  jigsaw: { extraGivens: 2 },
-  killer: { extraGivens: 1 },
+  // Raised by three each: players found the first calibration too hard.
+  diagonal: { extraGivens: 5 },
+  kropki: { extraGivens: 5 },
+  thermo: { extraGivens: 4 },
+  arrow: { extraGivens: 4 },
+  sandwich: { extraGivens: 5 },
+  jigsaw: { extraGivens: 5 },
+  killer: { extraGivens: 4 },
 };
 
 /** Review bands for a medium 6×6 puzzle. */

@@ -28,7 +28,7 @@ Rules:
 - Use ONLY facts stated in the SOURCE TEXT you are given. Never add outside knowledge.
 - For each clue, copy into "evidence" one sentence from the source that proves it, verbatim.
 - Never write the answer, any of its other names, or an obvious part of them (e.g. "Ice" for Iceland).
-- Clue 1 is vague but fair: a well-read person should not get it from clue 1 alone. Clue 5 is close to a give-away. Difficulty must fall steadily from 1 to 5.
+- Clue 1 is vague but fair. Most people should be able to get it by clue 3, and clue 5 is close to a give-away. Difficulty must fall steadily from 1 to 5.
 - Each clue is one sentence, 8 to 28 words, British English, playful but accurate.
 - For a person: only their work and public achievements. Never health, relationships, legal matters, scandal, or death details.
 - Avoid dates and numbers as the main hook of clues 1 and 2.`;

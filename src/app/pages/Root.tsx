@@ -497,7 +497,7 @@ export function Root() {
           >
             Copyright © {new Date().getFullYear()}{' '}
             <a
-              href="https://ninadsutrave.in"
+              href="https://ninadsutrave.com"
               target="_blank"
               rel="noopener noreferrer"
               className="font-bold hover:underline"

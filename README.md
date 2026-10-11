@@ -128,6 +128,6 @@ how to add a wordplay mechanism end to end.
 
 ## ⚖️ License
 
-Copyright © 2026 [Ninad Sutrave](https://ninadsutrave.in). All rights reserved.
+Copyright © 2026 [Ninad Sutrave](https://ninadsutrave.com). All rights reserved.
 See **[LICENSE](./LICENSE)**. For inquiries, visit
-[ninadsutrave.in](https://ninadsutrave.in).
+[ninadsutrave.com](https://ninadsutrave.com).

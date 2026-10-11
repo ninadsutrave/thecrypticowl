@@ -172,7 +172,7 @@ export function About() {
       >
         Made by{' '}
         <a
-          href="https://ninadsutrave.in"
+          href="https://ninadsutrave.com"
           target="_blank"
           rel="noopener noreferrer"
           className="font-extrabold underline"

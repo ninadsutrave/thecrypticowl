@@ -40,7 +40,7 @@ function jsonLd(page) {
     url: `${seo.site}/`,
     description: seo.home.description,
     inLanguage: 'en',
-    author: { '@type': 'Person', name: 'Ninad Sutrave', url: 'https://ninadsutrave.in' },
+    author: { '@type': 'Person', name: 'Ninad Sutrave', url: 'https://ninadsutrave.com' },
   };
   const graph = [website];
   if (page.path === '/') {

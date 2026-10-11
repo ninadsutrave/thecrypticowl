@@ -82,12 +82,12 @@ export function Privacy() {
           If you have any questions, concerns, or requests regarding your data, please contact Ninad
           Sutrave at ninadsutrave@gmail.com or visit{' '}
           <a
-            href="https://ninadsutrave.in"
+            href="https://ninadsutrave.com"
             target="_blank"
             rel="noopener noreferrer"
             style={{ color: T.brand, textDecoration: 'underline' }}
           >
-            ninadsutrave.in
+            ninadsutrave.com
           </a>
           .
         </>

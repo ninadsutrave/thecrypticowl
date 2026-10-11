@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { m, AnimatePresence } from 'motion/react';
 import { ThumbsUp, ThumbsDown } from 'lucide-react';
 import { getTheme } from '../../theme';
-import { useClueReaction } from '../../hooks/useClueReaction';
+import { useClueReaction, type Reaction } from '../../hooks/useClueReaction';
 // ─── CLUE REACTION ────────────────────────────────────────────────────────────
 
 export function ClueReactionWidget({
@@ -18,8 +18,27 @@ export function ClueReactionWidget({
   isDark: boolean;
   variant?: 'inline' | 'card';
 }) {
-  const T = getTheme(isDark);
   const { reaction, vote } = useClueReaction(puzzleNumber, userId, puzzleId);
+  return (
+    <ReactionWidget reaction={reaction} vote={vote} noun="clue" isDark={isDark} variant={variant} />
+  );
+}
+
+/** Thumbs up / down with a thank-you note. Toggling the chosen thumb clears it. */
+export function ReactionWidget({
+  reaction,
+  vote,
+  noun,
+  isDark,
+  variant = 'inline',
+}: {
+  reaction: Reaction;
+  vote: (r: 'like' | 'dislike') => Promise<boolean>;
+  noun: 'clue' | 'puzzle';
+  isDark: boolean;
+  variant?: 'inline' | 'card';
+}) {
+  const T = getTheme(isDark);
   const [flash, setFlash] = useState<'like' | 'dislike' | 'failed' | null>(null);
 
   const handleVote = async (r: 'like' | 'dislike') => {
@@ -46,7 +65,7 @@ export function ClueReactionWidget({
           borderColor: likeActive ? '#10B981' : T.inputBorder,
           color: likeActive ? '#10B981' : T.textMuted,
         }}
-        aria-label="Like this clue"
+        aria-label={`Like this ${noun}`}
         aria-pressed={likeActive}
       >
         <ThumbsUp size={14} />
@@ -63,7 +82,7 @@ export function ClueReactionWidget({
           borderColor: dislikeActive ? '#EF4444' : T.inputBorder,
           color: dislikeActive ? '#EF4444' : T.textMuted,
         }}
-        aria-label="Dislike this clue"
+        aria-label={`Dislike this ${noun}`}
         aria-pressed={dislikeActive}
       >
         <ThumbsDown size={14} />
@@ -116,7 +135,7 @@ export function ClueReactionWidget({
               margin: 0,
             }}
           >
-            How was this clue?
+            How was this {noun}?
           </p>
           {buttons}
         </div>
@@ -134,7 +153,7 @@ export function ClueReactionWidget({
           fontFamily: "'Nunito', sans-serif",
         }}
       >
-        Rate this clue
+        Rate this {noun}
       </span>
       {buttons}
     </div>

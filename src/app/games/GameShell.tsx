@@ -25,11 +25,14 @@ import {
   clearProgress,
   formatClock,
   getSolveRecord,
+  localDateKey,
   progressKey,
   type SolveOutcome,
   type SolveRecord,
 } from './solveRecords';
 import { recordPlay } from './playHistory';
+import { usePuzzleReaction } from '../hooks/usePuzzleReaction';
+import { ReactionWidget } from '../pages/puzzle/ClueReactionWidget';
 import { TutorialFlow, type TutorialStep } from './TutorialFlow';
 import { hasSeenTutorial, markTutorialSeen } from './tutorialSeen';
 import { useGameTimer } from './useGameTimer';
@@ -166,6 +169,7 @@ export function GameShell({
             T={T}
             isDark={isDark}
             alreadyDone
+            puzzleDate={localDateKey()}
             onReplay={startReplay}
           />
         </>
@@ -294,6 +298,7 @@ function GameSession({
             // finish is, even on a practice or archive puzzle.
             shareable={!replaying || practicePuzzle || archiveDate !== null}
             shareDate={archiveDate}
+            puzzleDate={practicePuzzle ? null : (archiveDate ?? localDateKey())}
             onReplay={onReplay}
           />
         )}
@@ -409,6 +414,7 @@ function ResultCard({
   archive,
   shareable,
   shareDate,
+  puzzleDate = null,
   onReplay,
 }: {
   game: GameMeta;
@@ -423,6 +429,8 @@ function ResultCard({
   shareable?: boolean;
   /** The puzzle's own date for the share text (archive days). */
   shareDate?: string | null;
+  /** The day of the puzzle being rated; null for a practice puzzle. */
+  puzzleDate?: string | null;
   onReplay: () => void;
 }) {
   const copy = OUTCOME_COPY[record.outcome];
@@ -441,6 +449,8 @@ function ResultCard({
   const isBest =
     !practice && record.outcome === 'solved' && mine.solves > 1 && mine.best === record.seconds;
   const [shared, setShared] = useState<'idle' | 'shared' | 'copied' | 'failed'>('idle');
+  const { user } = useAuth();
+  const rating = usePuzzleReaction(game.id, puzzleDate, user?.id);
 
   const share = async () =>
     setShared(
@@ -550,6 +560,15 @@ function ResultCard({
           />
         </div>
       )}
+
+      <div className="mb-4">
+        <ReactionWidget
+          reaction={rating.reaction}
+          vote={rating.vote}
+          noun="puzzle"
+          isDark={isDark}
+        />
+      </div>
 
       <div className="flex flex-col sm:flex-row gap-2 justify-center">
         {archive ? (

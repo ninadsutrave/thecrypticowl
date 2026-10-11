@@ -21,6 +21,8 @@ const PREFIX = 'tco-';
 export const StoreKeys = {
   streak: `${PREFIX}streak`,
   reactions: `${PREFIX}reactions`,
+  /** Thumbs up/down on other games' puzzles, keyed "game:date". */
+  puzzleReactions: `${PREFIX}puzzle-reactions`,
   appLiked: `${PREFIX}app-liked`,
   darkMode: `${PREFIX}dark-mode`,
   /** One entry per calendar date; pruned by `prunePuzzleCache`. */

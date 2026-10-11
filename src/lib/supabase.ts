@@ -712,6 +712,42 @@ export async function deleteClueReaction(userId: string, clueId: string): Promis
   if (error) throw new Error(`deleteClueReaction: ${error.message}`);
 }
 
+/** Save a player's thumbs up/down on a game's puzzle (migration 010). */
+export async function upsertPuzzleReaction(
+  userId: string,
+  game: string,
+  puzzleDate: string,
+  reaction: 'like' | 'dislike'
+): Promise<void> {
+  const supabase = await getSupabaseClient();
+  if (!isSupabaseConfigured) return;
+  const { error } = await supabase.from('puzzle_reactions').upsert({
+    user_id: userId,
+    game,
+    puzzle_date: puzzleDate,
+    reaction,
+    updated_at: new Date().toISOString(),
+  });
+  if (error) throw new Error(`upsertPuzzleReaction: ${error.message}`);
+}
+
+/** Remove a player's vote on a game's puzzle. */
+export async function deletePuzzleReaction(
+  userId: string,
+  game: string,
+  puzzleDate: string
+): Promise<void> {
+  const supabase = await getSupabaseClient();
+  if (!isSupabaseConfigured) return;
+  const { error } = await supabase
+    .from('puzzle_reactions')
+    .delete()
+    .eq('user_id', userId)
+    .eq('game', game)
+    .eq('puzzle_date', puzzleDate);
+  if (error) throw new Error(`deletePuzzleReaction: ${error.message}`);
+}
+
 // ─── APP LIKES ───────────────────────────────────────────────────────────────
 
 /** Fetch the total number of likes for the entire app. */

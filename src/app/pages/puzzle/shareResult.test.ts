@@ -1,11 +1,5 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
-import {
-  buildShareText,
-  shareBlocks,
-  formatSolveTime,
-  funCallout,
-  shareOrCopy,
-} from './shareResult';
+import { shareBlocks, formatSolveTime, funCallout, shareOrCopy } from './shareResult';
 
 describe('shareBlocks', () => {
   it('is all green when no hints were used', () => {
@@ -64,54 +58,6 @@ describe('funCallout', () => {
 
   it('never boasts about a revealed answer', () => {
     expect(funCallout({ hintsUsed: 0, wasRevealed: true })).toMatch(/stumped me/);
-  });
-});
-
-describe('buildShareText', () => {
-  const base = {
-    puzzleNumber: 42,
-    hintsUsed: 0,
-    wasRevealed: false,
-    solveTime: 95,
-    streak: 7,
-  };
-
-  it('leads with the puzzle number', () => {
-    expect(buildShareText(base).split('\n')[0]).toBe('🦉 TheCrypticOwl #42');
-  });
-
-  it('includes blocks, time and streak for a genuine solve', () => {
-    const text = buildShareText(base);
-    expect(text).toContain('🟩🟩🟩🟩  (0/4 hints used)');
-    expect(text).toContain('⏱️ 1m 35s  🔥 7-day streak');
-    expect(text).toContain('thecrypticowl.com');
-  });
-
-  it('omits the time and streak line when the answer was revealed', () => {
-    // Nothing to boast about, and a "streak" beside a revealed answer reads
-    // as a claim the solver didn't earn.
-    const text = buildShareText({ ...base, wasRevealed: true });
-    expect(text).toContain('(revealed the answer)');
-    expect(text).not.toContain('day streak');
-    expect(text).not.toContain('⏱️');
-  });
-
-  it('never leaks the answer or the clue', () => {
-    const text = buildShareText(base);
-    expect(text).not.toMatch(/CANOE|SPEAR/);
-  });
-
-  it('is stable — the same input always produces the same text', () => {
-    expect(buildShareText(base)).toBe(buildShareText(base));
-  });
-
-  it('does not claim a streak for the offline practice clue', () => {
-    // The fallback clue has no database row, so there is no streak behind it.
-    // "🔥 0-day streak" is worse than saying nothing.
-    const text = buildShareText({ ...base, isPractice: true, streak: 0 });
-    expect(text).toContain('practice clue');
-    expect(text).not.toContain('day streak');
-    expect(text).toContain('⏱️ 1m 35s');
   });
 });
 

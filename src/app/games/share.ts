@@ -1,8 +1,10 @@
 import type { GameId, GameMeta } from './registry';
 import { formatClock, type SolveRecord } from './solveRecords';
+import { VARIANTS } from './sudoku/variants';
+import { shareBlocks } from '../pages/puzzle/shareResult';
 
-type ShareRecord = Pick<SolveRecord, 'seconds' | 'outcome' | 'score' | 'details'> &
-  Partial<Pick<SolveRecord, 'hints'>>;
+type ShareRecord = Pick<SolveRecord, 'seconds' | 'outcome'> &
+  Partial<Pick<SolveRecord, 'score' | 'details' | 'hints' | 'mistakes'>>;
 
 interface ShareOptions {
   date?: Date;
@@ -10,36 +12,156 @@ interface ShareOptions {
   streak?: number;
 }
 
-/** What a solve sounds like, game by game ("Cracked today's cryptic clue"). */
-const SOLVED: Record<GameId, (r: ShareRecord) => string> = {
-  sudoku: () => "Solved today's Variant Sudoku",
-  cryptic: () => "Cracked today's cryptic clue",
-  'what-am-i': () => "Guessed today's What Am I?",
-  trivia: () => "Nailed today's trivia question",
-  chronology: () => "Put today's history in order",
-  chess: r => `Found today's mate in ${r.details?.mateIn ?? 'N'}`,
-  cryptogram: () => "Decoded today's cryptogram",
-  slitherlink: () => "Closed today's Slitherlink loop",
-  'higher-lower': () => "Played today's Higher or Lower",
-};
-
 const site = (path = '') => `thecrypticowl.com${path}`;
 
 /** The full address of a page on the site, for "Copy link", e.g. puzzleUrl('/trivia'). */
 export function puzzleUrl(path = '/'): string {
   return `https://www.thecrypticowl.com${path}`;
 }
+
 const dayLabel = (date: Date) =>
   date.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
+const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? '' : 's'}`;
+const num = (v: unknown, fallback = 0) => (typeof v === 'number' ? v : fallback);
+
+/** ", no hints ✨" or " with 2 hints". */
+const hintsNote = (r: ShareRecord) =>
+  r.hints ? ` with ${r.hints === 1 ? 'a hint' : plural(r.hints, 'hint')}` : ', no hints ✨';
+
+interface Voice {
+  /** What happened, in the game's own terms ("Got it on guess 2 of 3 in 1:35"). */
+  solved: (r: ShareRecord, time: string) => string;
+  failed?: (r: ShareRecord, time: string) => string;
+  /** The challenge to whoever reads it. */
+  dare: (r: ShareRecord, time: string) => string;
+  /** The emoji squares, or null where the result line says it all. */
+  grid?: (r: ShareRecord) => string | null;
+}
+
+/** The game's grid without its leading emoji or a trailing "✨ no hints". */
+const squares = (r: ShareRecord, emoji: string) => {
+  const g = typeof r.details?.grid === 'string' ? r.details.grid : null;
+  if (!g) return null;
+  return (
+    g
+      .replace(new RegExp(`^${emoji}\\s*`, 'u'), '')
+      .replace(/\s*✨( no hints)?$/u, '')
+      .trim() || null
+  );
+};
+
+const VOICES: Record<GameId, Voice> = {
+  sudoku: {
+    solved: (r, t) => {
+      const variant = SUDOKU_NAMES[String(r.details?.variant)] ?? 'Variant';
+      const size = num(r.details?.size);
+      return `Solved the ${variant}${size ? ` ${size}×${size}` : ''} in ${t}${hintsNote(r)}`;
+    },
+    dare: (r, t) => (r.outcome === 'solved' ? `Can you beat ${t}?` : 'Can you crack it?'),
+    grid: () => null,
+  },
+  trivia: {
+    solved: (r, t) => {
+      const g = num(r.details?.guesses, 1);
+      return `${g === 1 ? 'Got it first guess' : `Got it on guess ${g} of 3`} in ${t}`;
+    },
+    failed: () => 'Stumped after 3 guesses 😅',
+    dare: r =>
+      r.outcome !== 'solved'
+        ? 'Can you crack it?'
+        : num(r.details?.guesses, 1) > 1
+          ? 'Can you get it first time?'
+          : 'Can you match that?',
+  },
+  'what-am-i': {
+    solved: (r, t) => `Named it on clue ${num(r.details?.cluesSeen, 1)} of 5 in ${t}`,
+    failed: () => 'Stumped after all 5 clues 😅',
+    dare: r =>
+      r.outcome !== 'solved'
+        ? 'Can you name it?'
+        : num(r.details?.cluesSeen, 1) > 1
+          ? 'Can you get it in fewer clues?'
+          : 'Can you match that?',
+  },
+  chess: {
+    solved: (r, t) => {
+      const tries = num(r.mistakes);
+      return `Found the mate in ${num(r.details?.mateIn, 4)} ${tries === 0 ? 'on my first try' : `after ${tries + 1} tries`} (${t})`;
+    },
+    failed: r => `The mate in ${num(r.details?.mateIn, 4)} got away from me 😅`,
+    dare: () => 'Can you find it?',
+    grid: r => '♟️'.repeat(num(r.details?.mateIn, 4)),
+  },
+  chronology: {
+    solved: (r, t) => {
+      const checks = num(r.details?.checks, 1);
+      return checks === 1 ? `Sorted it first time in ${t}` : `Sorted it in ${checks} checks (${t})`;
+    },
+    failed: r =>
+      `Got ${num(r.details?.placed)}/5 in place after ${plural(num(r.details?.checks, 4), 'check')} 😅`,
+    dare: r =>
+      r.outcome !== 'solved'
+        ? 'Can you put it in order?'
+        : num(r.details?.checks, 1) > 1
+          ? 'Can you do it in one?'
+          : 'Can you match that?',
+  },
+  cryptic: {
+    solved: (r, t) =>
+      r.hints
+        ? `Cracked it with ${plural(r.hints, 'hint')} in ${t}`
+        : `Cracked it with no hints in ${t}`,
+    dare: r =>
+      r.outcome === 'solved' && r.hints ? 'Can you crack it with none?' : 'Can you crack it?',
+    grid: r => shareBlocks(r.hints ?? 0, r.outcome === 'revealed'),
+  },
+  'higher-lower': {
+    solved: (r, t) => `Scored ${num(r.details?.right)}/${rounds(r)} in ${t}`,
+    failed: (r, t) => `Scored ${num(r.details?.right)}/${rounds(r)} in ${t}`,
+    dare: r =>
+      num(r.details?.right) < rounds(r)
+        ? `Can you get ${rounds(r)}/${rounds(r)}?`
+        : 'Can you match that?',
+  },
+  slitherlink: {
+    solved: (r, t) => {
+      const size = num(r.details?.size);
+      return `Closed the ${size ? `${size}×${size} ` : ''}loop in ${t}${hintsNote(r)}`;
+    },
+    dare: (r, t) => (r.outcome === 'solved' ? `Can you beat ${t}?` : 'Can you close the loop?'),
+    grid: () => null,
+  },
+  cryptogram: {
+    solved: (r, t) => `Decoded the quote in ${t}${hintsNote(r)}`,
+    dare: (r, t) =>
+      r.outcome !== 'solved'
+        ? 'Can you crack the code?'
+        : r.hints
+          ? 'Can you do it with none?'
+          : `Can you beat ${t}?`,
+    grid: () => null,
+  },
+};
+
+/** Higher or Lower rounds played: one square each. */
+const rounds = (r: ShareRecord) => {
+  const g =
+    typeof r.details?.grid === 'string' ? [...r.details.grid.matchAll(/🟩|🟥/gu)].length : 0;
+  return g || 5;
+};
+
+const SUDOKU_NAMES: Record<string, string> = Object.fromEntries(
+  Object.entries(VARIANTS).map(([id, v]) => [id, v.name])
+);
 
 /**
- * The message a finished puzzle shares to a group chat: a headline in the
- * game's own voice, the result, the spoiler-free grid, and a dare.
+ * The message a finished puzzle shares to a group chat: who and when, the
+ * result in the game's own terms, the spoiler-free grid, and a dare.
  *
- *   🧠 Nailed today's trivia question in 4:12!
- *   Guess 1 of 3 · ✨ no hints · 🔥 5-day streak
- *   🧠 🟩⬜⬜
- *   Can you beat 4:12? 👉 thecrypticowl.com/trivia
+ *   🧠 Trivia · The Cryptic Owl · 11 Oct
+ *   Got it on guess 2 of 3 in 1:35 · 🔥 5 days
+ *   🟥🟩⬜
+ *   Can you get it first time? 👉 thecrypticowl.com/trivia
  *
  * Pure, so the exact text can be asserted in tests.
  */
@@ -48,29 +170,22 @@ export function buildGameShare(
   record: ShareRecord,
   { date = new Date(), streak = 0 }: ShareOptions = {}
 ): string {
+  const voice = VOICES[game.id];
   const time = formatClock(record.seconds);
-  const headline =
+  const result =
     record.outcome === 'solved'
-      ? `${game.emoji} ${SOLVED[game.id](record)} in ${time}!`
-      : record.outcome === 'failed'
-        ? `${game.emoji} Today's ${game.name} got the better of me 😅`
-        : `${game.emoji} I peeked at the answer to today's ${game.name} 👀`;
+      ? voice.solved(record, time)
+      : record.outcome === 'revealed'
+        ? `Peeked at the answer${record.hints ? ` after ${plural(record.hints, 'hint')}` : ''} 👀`
+        : (voice.failed?.(record, time) ?? 'Stumped this time 😅');
+  const grid = voice.grid ? voice.grid(record) : squares(record, game.emoji);
 
-  const facts = [
-    record.outcome === 'solved' && record.score && record.score !== 'No hints'
-      ? record.score
-      : null,
-    record.outcome === 'solved' && record.hints === 0 ? '✨ no hints' : null,
-    streak >= 2 ? `🔥 ${streak}-day streak` : null,
-  ].filter(Boolean);
-
-  const grid = typeof record.details?.grid === 'string' ? record.details.grid : null;
-  const dare =
-    record.outcome === 'solved'
-      ? `Can you beat ${time}? 👉 ${site(game.path)}`
-      : `Think you can do better? 👉 ${site(game.path)}`;
-
-  return [headline, facts.length ? facts.join(' · ') : null, grid, `${dare} · ${dayLabel(date)}`]
+  return [
+    `${game.emoji} ${game.name} · The Cryptic Owl · ${dayLabel(date)}`,
+    streak >= 2 ? `${result} · 🔥 ${streak} days` : result,
+    grid,
+    `${voice.dare(record, time)} 👉 ${site(game.path)}`,
+  ]
     .filter(Boolean)
     .join('\n');
 }
@@ -79,11 +194,11 @@ export function buildGameShare(
  * The big one: every puzzle of the day finished. One mark per game, the
  * total time, and an invitation.
  *
- *   🦉🏆 I finished all 9 daily puzzles on The Cryptic Owl!
- *   10 Oct · ⏱ 31:20 in total · 8/9 solved · 🔥 6-day streak
- *   🔢✅ 🧩✅ 🕵️✅ 🧠❌ ⏳✅
- *   ♞✅ 🔐✅ ➰✅ ↕️✅
- *   Fancy a go? 👉 thecrypticowl.com
+ *   🦉🏆 The Cryptic Owl · 11 Oct
+ *   I finished all 9 daily puzzles: 8/9 solved in 48:00 · 🔥 5 days
+ *   🔢✅ 🧠✅ 🕵️✅ ♞❌ ⏳✅
+ *   🧩✅ ↕️✅ ➰✅ 🔐✅
+ *   Can you finish all 9? 👉 thecrypticowl.com
  */
 export function buildDayShare(
   played: { game: Pick<GameMeta, 'emoji'>; record: Pick<SolveRecord, 'seconds' | 'outcome'> }[],
@@ -94,20 +209,17 @@ export function buildDayShare(
   const mark = { solved: '✅', failed: '❌', revealed: '👀' } as const;
   const cells = played.map(p => `${p.game.emoji}${mark[p.record.outcome]}`);
   const half = Math.ceil(cells.length / 2);
-  const perfect = solved === played.length;
+  const n = played.length;
+  const summary =
+    solved === n
+      ? `I finished all ${n} daily puzzles, every one solved, in ${formatClock(total)}`
+      : `I finished all ${n} daily puzzles: ${solved}/${n} solved in ${formatClock(total)}`;
   return [
-    `🦉🏆 I finished all ${played.length} daily puzzles on The Cryptic Owl${perfect ? ', every one solved' : ''}!`,
-    [
-      dayLabel(date),
-      `⏱ ${formatClock(total)} in total`,
-      `${solved}/${played.length} solved`,
-      streak >= 2 ? `🔥 ${streak}-day streak` : null,
-    ]
-      .filter(Boolean)
-      .join(' · '),
+    `🦉🏆 The Cryptic Owl · ${dayLabel(date)}`,
+    streak >= 2 ? `${summary} · 🔥 ${streak} days` : summary,
     cells.slice(0, half).join(' '),
     cells.slice(half).join(' '),
-    `Fancy a go? 👉 ${site()}`,
+    `Can you finish all ${n}? 👉 ${site()}`,
   ].join('\n');
 }
 

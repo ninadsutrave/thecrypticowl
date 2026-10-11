@@ -4,7 +4,8 @@ import { Check, Copy, ExternalLink, RotateCcw, Share2, Zap } from 'lucide-react'
 import confetti from 'canvas-confetti';
 import { Mascot } from '../../components/Mascot';
 import { CopyLinkButton } from '../../components/CopyLinkButton';
-import { puzzleUrl } from '../../games/share';
+import { buildGameShare, puzzleUrl } from '../../games/share';
+import { getGame } from '../../games/registry';
 import { getTheme } from '../../theme';
 import { useStreak, getXPForSolve, getLevelTitle } from '../../hooks/useStreak';
 import { useAuth } from '../../context/AuthContext';
@@ -12,13 +13,7 @@ import { DayComplete } from '../../games/DayComplete';
 import { ClueReactionWidget } from './ClueReactionWidget';
 import { NextPuzzleCountdown } from './Timers';
 import { PART_STYLES } from './types';
-import {
-  buildShareText,
-  shareOrCopy,
-  shareBlocks,
-  formatSolveTime,
-  funCallout,
-} from './shareResult';
+import { shareOrCopy, shareBlocks, formatSolveTime, funCallout } from './shareResult';
 import type { ActivePuzzle } from './ActivePuzzle';
 // ─── SUCCESS STATE ────────────────────────────────────────────────────────────
 
@@ -113,23 +108,21 @@ export function SuccessState({
 
   // Display values derived from the same helpers the share text uses, so the
   // card the solver sees and the text they paste can never disagree.
-  const today = new Date().toLocaleDateString('en-GB', {
-    day: 'numeric',
-    month: 'long',
-    year: 'numeric',
-  });
+  const today = (
+    activePuzzle.date ? new Date(`${activePuzzle.date}T12:00:00`) : new Date()
+  ).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
   const solveTimeStr = formatSolveTime(solveTime);
   const blocks = shareBlocks(hintsUsed, wasRevealed);
   const callout = funCallout({ hintsUsed, wasRevealed });
 
-  const shareText = buildShareText({
-    puzzleNumber: activePuzzle.number,
-    hintsUsed,
-    wasRevealed,
-    solveTime,
-    streak: displayData.streak,
-    isPractice,
-  });
+  // The same message as every other game's share, so the cryptic one reads
+  // like its siblings in a group chat.
+  const puzzleDay = activePuzzle.date ? new Date(`${activePuzzle.date}T12:00:00`) : new Date();
+  const shareText = buildGameShare(
+    getGame('cryptic'),
+    { seconds: solveTime, outcome: wasRevealed ? 'revealed' : 'solved', hints: hintsUsed },
+    { date: puzzleDay, streak: isPractice || archive ? 0 : displayData.streak }
+  );
 
   const handleShare = async () => {
     const outcome = await shareOrCopy(shareText);
@@ -234,7 +227,7 @@ export function SuccessState({
                   margin: 0,
                 }}
               >
-                {isPractice ? 'Practice clue' : `Puzzle #${activePuzzle.number}`} · {today}
+                {isPractice ? 'Practice clue' : 'British Style Cryptics'} · {today}
               </p>
             </div>
           </div>

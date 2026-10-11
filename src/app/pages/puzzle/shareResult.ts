@@ -9,19 +9,10 @@
  */
 
 export interface ShareInput {
-  puzzleNumber: number;
   /** 0–4 */
   hintsUsed: number;
   /** True when the solver revealed the answer instead of solving it. */
   wasRevealed: boolean;
-  /**
-   * True for the offline fallback clue. It is a real solve, but it has no
-   * database row behind it, so there is no streak to claim.
-   */
-  isPractice?: boolean;
-  /** Whole seconds. */
-  solveTime: number;
-  streak: number;
 }
 
 /** 🟩 solved before this hint · 🟨 early hint · 🟥 late hint · 🟫 revealed */
@@ -52,37 +43,6 @@ export function funCallout({
   if (hintsUsed === 1) return "Just 1 hint to crack today's cryptic — your turn 👀";
   if (hintsUsed <= 3) return 'Tricky clue, but I got there! Think you can crack it? 🔍';
   return "Today's cryptic nearly had me — reckon you can solve it? 🤯";
-}
-
-export function buildShareText(input: ShareInput): string {
-  const { puzzleNumber, hintsUsed, wasRevealed, solveTime, streak, isPractice } = input;
-
-  const scoreLine = wasRevealed
-    ? `${shareBlocks(hintsUsed, true)}  (revealed the answer)`
-    : `${shareBlocks(hintsUsed, false)}  (${hintsUsed}/4 hints used)`;
-
-  const heading = isPractice
-    ? `🦉 TheCrypticOwl — practice clue`
-    : `🦉 TheCrypticOwl #${puzzleNumber}`;
-  const lines = [heading, ``, scoreLine];
-
-  // A revealed answer has nothing to boast about, and a practice clue has no
-  // streak behind it — claiming "0-day streak" is worse than saying nothing.
-  if (!wasRevealed && !isPractice) {
-    lines.push(`⏱️ ${formatSolveTime(solveTime)}  🔥 ${streak}-day streak`);
-  } else if (!wasRevealed) {
-    lines.push(`⏱️ ${formatSolveTime(solveTime)}`);
-  }
-
-  lines.push(
-    ``,
-    funCallout({ hintsUsed, wasRevealed }),
-    ``,
-    `One cryptic clue a day — try it yourself:`,
-    `👉 thecrypticowl.com`
-  );
-
-  return lines.join('\n');
 }
 
 /**

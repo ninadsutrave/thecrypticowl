@@ -140,7 +140,7 @@ function ChronologyBoard({ puzzle, api }: { puzzle: ChronologyPuzzle; api: PlayA
         )}
       </div>
 
-      <ol className="space-y-2 list-none p-0 m-0">
+      <ol className="space-y-2 list-none p-0">
         {display.map((event, i) => {
           const isLocked = !finished && locked[i];
           return (

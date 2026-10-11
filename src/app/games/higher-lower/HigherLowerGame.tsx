@@ -289,10 +289,10 @@ function Chain({
 }) {
   return (
     <div className="space-y-2">
-      <h2 className="m-0 text-sm font-extrabold" style={{ color: T.textMuted }}>
+      <h2 className="text-sm font-extrabold" style={{ color: T.textMuted }}>
         TODAY'S CHAIN · {puzzle.title.toUpperCase()}
       </h2>
-      <ol className="list-none p-0 m-0 space-y-1.5">
+      <ol className="list-none p-0 space-y-1.5">
         {puzzle.items.map((item, i) => (
           <li
             key={item.id}

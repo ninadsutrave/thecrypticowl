@@ -97,7 +97,7 @@ function WhatAmIBoard({ puzzle, api }: { puzzle: WhatAmIPuzzle; api: PlayApi }) 
 
   return (
     <div className="space-y-4">
-      <ol className="space-y-2.5 list-none p-0 m-0">
+      <ol className="space-y-2.5 list-none p-0">
         {puzzle.clues.map((clue, i) => {
           const visible = i < shown || api.finished;
           const worth = MAX_POINTS - i;

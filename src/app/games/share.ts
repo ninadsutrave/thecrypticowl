@@ -38,13 +38,21 @@ interface Voice {
   grid?: (r: ShareRecord) => string | null;
 }
 
-/** The game's grid without its leading emoji or a trailing "✨ no hints". */
+/**
+ * A result grid without the game's own emoji in front ("🧠 🟥🟩⬜" →
+ * "🟥🟩⬜"): wherever the grid appears, the game is already named. Older
+ * saved results still carry the prefix.
+ */
+export function gridWithoutEmoji(grid: string, emoji: string): string {
+  return grid.startsWith(emoji) ? grid.slice(emoji.length).trim() : grid;
+}
+
+/** The share grid: no leading emoji and no trailing "✨ no hints". */
 const squares = (r: ShareRecord, emoji: string) => {
   const g = typeof r.details?.grid === 'string' ? r.details.grid : null;
   if (!g) return null;
   return (
-    g
-      .replace(new RegExp(`^${emoji}\\s*`, 'u'), '')
+    gridWithoutEmoji(g, emoji)
       .replace(/\s*✨( no hints)?$/u, '')
       .trim() || null
   );

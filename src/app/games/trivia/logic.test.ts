@@ -13,10 +13,10 @@ describe('describePattern', () => {
 
 describe('triviaGrid', () => {
   it('shows each guess and the hint', () => {
-    expect(triviaGrid(0, true, false, 3)).toBe('🧠 🟩⬜⬜');
-    expect(triviaGrid(1, true, true, 3)).toBe('🧠 🟥🟩⬜ 💡');
-    expect(triviaGrid(3, false, false, 3)).toBe('🧠 🟥🟥🟥');
-    expect(triviaGrid(1, false, false, 3)).toBe('🧠 🟥⬜⬜');
+    expect(triviaGrid(0, true, false, 3)).toBe('🟩⬜⬜');
+    expect(triviaGrid(1, true, true, 3)).toBe('🟥🟩⬜ 💡');
+    expect(triviaGrid(3, false, false, 3)).toBe('🟥🟥🟥');
+    expect(triviaGrid(1, false, false, 3)).toBe('🟥⬜⬜');
   });
 });
 

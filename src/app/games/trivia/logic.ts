@@ -15,5 +15,5 @@ export function triviaGrid(wrong: number, solved: boolean, hint: boolean, max: n
     ...(solved ? ['🟩'] : []),
   ];
   while (cells.length < max) cells.push('⬜');
-  return `🧠 ${cells.join('')}${hint ? ' 💡' : ''}`;
+  return `${cells.join('')}${hint ? ' 💡' : ''}`;
 }

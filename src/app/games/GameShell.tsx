@@ -33,7 +33,7 @@ import { recordPlay } from './playHistory';
 import { TutorialFlow, type TutorialStep } from './TutorialFlow';
 import { hasSeenTutorial, markTutorialSeen } from './tutorialSeen';
 import { useGameTimer } from './useGameTimer';
-import { buildGameShare, puzzleUrl } from './share';
+import { buildGameShare, gridWithoutEmoji, puzzleUrl } from './share';
 import { DayComplete } from './DayComplete';
 import { computeHistoryStats } from './historyStats';
 import { getAllPlays } from './solveRecords';
@@ -521,7 +521,7 @@ function ResultCard({
           style={{ fontSize: '1.25rem', letterSpacing: '0.08em' }}
           aria-label="Your result grid"
         >
-          {record.details.grid}
+          {gridWithoutEmoji(record.details.grid, game.emoji)}
         </p>
       )}
 

@@ -9,7 +9,7 @@ import { buildSolverPrompt, SOLVE_SCHEMA, SOLVER_SYSTEM } from './prompts.js';
  */
 export function opening(question) {
   const sentences = question.split(/(?<=[.!?])\s+/);
-  return `${sentences.slice(0, 3).join(' ')} What is it?`;
+  return `${sentences.slice(0, 2).join(' ')} What is it?`;
 }
 
 /**

@@ -7,7 +7,7 @@ import { normaliseText } from '../sources/wikipedia.js';
 
 /** Words too common to count as giving the answer away. */
 const COMMON = new Set(
-  'the and of for new great old big little mount saint city state united republic kingdom tower bridge house river island lake day night festival film show band company statue sauce engine trophy machine series brand product language programming'.split(
+  'the and of for new great old big little mount saint city state united republic kingdom tower bridge house river island lake day night festival film show band company statue sauce engine trophy machine series brand product language programming system systems mission hotel palace temple temples fort railway railways airport station college university school academy institute museum library garden gardens stadium building society party movement award prize league church mosque cathedral monument foundation project programme network express airlines agency market square street road gate theatre cinema studios records valley desert forest falls beach empire dynasty national international world'.split(
     ' '
   )
 );

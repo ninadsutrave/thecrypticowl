@@ -9,7 +9,9 @@ import { poolForDay } from '../../shared/runtime/india.js';
 import { buildWriterPrompt, QUESTION_SCHEMA, WRITER_SYSTEM } from './prompts.js';
 import { ALL_TOPICS } from './topics.js';
 
-const EXCERPT_CHARS = 7000;
+// Enough for five grounded facts, and half the tokens a 7,000-character
+// excerpt cost: Groq's free tier allows only a few thousand a minute.
+const EXCERPT_CHARS = 4000;
 
 /** "Imagine (song)" → "Imagine": the disambiguator is Wikipedia's, not the answer's. */
 export function displayName(title) {

@@ -28,8 +28,8 @@ const VISUALS: Partial<Record<SudokuVariant, () => React.ReactNode>> = {
   ),
   thermo: () => (
     <Stack>
-      <Cells items={[2, 5, 8]} tones={['good', 'good', 'good']} />
-      <Pill color={ACCENT}>Rising from the bulb: 2 → 5 → 8</Pill>
+      <Cells items={[2, 4, 5]} tones={['good', 'good', 'good']} />
+      <Pill color={ACCENT}>Rising from the bulb: 2 → 4 → 5</Pill>
     </Stack>
   ),
 };
@@ -37,7 +37,8 @@ const VISUALS: Partial<Record<SudokuVariant, () => React.ReactNode>> = {
 export function getSudokuTutorial(puzzle: SudokuPuzzle): TutorialStep[] {
   const n = puzzle.size;
   const info = VARIANTS[puzzle.variant];
-  const row = Array.from({ length: n }, (_, i) => ((i * 2) % n) + 1);
+  // A mixed-up row that really holds each digit once (4 1 6 2 5 3 on a 6×6).
+  const row = [4, 1, 6, 2, 5, 3, 9, 7, 8].filter(d => d <= n);
   return [
     {
       title: 'Every row, column and box',

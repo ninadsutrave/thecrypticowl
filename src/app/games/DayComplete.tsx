@@ -4,9 +4,10 @@ import { Check, Flame, Share2, Timer, Trophy } from 'lucide-react';
 import { useDarkMode } from '../context/DarkModeContext';
 import { getTheme } from '../theme';
 import { shareOrCopy } from '../pages/puzzle/shareResult';
+import { CopyLinkButton } from '../components/CopyLinkButton';
 import { computeHistoryStats } from './historyStats';
 import { dayResults } from './progress';
-import { buildDayShare } from './share';
+import { buildDayShare, puzzleUrl } from './share';
 import { formatClock, getAllPlays } from './solveRecords';
 
 /**
@@ -88,24 +89,27 @@ export function DayComplete() {
           {played.map(p => `${p.game.emoji}${mark[p.record.outcome]}`).join(' ')}
         </p>
 
-        <button
-          onClick={share}
-          className="mt-5 min-h-[48px] w-full sm:w-auto px-6 rounded-2xl font-extrabold inline-flex items-center justify-center gap-2"
-          style={{
-            background: 'linear-gradient(135deg, #7C3AED, #EC4899)',
-            color: '#FFFFFF',
-            boxShadow: '0 8px 20px -8px rgba(124,58,237,0.6)',
-          }}
-        >
-          <Share2 size={16} aria-hidden />
-          {shared === 'copied'
-            ? 'Copied! Paste it anywhere'
-            : shared === 'shared'
-              ? 'Shared!'
-              : shared === 'failed'
-                ? "Couldn't share. Try again"
-                : 'Share your day'}
-        </button>
+        <div className="mt-5 flex flex-col sm:flex-row gap-2 justify-center">
+          <button
+            onClick={share}
+            className="min-h-[48px] w-full sm:w-auto px-6 rounded-2xl font-extrabold inline-flex items-center justify-center gap-2"
+            style={{
+              background: 'linear-gradient(135deg, #7C3AED, #EC4899)',
+              color: '#FFFFFF',
+              boxShadow: '0 8px 20px -8px rgba(124,58,237,0.6)',
+            }}
+          >
+            <Share2 size={16} aria-hidden />
+            {shared === 'copied'
+              ? 'Copied! Paste it anywhere'
+              : shared === 'shared'
+                ? 'Shared!'
+                : shared === 'failed'
+                  ? "Couldn't share. Try again"
+                  : 'Share your day'}
+          </button>
+          <CopyLinkButton url={puzzleUrl('/')} T={T} className="min-h-[48px] w-full sm:w-auto" />
+        </div>
       </div>
     </m.section>
   );

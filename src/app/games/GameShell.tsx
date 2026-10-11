@@ -33,11 +33,12 @@ import { recordPlay } from './playHistory';
 import { TutorialFlow, type TutorialStep } from './TutorialFlow';
 import { hasSeenTutorial, markTutorialSeen } from './tutorialSeen';
 import { useGameTimer } from './useGameTimer';
-import { buildGameShare } from './share';
+import { buildGameShare, puzzleUrl } from './share';
 import { DayComplete } from './DayComplete';
 import { computeHistoryStats } from './historyStats';
 import { getAllPlays } from './solveRecords';
 import { shareOrCopy } from '../pages/puzzle/shareResult';
+import { CopyLinkButton } from '../components/CopyLinkButton';
 import { GameIcon } from './GameIcon';
 import { archiveDateFrom, archivePath, longDate, recordArchivePlay } from './archive';
 import { SignInGate } from '../components/SignInGate';
@@ -525,23 +526,29 @@ function ResultCard({
       )}
 
       {(shareable ?? !practice) && (
-        <button
-          onClick={share}
-          className="mb-3 inline-flex items-center justify-center gap-2 px-6 py-3 rounded-2xl font-extrabold"
-          style={{ background: game.accentStrong, color: '#FFFFFF', boxShadow: T.shadowCard }}
-        >
-          {shared === 'copied' || shared === 'shared' ? (
-            <>
-              <Check size={16} aria-hidden />{' '}
-              {shared === 'copied' ? 'Copied — paste it anywhere' : 'Shared!'}
-            </>
-          ) : (
-            <>
-              <Share2 size={16} aria-hidden />{' '}
-              {shared === 'failed' ? 'Couldn’t share — try again' : 'Share result'}
-            </>
-          )}
-        </button>
+        <div className="mb-3 flex flex-col sm:flex-row gap-2 justify-center">
+          <button
+            onClick={share}
+            className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-2xl font-extrabold"
+            style={{ background: game.accentStrong, color: '#FFFFFF', boxShadow: T.shadowCard }}
+          >
+            {shared === 'copied' || shared === 'shared' ? (
+              <>
+                <Check size={16} aria-hidden />{' '}
+                {shared === 'copied' ? 'Copied — paste it anywhere' : 'Shared!'}
+              </>
+            ) : (
+              <>
+                <Share2 size={16} aria-hidden />{' '}
+                {shared === 'failed' ? 'Couldn’t share — try again' : 'Share result'}
+              </>
+            )}
+          </button>
+          <CopyLinkButton
+            url={puzzleUrl(archive && shareDate ? `${game.path}?date=${shareDate}` : game.path)}
+            T={T}
+          />
+        </div>
       )}
 
       <div className="flex flex-col sm:flex-row gap-2 justify-center">

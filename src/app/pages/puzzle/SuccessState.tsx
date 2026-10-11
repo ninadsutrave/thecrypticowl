@@ -3,6 +3,8 @@ import { m } from 'motion/react';
 import { Check, Copy, ExternalLink, RotateCcw, Share2, Zap } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { Mascot } from '../../components/Mascot';
+import { CopyLinkButton } from '../../components/CopyLinkButton';
+import { puzzleUrl } from '../../games/share';
 import { getTheme } from '../../theme';
 import { useStreak, getXPForSolve, getLevelTitle } from '../../hooks/useStreak';
 import { useAuth } from '../../context/AuthContext';
@@ -405,6 +407,13 @@ export function SuccessState({
               </>
             )}
           </m.button>
+          <CopyLinkButton
+            url={puzzleUrl(
+              archive && activePuzzle.date ? `/cryptic?date=${activePuzzle.date}` : '/cryptic'
+            )}
+            T={T}
+            className="mt-2 w-full"
+          />
         </div>
       </m.div>
 

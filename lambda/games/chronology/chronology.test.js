@@ -10,6 +10,7 @@ import {
   isIndian,
   normaliseEntry,
   pickEvents,
+  popularFirst,
 } from './selector.js';
 
 const page = title => ({
@@ -39,6 +40,42 @@ describe('normaliseEntry', () => {
         'events'
       )
     ).toBeNull();
+  });
+});
+
+describe('famous people and popularity', () => {
+  const birth = (year, text, title) =>
+    normaliseEntry({ year, text, pages: [page(title)] }, 'births');
+
+  it('keeps a living person only when very widely known', () => {
+    const big = birth(1942, 'Amitabh Bachchan, Indian film actor', 'Amitabh');
+    const small = birth(1970, 'A Smith, Indian cricketer', 'Smith');
+    expect(big.living).toBe(true);
+    const views = new Map([
+      ['Amitabh', 154_000],
+      ['Smith', 30_000],
+    ]);
+    const pool = famous([big, small], views).map(c => c.title);
+    expect(pool).toContain('Amitabh');
+    expect(pool).not.toContain('Smith');
+  });
+
+  it('drops named military operations but not "the operation of" a metro', () => {
+    const ev = text => normaliseEntry({ year: 1987, text, pages: [page('x')] }, 'events');
+    expect(ev('Start of Operation Pawan by Indian forces in Sri Lanka')).toBeNull();
+    expect(ev('Montreal begins the operation of its underground Montreal Metro')).not.toBeNull();
+  });
+
+  it('puts better-known entries first far more often', () => {
+    const pool = [
+      { id: 'a', text: 'a', views: 250_000 },
+      { id: 'b', text: 'b', views: 1_000 },
+    ];
+    const rng = createRng('popular');
+    let first = 0;
+    for (let i = 0; i < 400; i++) if (popularFirst(pool, rng)[0].id === 'a') first++;
+    expect(first).toBeGreaterThan(300);
+    expect(first).toBeLessThan(400);
   });
 });
 

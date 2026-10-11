@@ -26,11 +26,12 @@ export const SCREEN_SCHEMA = {
   required: ['verdicts'],
 };
 
-export const SCREEN_SYSTEM = `You curate a light, friendly daily history puzzle for a general international audience. For each numbered event, decide whether it is suitable.
+export const SCREEN_SYSTEM = `You curate a light, friendly daily history puzzle. Most players are in India; the rest are international. For each numbered event, decide whether it is suitable.
 
 Suitable means BOTH:
-- Recognisable: a well-read adult has likely heard of it or its subject, or it is a clear landmark (a founding, a first, an invention, a famous work, a coronation of a well-known ruler, a famous person's birth).
+- Recognisable: a well-read adult has likely heard of it or its subject, or it is a clear landmark (a founding, a first, an invention, a famous work, a coronation of a well-known ruler, a famous person's birth). Judge Indian history, leaders, reformers, film, music and sport as an Indian reader would: a figure well known in India counts even if few outside India know them.
 - Light: nothing about war, military action, violence, terrorism, weapons (including nuclear tests), disasters, sectarian or ethnic conflict, executions, persecution, or anything likely to upset or divide players.
+- A living person's birth only if they are loved and uncontroversial: film, music, sport, science, arts. Never a politician, activist, businessperson or anyone whose name divides opinion.
 
 Be strict: when unsure, mark it unsuitable. There are plenty to choose from.`;
 

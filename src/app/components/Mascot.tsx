@@ -25,53 +25,36 @@ function OwlSVG({ mood = 'default' }: { mood: MascotMood }) {
       xmlns="http://www.w3.org/2000/svg"
       className="w-full h-full"
     >
-      {/* Ear tufts */}
-      <ellipse cx="31" cy="26" rx="8" ry="14" fill="#A78BFA" transform="rotate(-22 31 26)" />
-      <ellipse cx="69" cy="26" rx="8" ry="14" fill="#A78BFA" transform="rotate(22 69 26)" />
-      <ellipse cx="31" cy="26" rx="5" ry="10" fill="#C4B5FD" transform="rotate(-22 31 26)" />
-      <ellipse cx="69" cy="26" rx="5" ry="10" fill="#C4B5FD" transform="rotate(22 69 26)" />
+      {/* Ear tufts: pointed, so the silhouette reads as an owl */}
+      <path d="M 22 42 L 20 6 L 44 30 Z" fill="#7C3AED" />
+      <path d="M 78 42 L 80 6 L 56 30 Z" fill="#7C3AED" />
+      <path d="M 25 38 L 24 14 L 40 30 Z" fill="#A78BFA" />
+      <path d="M 75 38 L 76 14 L 60 30 Z" fill="#A78BFA" />
 
-      {/* Body */}
-      <ellipse cx="50" cy="74" rx="32" ry="36" fill="#C4B5FD" />
+      {/* Head and body in one round shape */}
+      <ellipse cx="50" cy="70" rx="35" ry="42" fill="#A78BFA" />
 
-      {/* Belly */}
-      <ellipse cx="50" cy="82" rx="19" ry="24" fill="#EDE9FE" />
+      {/* Belly with feather chevrons */}
+      <ellipse cx="50" cy="88" rx="21" ry="21" fill="#EDE9FE" />
+      <g stroke="#C4B5FD" strokeWidth="1.6" strokeLinecap="round" fill="none">
+        <path d="M 41 82 L 44 85 L 47 82" />
+        <path d="M 53 82 L 56 85 L 59 82" />
+        <path d="M 47 90 L 50 93 L 53 90" />
+        <path d="M 39 95 L 42 98 L 45 95" />
+        <path d="M 55 95 L 58 98 L 61 95" />
+      </g>
 
-      {/* Belly texture lines */}
+      {/* Facial disc: the pale ring round each eye */}
+      <circle cx="37" cy="55" r="16" fill="#EDE9FE" />
+      <circle cx="63" cy="55" r="16" fill="#EDE9FE" />
+
+      {/* Brow ridge: the owl's V between the eyes */}
       <path
-        d="M 43 74 Q 50 71 57 74"
-        stroke="#C4B5FD"
-        strokeWidth="1.2"
+        d="M 23 40 Q 37 35 50 47 Q 63 35 77 40"
+        stroke="#7C3AED"
+        strokeWidth="3"
         strokeLinecap="round"
         fill="none"
-        opacity="0.6"
-      />
-      <path
-        d="M 42 80 Q 50 77 58 80"
-        stroke="#C4B5FD"
-        strokeWidth="1.2"
-        strokeLinecap="round"
-        fill="none"
-        opacity="0.6"
-      />
-
-      {/* Detective hat brim */}
-      <rect x="18" y="34" width="64" height="7" rx="3.5" fill="#2D1B69" />
-
-      {/* Hat top */}
-      <rect x="27" y="10" width="46" height="28" rx="8" fill="#2D1B69" />
-
-      {/* Hat band */}
-      <rect x="27" y="30" width="46" height="6" fill="#7C3AED" rx="1.5" />
-
-      {/* Hat shine */}
-      <path
-        d="M 33 14 Q 38 12 43 15"
-        stroke="white"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-        fill="none"
-        opacity="0.25"
       />
 
       {/* Magnifying glass on belt/body */}
@@ -196,40 +179,26 @@ function OwlSVG({ mood = 'default' }: { mood: MascotMood }) {
         </>
       )}
 
-      {/* Beak */}
-      {isHappy ? (
-        <>
-          <polygon points="50,65 43,73 57,73" fill="#F97316" />
-          <path
-            d="M 44 72 Q 50 78 56 72"
-            stroke="#EA580C"
-            strokeWidth="1.5"
-            fill="#FED7AA"
-            strokeLinecap="round"
-          />
-        </>
-      ) : isSad ? (
-        <>
-          <polygon points="50,67 44,72 56,72" fill="#F97316" />
-          <path
-            d="M 44 75 Q 50 71 56 75"
-            stroke="#EA580C"
-            strokeWidth="1.5"
-            fill="none"
-            strokeLinecap="round"
-          />
-        </>
-      ) : (
-        <polygon points="50,65 43,73 57,73" fill="#F97316" />
+      {/* Beak: hooked, pointing down */}
+      <path d="M 50 60 L 44.5 66 Q 47 74 50 79 Q 53 74 55.5 66 Z" fill="#F97316" />
+      <path d="M 50 60 L 44.5 66 L 55.5 66 Z" fill="#FDBA74" />
+      {isHappy && (
+        <path
+          d="M 43 80 Q 50 85 57 80"
+          stroke="#7C3AED"
+          strokeWidth="1.8"
+          strokeLinecap="round"
+          fill="none"
+        />
       )}
 
       {/* Left wing */}
-      <ellipse cx="17" cy="82" rx="11" ry="20" fill="#A78BFA" transform="rotate(-15 17 82)" />
-      <ellipse cx="17" cy="82" rx="7" ry="14" fill="#C4B5FD" transform="rotate(-15 17 82)" />
+      <ellipse cx="19" cy="80" rx="10" ry="21" fill="#7C3AED" transform="rotate(-12 19 80)" />
+      <ellipse cx="20" cy="78" rx="6" ry="15" fill="#8B5CF6" transform="rotate(-12 20 78)" />
 
       {/* Right wing (shorter to show magnifying glass) */}
-      <ellipse cx="83" cy="82" rx="11" ry="20" fill="#A78BFA" transform="rotate(15 83 82)" />
-      <ellipse cx="83" cy="82" rx="7" ry="14" fill="#C4B5FD" transform="rotate(15 83 82)" />
+      <ellipse cx="81" cy="80" rx="10" ry="21" fill="#7C3AED" transform="rotate(12 81 80)" />
+      <ellipse cx="80" cy="78" rx="6" ry="15" fill="#8B5CF6" transform="rotate(12 80 78)" />
 
       {/* Feet */}
       <g stroke="#F97316" strokeWidth="2.2" strokeLinecap="round" fill="none">

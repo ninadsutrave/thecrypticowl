@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react';
 import { m } from 'motion/react';
-import { Check, Flame, Share2, Timer, Trophy } from 'lucide-react';
+import { Check, Copy, Flame, Share2, Timer, Trophy } from 'lucide-react';
 import { useDarkMode } from '../context/DarkModeContext';
 import { getTheme } from '../theme';
-import { shareOrCopy } from '../pages/puzzle/shareResult';
+import { canShareSheet, shareOrCopy } from '../pages/puzzle/shareResult';
 import { CopyLinkButton } from '../components/CopyLinkButton';
 import { computeHistoryStats } from './historyStats';
 import { dayResults } from './progress';
@@ -29,6 +29,11 @@ export function DayComplete() {
     return () => clearTimeout(id);
   }, []);
   const [shared, setShared] = useState<'idle' | 'shared' | 'copied' | 'failed'>('idle');
+  useEffect(() => {
+    if (shared === 'idle') return;
+    const t = setTimeout(() => setShared('idle'), 2500);
+    return () => clearTimeout(t);
+  }, [shared]);
   if (!played) return null;
 
   const total = played.reduce((s, p) => s + p.record.seconds, 0);
@@ -99,14 +104,16 @@ export function DayComplete() {
               boxShadow: '0 8px 20px -8px rgba(124,58,237,0.6)',
             }}
           >
-            <Share2 size={16} aria-hidden />
+            {canShareSheet ? <Share2 size={16} aria-hidden /> : <Copy size={16} aria-hidden />}
             {shared === 'copied'
-              ? 'Copied! Paste it anywhere'
+              ? 'Day copied'
               : shared === 'shared'
                 ? 'Shared!'
                 : shared === 'failed'
                   ? "Couldn't share. Try again"
-                  : 'Share your day'}
+                  : canShareSheet
+                    ? 'Share your day'
+                    : 'Copy your day'}
           </button>
           <CopyLinkButton url={puzzleUrl('/')} T={T} className="min-h-[48px] w-full sm:w-auto" />
         </div>

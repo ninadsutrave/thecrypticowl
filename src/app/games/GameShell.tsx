@@ -10,6 +10,7 @@ import {
   GraduationCap,
   LayoutGrid,
   RotateCcw,
+  Copy,
   Share2,
   Timer,
   Trophy,
@@ -40,7 +41,7 @@ import { buildGameShare, gridWithoutEmoji, puzzleUrl } from './share';
 import { DayComplete } from './DayComplete';
 import { computeHistoryStats } from './historyStats';
 import { getAllPlays } from './solveRecords';
-import { shareOrCopy } from '../pages/puzzle/shareResult';
+import { canShareSheet, shareOrCopy } from '../pages/puzzle/shareResult';
 import { CopyLinkButton } from '../components/CopyLinkButton';
 import { GameIcon } from './GameIcon';
 import { archiveDateFrom, archivePath, longDate, recordArchivePlay } from './archive';
@@ -449,6 +450,12 @@ function ResultCard({
   const isBest =
     !practice && record.outcome === 'solved' && mine.solves > 1 && mine.best === record.seconds;
   const [shared, setShared] = useState<'idle' | 'shared' | 'copied' | 'failed'>('idle');
+  // The confirmation is a moment's feedback, not a new state for the button.
+  useEffect(() => {
+    if (shared === 'idle') return;
+    const t = setTimeout(() => setShared('idle'), 2500);
+    return () => clearTimeout(t);
+  }, [shared]);
   const { user } = useAuth();
   const rating = usePuzzleReaction(game.id, puzzleDate, user?.id);
 
@@ -544,13 +551,16 @@ function ResultCard({
           >
             {shared === 'copied' || shared === 'shared' ? (
               <>
-                <Check size={16} aria-hidden />{' '}
-                {shared === 'copied' ? 'Copied — paste it anywhere' : 'Shared!'}
+                <Check size={16} aria-hidden /> {shared === 'copied' ? 'Result copied' : 'Shared!'}
               </>
             ) : (
               <>
-                <Share2 size={16} aria-hidden />{' '}
-                {shared === 'failed' ? 'Couldn’t share — try again' : 'Share result'}
+                {canShareSheet ? <Share2 size={16} aria-hidden /> : <Copy size={16} aria-hidden />}{' '}
+                {shared === 'failed'
+                  ? 'Couldn’t share. Try again'
+                  : canShareSheet
+                    ? 'Share result'
+                    : 'Copy result'}
               </>
             )}
           </button>

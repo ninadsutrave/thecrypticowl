@@ -46,6 +46,14 @@ export function funCallout({
 }
 
 /**
+ * Whether this device has a share sheet. Without one (most desktops) a
+ * "share" can only copy, so buttons should say "Copy" rather than promise
+ * a share and then quietly copy.
+ */
+export const canShareSheet =
+  typeof navigator !== 'undefined' && typeof navigator.share === 'function';
+
+/**
  * Share via the native sheet, falling back to the clipboard.
  *
  * @returns what actually happened, so the UI can show the right confirmation

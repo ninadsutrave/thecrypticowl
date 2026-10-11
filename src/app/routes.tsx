@@ -17,9 +17,21 @@ export const router = createBrowserRouter([
     children: [
       { index: true, Component: Hub },
       { path: 'cryptic', lazy: cryptic },
-      // Pre-multi-game URLs: shared links and the archive still use these.
-      { path: 'puzzle', lazy: cryptic },
-      { path: 'puzzle/:number', lazy: cryptic },
+      // Pre-multi-game URLs, kept so old shared links still work: /puzzle is
+      // today's clue, /puzzle/42 the day clue #42 was published.
+      {
+        path: 'puzzle',
+        loader: ({ request }) => redirect(`/cryptic${new URL(request.url).search}`),
+      },
+      {
+        path: 'puzzle/:number',
+        loader: async ({ params }) => {
+          const { fetchPuzzleByNumber } = await import('../lib/supabase');
+          const n = Number.parseInt(params.number ?? '', 10);
+          const p = Number.isFinite(n) ? await fetchPuzzleByNumber(n) : null;
+          return redirect(p?.date ? `/cryptic?date=${p.date}` : '/cryptic');
+        },
+      },
       {
         path: 'sudoku',
         lazy: async () => ({

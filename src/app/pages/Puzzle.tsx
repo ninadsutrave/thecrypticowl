@@ -11,13 +11,13 @@ import {
   Timer,
   ExternalLink,
 } from 'lucide-react';
-import { Link, useParams, useSearchParams } from 'react-router';
+import { Link, useSearchParams } from 'react-router';
 import { Mascot, MascotMood } from '../components/Mascot';
 import { useDarkMode } from '../context/DarkModeContext';
 import { getTheme } from '../theme';
 import { hasSolvedToday } from '../hooks/useStreak';
 import { useAuth } from '../context/AuthContext';
-import { fetchPuzzleByDate, fetchPuzzleByNumber, type DbDailyPuzzle } from '../../lib/supabase';
+import { fetchPuzzleByDate, type DbDailyPuzzle } from '../../lib/supabase';
 import { StoreKeys, readRaw, writeRaw, readJSON, prunePuzzleCache } from '../lib/localStore';
 import { ClueReactionWidget } from './puzzle/ClueReactionWidget';
 import { SolveTimer } from './puzzle/Timers';
@@ -31,7 +31,7 @@ import { TutorialFlow } from '../games/TutorialFlow';
 import { getGame } from '../games/registry';
 import { hasSeenTutorial, markTutorialSeen } from '../games/tutorialSeen';
 import { getCrypticTutorial } from './puzzle/crypticTutorial';
-import { archivePath, recordArchivePlay } from '../games/archive';
+import { archiveDateFrom, archivePath, longDate, recordArchivePlay } from '../games/archive';
 import { localDateKey } from '../games/solveRecords';
 import { SignInGate } from '../components/SignInGate';
 
@@ -59,11 +59,11 @@ const MECHANISM_NUDGE: Record<string, string> = {
 // ─── MAIN PUZZLE PAGE ─────────────────────────────────────────────────────────
 
 export function Puzzle() {
-  const { number: puzzleNumberParam } = useParams<{ number?: string }>();
-  const requestedNumber = puzzleNumberParam ? parseInt(puzzleNumberParam, 10) : undefined;
-  // isArchive = true whenever a puzzle number is in the URL (even if it equals the hardcoded
-  // fallback number). This ensures /puzzle/42 always fetches puzzle #42 from the DB.
-  const isArchive = requestedNumber !== undefined;
+  // A past day from the archive (`/cryptic?date=2026-10-09`), the same URL
+  // shape as every other game. Old /puzzle/42 links redirect here (routes.tsx).
+  const [searchParams, setSearchParams] = useSearchParams();
+  const archiveDate = archiveDateFrom(searchParams);
+  const isArchive = archiveDate !== null;
 
   // The puzzle to play: archive puzzle (if loaded) or today's hardcoded puzzle
   const [activePuzzle, setActivePuzzle] = useState<ActivePuzzle | null>(null);
@@ -78,8 +78,8 @@ export function Puzzle() {
     // (e.g. rapid archive hops).
     let cancelled = false;
 
-    if (isArchive && requestedNumber) {
-      fetchPuzzleByNumber(requestedNumber)
+    if (archiveDate) {
+      fetchPuzzleByDate(archiveDate, false)
         .then(p => {
           if (cancelled) return;
           if (p) {
@@ -153,7 +153,7 @@ export function Puzzle() {
     return () => {
       cancelled = true;
     };
-  }, [requestedNumber, isArchive]);
+  }, [archiveDate]);
 
   const [answer, setAnswer] = useState('');
   const [hintsUnlocked, setHintsUnlocked] = useState(0);
@@ -166,7 +166,6 @@ export function Puzzle() {
   const [startTime, setStartTime] = useState<number>(0);
   // How to play: opens on the first visit, from the header, and from the
   // home card's "How to play" (?tutorial). Time spent reading isn't solve time.
-  const [searchParams, setSearchParams] = useSearchParams();
   const [tutorialOpen, setTutorialOpen] = useState(
     () => searchParams.has('tutorial') || !hasSeenTutorial('cryptic')
   );
@@ -194,7 +193,7 @@ export function Puzzle() {
   const { user, isSignedIn } = useAuth();
   const alreadySolved = isArchive ? false : hasSolvedToday();
   // The date this puzzle was published, not the date you are reading it.
-  // /puzzle/12 was captioned with today because activePuzzle.date — which is
+  // An archive clue was captioned with today because activePuzzle.date — which is
   // fetched — was never read.
   const displayDate = useMemo(() => {
     const opts = { day: 'numeric', month: 'long', year: 'numeric' } as const;
@@ -294,7 +293,7 @@ export function Puzzle() {
             marginBottom: 8,
           }}
         >
-          Puzzle #{requestedNumber} not found
+          No clue for {archiveDate ? longDate(archiveDate) : 'this day'}
         </h2>
         <p
           style={{

@@ -25,14 +25,17 @@ const cache = new Map<GameId, ArchiveDay[]>();
 
 async function loadDays(game: GameMeta, today: string): Promise<ArchiveDay[]> {
   if (game.id === 'cryptic') {
-    // Cryptic clues have their own numbered pages.
+    // Cryptic clues live in their own tables, but link like every other game.
     const puzzles = await fetchPuzzleArchive();
-    return puzzles
-      .filter(p => p.date < today)
-      .map(p => ({ date: p.date, to: `/puzzle/${p.number}` }));
+    return puzzles.filter(p => p.date < today).map(p => dayLink(game, p.date));
   }
   const dates = await fetchGameArchiveDates(game.id, today);
-  return dates.map(date => ({ date, to: `${game.path}?date=${date}` }));
+  return dates.map(date => dayLink(game, date));
+}
+
+/** Every game's past day lives at its own page plus `?date=`. */
+function dayLink(game: GameMeta, date: string): ArchiveDay {
+  return { date, to: `${game.path}?date=${date}` };
 }
 
 /** Days grouped by month, newest month first. */

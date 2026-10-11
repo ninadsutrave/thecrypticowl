@@ -45,8 +45,21 @@ if (game === 'cryptic') {
   process.exit(0);
 }
 
+// Several dates at once (comma-separated): each one avoids what the earlier
+// ones and PREVIEW_USED (comma-separated source keys) already took. Every
+// result is also printed on one line after PREVIEW_RESULT, for scripts.
 const { handler } = await import(`../games/${game}/index.js`);
-const res = await handler({ preview: true, ...(date ? { date } : {}) });
-const body = JSON.parse(res.body);
-console.log(JSON.stringify(body, null, 2));
-process.exit(res.statusCode === 200 ? 0 : 1);
+const used = (process.env.PREVIEW_USED ?? '').split(',').filter(Boolean);
+let failed = false;
+for (const d of (date ?? '')
+  .split(',')
+  .filter(Boolean)
+  .concat(date ? [] : [undefined])) {
+  const res = await handler({ preview: true, used, ...(d ? { date: d } : {}) });
+  const body = JSON.parse(res.body);
+  console.log(JSON.stringify(body, null, 2));
+  console.log(`PREVIEW_RESULT ${JSON.stringify(body)}`);
+  if (res.statusCode === 200) used.push(...(body.sourceKeys ?? []));
+  else failed = true;
+}
+process.exit(failed ? 1 : 0);

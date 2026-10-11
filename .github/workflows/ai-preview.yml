@@ -9,6 +9,12 @@ on:
       games:
         description: 'Space-separated: cryptic what-am-i trivia'
         default: 'cryptic what-am-i trivia'
+      dates:
+        description: 'Comma-separated dates (blank = today; not for cryptic)'
+        default: ''
+      used:
+        description: 'Comma-separated source keys to avoid (e.g. wiki:Python)'
+        default: ''
 
 permissions:
   contents: read
@@ -29,6 +35,8 @@ jobs:
           GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
           CONTACT_EMAIL: ${{ vars.CONTACT_EMAIL }}
           GAMES: ${{ inputs.games }}
+          DATES: ${{ inputs.dates }}
+          PREVIEW_USED: ${{ inputs.used }}
         run: |
           # Same writers and checker as production (deploy-lambda-*.yml).
           for g in $GAMES; do
@@ -38,6 +46,6 @@ jobs:
             esac
             echo "::group::$g"
             AI_PROVIDER=groq JUDGE_PROVIDER=gemini GROQ_MODEL=$model \
-              node lambda/scripts/preview.mjs "$g" || echo "!! $g exited with an error"
+              node lambda/scripts/preview.mjs "$g" $DATES || echo "!! $g exited with an error"
             echo "::endgroup::"
           done

@@ -119,10 +119,13 @@ export function createGameHandler(spec, deps = {}) {
     if (event.preview === true) {
       const date = event.date ?? today;
       try {
+        // A preview can be told what's taken (`event.used`), so a batch of
+        // previews for several dates never repeats a subject.
+        const taken = new Set(Array.isArray(event.used) ? event.used : []);
         const result = await produce({
           date,
-          used: new Set(),
-          usedSince: async () => new Set(),
+          used: taken,
+          usedSince: async () => taken,
           ai,
           env,
         });

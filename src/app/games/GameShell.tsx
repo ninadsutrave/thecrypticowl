@@ -164,7 +164,7 @@ export function GameShell({
             clock={record.seconds}
             frozen
             onTutorial={openTutorial}
-            mood={moodFor(record.outcome)}
+            mood={null}
           />
           <ResultCard
             game={game}
@@ -284,7 +284,7 @@ function GameSession({
         practice={replaying && !practicePuzzle && !archiveDate}
         archiveDate={archiveDate}
         onTutorial={onTutorial}
-        mood={result ? moodFor(result.outcome) : worried ? 'wrong' : 'thinking'}
+        mood={result ? null : worried ? 'wrong' : 'thinking'}
       />
       {practicePuzzle && (
         <p
@@ -339,8 +339,8 @@ function GameHeader({
   practice?: boolean;
   archiveDate?: string | null;
   onTutorial: () => void;
-  /** Ollie beside the title: thinking while you play, then how it went. */
-  mood?: MascotMood;
+  /** Ollie beside the title while you play; null once the result card (with its own owl) shows. */
+  mood?: MascotMood | null;
 }) {
   return (
     <header className="mb-4">
@@ -409,9 +409,11 @@ function GameHeader({
             </span>
           )}
         </div>
-        <div className="ml-auto flex-shrink-0">
-          <Mascot mood={mood} size={52} animate={mood === 'thinking'} />
-        </div>
+        {mood && (
+          <div className="ml-auto flex-shrink-0">
+            <Mascot mood={mood} size={52} animate={mood === 'thinking'} />
+          </div>
+        )}
       </div>
     </header>
   );

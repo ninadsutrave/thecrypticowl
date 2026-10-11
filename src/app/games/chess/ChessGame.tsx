@@ -327,11 +327,12 @@ function ChessBoard({ puzzle, api }: { puzzle: ChessPuzzle; api: PlayApi }) {
 
       {!api.finished && !outOfMoves && history.length > 1 && !onLine && (
         <p className="text-xs font-bold text-center" style={{ color: T.textMuted }}>
-          You've left the puzzle's main line, so hints are off. Any mate still counts.
+          That's not the expected move, so hints are off for now. Any checkmate still wins, or tap
+          Start over to try again.
         </p>
       )}
       {/* After a few moves, a way back to the start without waiting to run out. */}
-      {!api.finished && !outOfMoves && history.length >= 3 && (
+      {!api.finished && !outOfMoves && history.length > 1 && (
         <button
           onClick={retry}
           className="py-2.5 px-5 rounded-2xl border-2 flex items-center gap-2 text-sm font-extrabold"

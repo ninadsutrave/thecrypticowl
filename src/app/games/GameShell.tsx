@@ -323,9 +323,9 @@ function GameSession({
             isDark={isDark}
             practice={replaying}
             archive={archiveDate !== null && !practicePuzzle}
-            // A second run of a finished puzzle isn't worth sharing; a first
-            // finish is, even on a practice or archive puzzle.
-            shareable={!replaying || practicePuzzle || archiveDate !== null}
+            // Always shareable. A replay shares the day's first result, so a
+            // second run can't improve the score that gets posted.
+            shareable
             shareDate={archiveDate}
             puzzleDate={practicePuzzle ? null : (archiveDate ?? localDateKey())}
             onReplay={onReplay}
@@ -500,11 +500,13 @@ function ResultCard({
   const { user } = useAuth();
   const rating = usePuzzleReaction(game.id, puzzleDate, user?.id);
 
+  // A replay of today's puzzle shares the first finish, not the rerun.
+  const first = practice && !archive ? getSolveRecord(game.id) : null;
   const share = async () =>
     setShared(
       await shareOrCopy(
-        buildGameShare(game, record, {
-          streak: practice ? 0 : mine.streak,
+        buildGameShare(game, first ?? record, {
+          streak: practice && !first ? 0 : mine.streak,
           date: shareDate ? new Date(`${shareDate}T12:00:00`) : new Date(),
         })
       )

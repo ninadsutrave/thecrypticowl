@@ -119,10 +119,11 @@ function SudokuBoard({ puzzle, api }: { puzzle: SudokuPuzzle; api: PlayApi }) {
         )
       );
       const wrongNow = placed > 0 && String(placed) !== puzzle.solution[cell];
-      if (wrongNow) {
-        setMistakes(m => m + 1);
-        api.oops();
-      }
+      if (wrongNow) setMistakes(m => m + 1);
+      // Ollie frowns only at a rule break (a repeat in a row, column, box
+      // or cage), never at a digit that is merely not the solution's: that
+      // would be a free hint.
+      if (placed && findConflicts(next, puzzle).has(cell)) api.oops();
       finishIfSolved(next, revealed.length, mistakes + (wrongNow ? 1 : 0));
     },
     [

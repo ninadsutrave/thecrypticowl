@@ -76,6 +76,11 @@ function ChessBoard({ puzzle, api }: { puzzle: ChessPuzzle; api: PlayApi }) {
     !api.finished &&
     history.length > 0 &&
     (solverMated || (!g.isCheckmate() && (g.isGameOver() || movesLeft <= 0)));
+  // An attempt that ran out of moves without mate is the one real miss in a
+  // chess puzzle (a different move can still mate), so that's when Ollie frowns.
+  useEffect(() => {
+    if (outOfMoves) api.oops();
+  }, [outOfMoves, api]);
   const solverTurn = !api.finished && !outOfMoves && history.length > 0 && g.turn() === playerColor;
   const lastMove = history.length ? history[history.length - 1] : null;
 
@@ -139,7 +144,6 @@ function ChessBoard({ puzzle, api }: { puzzle: ChessPuzzle; api: PlayApi }) {
     play(uci);
     // Any mate counts, not only the puzzle's own line (the Lichess convention).
     if (g.isCheckmate()) finish('solved');
-    else if (expected && uci !== expected) api.oops();
   };
 
   /** Back to the position after the setup move, for another go. */

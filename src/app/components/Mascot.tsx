@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { m } from 'motion/react';
 import { useDarkMode } from '../context/DarkModeContext';
 import { getTheme } from '../theme';
@@ -27,12 +28,12 @@ if (typeof window !== 'undefined') {
   for (const src of new Set(Object.values(OWL_FOR))) new Image().src = src;
 }
 
-function Owl({ mood }: { mood: MascotMood }) {
+function Owl({ mood, smiling }: { mood: MascotMood; smiling: boolean }) {
   const happy = mood === 'celebrating' || mood === 'correct';
   return (
     <div className="relative w-full h-full">
       <img
-        src={OWL_FOR[mood]}
+        src={smiling ? '/owl-happy.webp' : OWL_FOR[mood]}
         alt=""
         aria-hidden
         draggable={false}
@@ -68,6 +69,8 @@ export function Mascot({
 }: MascotProps) {
   const { isDark } = useDarkMode();
   const T = getTheme(isDark);
+  // Ollie smiles back at a pointer resting on him.
+  const [smiling, setSmiling] = useState(false);
   const bubbleStyle = { background: T.bubbleBg, borderColor: T.bubbleBorder };
   const bounceAnimation =
     mood === 'celebrating'
@@ -107,9 +110,11 @@ export function Mascot({
         style={{ width: size, height: size }}
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         animate={bounceAnimation as any}
+        onHoverStart={() => setSmiling(true)}
+        onHoverEnd={() => setSmiling(false)}
         className="flex-shrink-0"
       >
-        <Owl mood={mood} />
+        <Owl mood={mood} smiling={smiling} />
       </m.div>
       {bubbleDirection === 'right' && bubble('18px 18px 18px 4px')}
     </div>

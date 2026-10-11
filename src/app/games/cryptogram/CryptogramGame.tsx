@@ -96,13 +96,15 @@ function CryptogramBoard({ puzzle, api }: { puzzle: CryptogramPuzzle; api: PlayA
       const target = selected ?? firstOpen;
       if (!target || isLocked(target)) return;
       // A plain letter fixed by a given or a hint can't be reused elsewhere.
-      if (plain && Object.entries(guesses).some(([c, p]) => p === plain && isLocked(c))) return;
+      // That's a rule break, so Ollie frowns; a wrong letter alone doesn't
+      // get a reaction, which would give the answer away.
+      if (plain && Object.entries(guesses).some(([c, p]) => p === plain && isLocked(c))) {
+        api.oops();
+        return;
+      }
       const next = assign(guesses, target, plain);
       const wrongNow = Boolean(plain) && solution[target] !== plain;
-      if (wrongNow) {
-        setMistakes(m => m + 1);
-        api.oops();
-      }
+      if (wrongNow) setMistakes(m => m + 1);
       setGuesses(next);
       if (plain) setSelected(nextOpen(target, next));
       finishIfSolved(next, hinted.length, mistakes + (wrongNow ? 1 : 0));

@@ -31,9 +31,26 @@ const LikeButton = lazy(() =>
   import('../components/LikeButton').then(mod => ({ default: mod.LikeButton }))
 );
 
-/** The navbar mark: Ollie's badge, the same image as the favicon. */
+/** The navbar mark: Ollie's badge, smiling while the logo is hovered. */
 function OwlLogoMini() {
-  return <img src="/owl-badge.webp" width={34} height={34} alt="" aria-hidden className="block" />;
+  return (
+    <span className="relative block w-[34px] h-[34px]" aria-hidden>
+      <img
+        src="/owl-badge.webp"
+        width={34}
+        height={34}
+        alt=""
+        className="absolute inset-0 transition-opacity duration-150 group-hover:opacity-0"
+      />
+      <img
+        src="/owl-badge-happy.webp"
+        width={34}
+        height={34}
+        alt=""
+        className="absolute inset-0 opacity-0 transition-opacity duration-150 group-hover:opacity-100"
+      />
+    </span>
+  );
 }
 
 export function Root() {
@@ -113,7 +130,7 @@ export function Root() {
       >
         <div className="max-w-5xl mx-auto px-4 h-16 flex items-center justify-between">
           {/* Logo */}
-          <NavLink to="/" className="flex items-center gap-2.5 no-underline flex-shrink-0">
+          <NavLink to="/" className="group flex items-center gap-2.5 no-underline flex-shrink-0">
             <OwlLogoMini />
             <span
               className="whitespace-nowrap"

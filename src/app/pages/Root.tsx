@@ -20,6 +20,7 @@ import { useStreak } from '../hooks/useStreak';
 import { currentStreak } from '../games/solveRecords';
 import { useAuth } from '../context/AuthContext';
 import { useOnlineStatus } from '../hooks/useOnlineStatus';
+import { OwlArt } from '../components/OwlArt';
 
 // Off the critical path, but fetched once the page is idle: by the time the
 // connection drops, the offline screen is already in memory.
@@ -32,36 +33,14 @@ const LikeButton = lazy(() =>
 );
 
 /** The navbar mark: the same owl as public/favicon.svg. */
+/** The navbar mark: Ollie in a circle, the same drawing as the favicon. */
 function OwlLogoMini() {
   return (
-    <svg viewBox="0 0 36 36" width="34" height="34" fill="none" aria-hidden>
-      <circle cx="18" cy="18" r="18" fill="#EDE9FE" />
-      <path d="M8 15 L7 3 L15 10 Z" fill="#7C3AED" />
-      <path d="M28 15 L29 3 L21 10 Z" fill="#7C3AED" />
-      <ellipse cx="18" cy="21" rx="12" ry="13" fill="#A78BFA" />
-      <circle cx="13" cy="17" r="5.6" fill="#F5F3FF" />
-      <circle cx="23" cy="17" r="5.6" fill="#F5F3FF" />
-      <path
-        d="M7.5 11.5 Q13 9.8 18 14.5 Q23 9.8 28.5 11.5"
-        stroke="#7C3AED"
-        strokeWidth="1.6"
-        strokeLinecap="round"
-        fill="none"
-      />
-      <circle cx="13" cy="17" r="3.4" fill="#FCD34D" />
-      <circle cx="23" cy="17" r="3.4" fill="#FCD34D" />
-      <circle cx="13" cy="17" r="1.9" fill="#1E1B4B" />
-      <circle cx="23" cy="17" r="1.9" fill="#1E1B4B" />
-      <circle cx="13.8" cy="16.2" r="0.7" fill="white" />
-      <circle cx="23.8" cy="16.2" r="0.7" fill="white" />
-      <path d="M18 20 L16 22.5 Q17 25.5 18 27 Q19 25.5 20 22.5 Z" fill="#F97316" />
-      <path
-        d="M14 28 L15 29.5 L16 28 M20 28 L21 29.5 L22 28"
-        stroke="#EDE9FE"
-        strokeWidth="1"
-        strokeLinecap="round"
-        fill="none"
-      />
+    <svg viewBox="0 0 120 120" width="34" height="34" fill="none" aria-hidden>
+      <circle cx="60" cy="60" r="60" fill="#EDE9FE" />
+      <g transform="translate(8 -2) scale(1.04)">
+        <OwlArt />
+      </g>
     </svg>
   );
 }

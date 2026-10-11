@@ -58,6 +58,11 @@ export interface GameResult {
   details?: SolveRecord['details'];
   /** Spoiler-free emoji grid for the share text, e.g. "🟩🟥🟩⬜⬜". */
   grid?: string;
+  /**
+   * The answer, shown on the result card (which replaces the board), e.g.
+   * "Shampoo" or a quote with its author. Never in the share text.
+   */
+  reveal?: string;
 }
 
 export interface PlayApi {
@@ -233,6 +238,15 @@ function GameSession({
   const [result, setResult] = useState<SolveRecord | null>(null);
   const progressSlot = replaying ? null : progressKey(game.id, timer.date, puzzleId);
   const [worried, setWorried] = useState(false);
+  const [showCard, setShowCard] = useState(false);
+  useEffect(() => {
+    if (!result) return;
+    const t = setTimeout(() => {
+      setShowCard(true);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }, 1200);
+    return () => clearTimeout(t);
+  }, [result]);
   useEffect(() => {
     if (!worried) return;
     const t = setTimeout(() => setWorried(false), 1600);
@@ -244,7 +258,7 @@ function GameSession({
       finished: result !== null,
       progressSlot,
       oops: () => setWorried(true),
-      complete: ({ outcome, score, hints, mistakes = 0, details, grid }) => {
+      complete: ({ outcome, score, hints, mistakes = 0, details, grid, reveal }) => {
         if (result) return;
         const seconds = timer.stop();
         // The grid rides along in details so a later visit can share it too.
@@ -254,7 +268,7 @@ function GameSession({
           score,
           hints,
           mistakes,
-          details: grid ? { ...details, grid } : details,
+          details: { ...details, ...(grid ? { grid } : {}), ...(reveal ? { reveal } : {}) },
         };
         const finished = { ...play, completedAt: new Date().toISOString() };
         if (progressSlot) {
@@ -297,9 +311,11 @@ function GameSession({
             : "Today's puzzle isn't available right now, so here's a stand-in. It counts as today's play."}
         </p>
       )}
-      <div className="mt-5">{children(api)}</div>
+      {/* Finished: the board stays a moment so the last move lands, then the
+          result card takes its place. Play again brings a fresh board. */}
+      {!showCard && <div className="mt-5">{children(api)}</div>}
       <AnimatePresence>
-        {result && (
+        {result && showCard && (
           <ResultCard
             game={game}
             record={result}
@@ -556,6 +572,23 @@ function ResultCard({
           />
         )}
       </div>
+
+      {typeof record.details?.reveal === 'string' && (
+        <div
+          className="mb-4 mx-auto max-w-md rounded-2xl border px-4 py-3 text-left"
+          style={{ background: T.cardBg, borderColor: T.cardBorder }}
+        >
+          <p
+            className="text-xs font-extrabold uppercase tracking-wider mb-1"
+            style={{ color: T.textMuted }}
+          >
+            {record.outcome === 'solved' ? 'The answer' : 'It was'}
+          </p>
+          <p className="whitespace-pre-line font-bold" style={{ color: T.heading }}>
+            {record.details.reveal}
+          </p>
+        </div>
+      )}
 
       {typeof record.details?.grid === 'string' && (
         <p

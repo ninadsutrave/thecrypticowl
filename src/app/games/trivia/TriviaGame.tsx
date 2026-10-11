@@ -52,6 +52,7 @@ function TriviaBoard({ puzzle, api }: { puzzle: TriviaPuzzle; api: PlayApi }) {
     if (isCorrectGuess(g, puzzle.accepted)) {
       setSolved(true);
       api.complete({
+        reveal: puzzle.fact ? `${puzzle.answer}\n\n${puzzle.fact}` : puzzle.answer,
         outcome: 'solved',
         score: `Guess ${wrong.length + 1} of ${MAX_GUESSES}${hintUsed ? ' · hint' : ''}`,
         hints,
@@ -68,6 +69,7 @@ function TriviaBoard({ puzzle, api }: { puzzle: TriviaPuzzle; api: PlayApi }) {
     setShake(n => n + 1);
     if (next.length >= MAX_GUESSES) {
       api.complete({
+        reveal: puzzle.fact ? `${puzzle.answer}\n\n${puzzle.fact}` : puzzle.answer,
         outcome: 'failed',
         score: 'Not this time',
         hints,
@@ -82,6 +84,7 @@ function TriviaBoard({ puzzle, api }: { puzzle: TriviaPuzzle; api: PlayApi }) {
 
   const giveUp = () => {
     api.complete({
+      reveal: puzzle.fact ? `${puzzle.answer}\n\n${puzzle.fact}` : puzzle.answer,
       outcome: 'revealed',
       score: 'Revealed',
       hints,

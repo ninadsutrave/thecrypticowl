@@ -54,6 +54,7 @@ function WhatAmIBoard({ puzzle, api }: { puzzle: WhatAmIPuzzle; api: PlayApi }) 
     if (isCorrectGuess(guess, puzzle.accepted)) {
       setWon(true);
       api.complete({
+        reveal: puzzle.answer,
         outcome: 'solved',
         score: `${points}/${MAX_POINTS} points${hintUsed ? ' · hint' : ''}`,
         hints: hintUsed ? 1 : 0,
@@ -68,6 +69,7 @@ function WhatAmIBoard({ puzzle, api }: { puzzle: WhatAmIPuzzle; api: PlayApi }) 
     setGuess('');
     if (lastClue) {
       api.complete({
+        reveal: puzzle.answer,
         outcome: 'failed',
         score: `0/${MAX_POINTS} points`,
         hints: hintUsed ? 1 : 0,
@@ -84,6 +86,7 @@ function WhatAmIBoard({ puzzle, api }: { puzzle: WhatAmIPuzzle; api: PlayApi }) 
   const revealNext = () => {
     if (lastClue) {
       api.complete({
+        reveal: puzzle.answer,
         outcome: 'revealed',
         score: `0/${MAX_POINTS} points`,
         hints: hintUsed ? 1 : 0,

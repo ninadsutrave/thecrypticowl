@@ -80,6 +80,7 @@ function CryptogramBoard({ puzzle, api }: { puzzle: CryptogramPuzzle; api: PlayA
     (g: GuessMap, hintCount: number, wrong: number) => {
       if (!isSolved(g, solution)) return;
       api.complete({
+        reveal: puzzle.author ? `“${puzzle.text}”\n— ${puzzle.author}` : puzzle.text,
         outcome: 'solved',
         score: hintCount === 0 ? 'No hints' : `${hintCount} hint${hintCount === 1 ? '' : 's'}`,
         hints: hintCount,
@@ -88,7 +89,7 @@ function CryptogramBoard({ puzzle, api }: { puzzle: CryptogramPuzzle; api: PlayA
         grid: `🔐 ${hintCount ? '💡'.repeat(Math.min(hintCount, 8)) : '✨ no hints'}`,
       });
     },
-    [api, solution, givenCipher.length]
+    [api, solution, givenCipher.length, puzzle.author, puzzle.text]
   );
 
   const type = useCallback(

@@ -70,6 +70,10 @@ function ChronologyBoard({ puzzle, api }: { puzzle: ChronologyPuzzle; api: PlayA
     if (placed < slots.length) api.oops();
     if (placed === slots.length) {
       api.complete({
+        reveal: [...puzzle.events]
+          .sort((a, b) => a.year - b.year)
+          .map(e => `${e.year} · ${e.text}`)
+          .join('\n'),
         outcome: 'solved',
         score: `Check ${nextHistory.length} of ${MAX_ATTEMPTS}${hintUsed ? ' · hint' : ''}`,
         hints: hintUsed ? 1 : 0,
@@ -79,6 +83,10 @@ function ChronologyBoard({ puzzle, api }: { puzzle: ChronologyPuzzle; api: PlayA
       });
     } else if (nextHistory.length === MAX_ATTEMPTS) {
       api.complete({
+        reveal: [...puzzle.events]
+          .sort((a, b) => a.year - b.year)
+          .map(e => `${e.year} · ${e.text}`)
+          .join('\n'),
         outcome: 'failed',
         score: `${placed}/${slots.length} in place`,
         hints: hintUsed ? 1 : 0,

@@ -20,7 +20,6 @@ import { useStreak } from '../hooks/useStreak';
 import { currentStreak } from '../games/solveRecords';
 import { useAuth } from '../context/AuthContext';
 import { useOnlineStatus } from '../hooks/useOnlineStatus';
-import { OwlArt } from '../components/OwlArt';
 
 // Off the critical path, but fetched once the page is idle: by the time the
 // connection drops, the offline screen is already in memory.
@@ -32,17 +31,9 @@ const LikeButton = lazy(() =>
   import('../components/LikeButton').then(mod => ({ default: mod.LikeButton }))
 );
 
-/** The navbar mark: the same owl as public/favicon.svg. */
-/** The navbar mark: Ollie in a circle, the same drawing as the favicon. */
+/** The navbar mark: Ollie's badge, the same image as the favicon. */
 function OwlLogoMini() {
-  return (
-    <svg viewBox="0 0 120 120" width="34" height="34" fill="none" aria-hidden>
-      <circle cx="60" cy="60" r="60" fill="#EDE9FE" />
-      <g transform="translate(8 -2) scale(1.04)">
-        <OwlArt />
-      </g>
-    </svg>
-  );
+  return <img src="/owl-badge.webp" width={34} height={34} alt="" aria-hidden className="block" />;
 }
 
 export function Root() {

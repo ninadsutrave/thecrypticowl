@@ -1,7 +1,6 @@
 import { m } from 'motion/react';
 import { useDarkMode } from '../context/DarkModeContext';
 import { getTheme } from '../theme';
-import { OwlArt } from './OwlArt';
 
 export type MascotMood = 'default' | 'thinking' | 'celebrating' | 'hint' | 'wrong' | 'correct';
 
@@ -13,16 +12,44 @@ interface MascotProps {
   animate?: boolean;
 }
 
-function OwlSVG({ mood = 'default' }: { mood: MascotMood }) {
+/**
+ * Ollie: the artwork in public/owl.webp. Moods show as the bounce or shake
+ * in Mascot plus a small flourish beside the owl.
+ */
+function Owl({ mood }: { mood: MascotMood }) {
+  const happy = mood === 'celebrating' || mood === 'correct';
   return (
-    <svg
-      viewBox="0 0 100 118"
-      fill="none"
-      xmlns="http://www.w3.org/2000/svg"
-      className="w-full h-full"
-    >
-      <OwlArt mood={mood} />
-    </svg>
+    <div className="relative w-full h-full">
+      <img
+        src="/owl.webp"
+        alt=""
+        aria-hidden
+        draggable={false}
+        className="w-full h-full object-contain select-none"
+      />
+      {happy && (
+        <>
+          <span className="absolute -left-1 top-[18%] text-[0.9em]" aria-hidden>
+            ✨
+          </span>
+          <span className="absolute -right-1 top-[8%] text-[0.75em]" aria-hidden>
+            ⭐
+          </span>
+        </>
+      )}
+      {mood === 'thinking' && (
+        <span className="absolute -right-2 top-0 flex items-end gap-0.5" aria-hidden>
+          <span className="w-1.5 h-1.5 rounded-full bg-violet-300/70" />
+          <span className="w-2 h-2 rounded-full bg-violet-300/80" />
+          <span className="w-3 h-3 rounded-full bg-violet-300/90" />
+        </span>
+      )}
+      {mood === 'hint' && (
+        <span className="absolute -right-1 top-[4%] text-[0.85em]" aria-hidden>
+          💡
+        </span>
+      )}
+    </div>
   );
 }
 
@@ -76,7 +103,7 @@ export function Mascot({
         animate={bounceAnimation as any}
         className="flex-shrink-0"
       >
-        <OwlSVG mood={mood} />
+        <Owl mood={mood} />
       </m.div>
       {bubbleDirection === 'right' && bubble('18px 18px 18px 4px')}
     </div>

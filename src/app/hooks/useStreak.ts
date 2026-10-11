@@ -127,11 +127,11 @@ export function getXPToNextLevel(
 
 export function getLevelTitle(level: number): string {
   if (level >= 20) return 'Grand Master 🏆';
-  if (level >= 15) return 'Cryptic Expert 🎓';
-  if (level >= 10) return 'Word Wizard 🧙';
-  if (level >= 5) return 'Clue Hunter 🔎';
+  if (level >= 15) return 'Puzzle Expert 🎓';
+  if (level >= 10) return 'Wise Owl 🦉';
+  if (level >= 5) return 'Puzzle Hunter 🔎';
   if (level >= 2) return 'Apprentice Solver 📖';
-  return 'Newbie Cryptician 🦉';
+  return 'Newbie Owlet 🐣';
 }
 
 /** Local-time day key. Deliberately not UTC — see recordSolve. */

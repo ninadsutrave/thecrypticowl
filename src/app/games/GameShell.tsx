@@ -32,6 +32,7 @@ import {
   type SolveRecord,
 } from './solveRecords';
 import { recordPlay } from './playHistory';
+import { xpForPlay } from './xp';
 import { usePuzzleReaction } from '../hooks/usePuzzleReaction';
 import { ReactionWidget } from '../pages/puzzle/ClueReactionWidget';
 import { TutorialFlow, type TutorialStep } from './TutorialFlow';
@@ -561,6 +562,9 @@ function ResultCard({
       <div className="flex flex-wrap justify-center gap-2.5 my-4">
         <Stat label="Time" value={formatClock(record.seconds)} T={T} isDark={isDark} />
         {record.score && <Stat label="Result" value={record.score} T={T} isDark={isDark} />}
+        {!practice && !archive && (
+          <Stat label="XP" value={`+${xpForPlay(record)}`} T={T} isDark={isDark} />
+        )}
         {!practice && mine.best != null && (
           <Stat label="Best" value={formatClock(mine.best)} T={T} isDark={isDark} />
         )}

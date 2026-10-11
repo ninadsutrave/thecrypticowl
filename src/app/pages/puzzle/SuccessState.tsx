@@ -12,6 +12,8 @@ import {
 } from 'lucide-react';
 import { Link } from 'react-router';
 import { nextUnfinished } from '../../games/progress';
+import { getAllPlays, localDateKey } from '../../games/solveRecords';
+import { levelForXP, totalXP } from '../../games/xp';
 import { archivePath } from '../../games/archive';
 import confetti from 'canvas-confetti';
 import { Mascot } from '../../components/Mascot';
@@ -148,7 +150,12 @@ export function SuccessState({
     }
   };
 
-  const levelTitle = getLevelTitle(displayData.level);
+  // XP across every game. Today's clue may not be in the play history yet
+  // (the page records it a moment after this renders), so add it once.
+  const plays = getAllPlays();
+  const clueRecorded = plays.some(p => p.game === 'cryptic' && p.date === localDateKey());
+  const allXP = totalXP(plays) + (clueRecorded ? 0 : xpEarned);
+  const levelTitle = getLevelTitle(levelForXP(allXP));
 
   return (
     <m.div
@@ -488,7 +495,7 @@ export function SuccessState({
               {[
                 { emoji: '🔥', value: displayData.streak, label: 'Streak' },
                 { emoji: '🧩', value: displayData.total, label: 'Total Solved' },
-                { emoji: '⚡', value: `${displayData.xp} XP`, label: levelTitle.split(' ')[0] },
+                { emoji: '⚡', value: `${allXP} XP`, label: levelTitle.split(' ')[0] },
               ].map((s, i) => (
                 <div key={i}>
                   <p

@@ -12,6 +12,8 @@ import { useDarkMode } from '../context/DarkModeContext';
 import { getTheme } from '../theme';
 import { useAuth } from '../context/AuthContext';
 import { useStreak, getLevelTitle } from '../hooks/useStreak';
+import { getAllPlays } from '../games/solveRecords';
+import { levelForXP, totalXP } from '../games/xp';
 import { Mascot } from '../components/Mascot';
 import { Link } from 'react-router';
 import { SignInGate } from '../components/SignInGate';
@@ -504,7 +506,10 @@ export function Progress() {
   const T = getTheme(isDark);
   const { user, signOut, isSignedIn, loading: authLoading } = useAuth();
   const localStreak = useStreak();
-  const levelTitle = getLevelTitle(localStreak.level);
+  // XP and level count every game's finished puzzles (the play history),
+  // not just cryptic clues.
+  const allXP = totalXP(getAllPlays());
+  const levelTitle = getLevelTitle(levelForXP(allXP));
 
   // Remote data state
   const [solveHistory, setSolveHistory] = useState<DbSolveRecord[]>([]);
@@ -566,7 +571,7 @@ export function Progress() {
   if (!isSignedIn) return <SignInGate />;
 
   // Use remote stats if available, otherwise fall back to localStorage
-  const xp = remoteStats?.xp ?? localStreak.xp;
+  const xp = allXP;
   const totalSolved = remoteStats?.totalSolved ?? localStreak.totalSolved;
   const bestStreak = remoteStats?.bestStreak ?? localStreak.bestStreak;
   const streakCount = remoteStats?.streakCount ?? localStreak.count;

@@ -56,7 +56,7 @@ export const GAMES: readonly GameMeta[] = [
   },
   {
     id: 'what-am-i',
-    name: 'What Am I Talking About?',
+    name: 'What Am I?',
     path: '/what-am-i',
     emoji: '🕵️',
     blurb:

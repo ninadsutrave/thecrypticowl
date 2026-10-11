@@ -19,7 +19,7 @@ today.
 |---|---|---|---|---|
 | 1 | **Variant Sudoku** | Pure algorithm | 0 | Generator + solver |
 | 2 | **British Style Cryptics** | AI + mechanical verification | up to 9 + judge | Existing pipeline |
-| 3 | **What Am I Talking About?** | AI, grounded in Wikipedia | ~2–6 | Wikipedia / Wikidata |
+| 3 | **What Am I?** | AI, grounded in Wikipedia | ~2–6 | Wikipedia / Wikidata |
 | 4 | **Trivia** | AI, grounded in Wikipedia | ~3–9 | Wikipedia (hand-written bank as fallback) |
 | 5 | **Chronology** | Factual data feed | 0 (1 optional) | Wikipedia "On this day" |
 | 6 | **Chess: Mate in N** | Curated dataset | 0 | Lichess puzzle database |
@@ -162,7 +162,7 @@ The only work here is moving it into the shared multi-game structure (see
 
 ---
 
-### 3. What Am I Talking About?
+### 3. What Am I?
 
 The player gets **5 clues about one hidden thing**, revealed one at a time from
 vague to specific, and guesses as early as they dare.

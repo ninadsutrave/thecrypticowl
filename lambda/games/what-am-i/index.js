@@ -14,13 +14,13 @@ const LOW_STOCK_PER_CATEGORY = 3;
 const LOW_STOCK_INDIAN = 20;
 
 /**
- * What Am I Talking About?: subject picked in code, clues written by the
+ * What Am I?: subject picked in code, clues written by the
  * generator model from Wikipedia, checked in code, then blind-solved by the
  * judge model.
  */
 export const spec = {
   game: 'what-am-i',
-  label: 'What Am I',
+  label: 'What Am I?',
   needsAI: true,
   maxAttempts: 4,
   generate: ctx => generateWhatAmI(ctx),

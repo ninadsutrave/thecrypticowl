@@ -12,16 +12,27 @@ interface MascotProps {
   animate?: boolean;
 }
 
-/**
- * Ollie: the artwork in public/owl.webp. Moods show as the bounce or shake
- * in Mascot plus a small flourish beside the owl.
- */
+/** Ollie's face for each mood: the artwork with its eyes repainted. */
+const OWL_FOR: Record<MascotMood, string> = {
+  default: '/owl.webp',
+  correct: '/owl-happy.webp',
+  celebrating: '/owl-happy.webp',
+  thinking: '/owl-thinking.webp',
+  hint: '/owl-hint.webp',
+  wrong: '/owl-wrong.webp',
+};
+
+// Fetch every face up front so changing mood never flickers.
+if (typeof window !== 'undefined') {
+  for (const src of new Set(Object.values(OWL_FOR))) new Image().src = src;
+}
+
 function Owl({ mood }: { mood: MascotMood }) {
   const happy = mood === 'celebrating' || mood === 'correct';
   return (
     <div className="relative w-full h-full">
       <img
-        src="/owl.webp"
+        src={OWL_FOR[mood]}
         alt=""
         aria-hidden
         draggable={false}
@@ -42,11 +53,6 @@ function Owl({ mood }: { mood: MascotMood }) {
           <span className="w-1.5 h-1.5 rounded-full bg-violet-300/70" />
           <span className="w-2 h-2 rounded-full bg-violet-300/80" />
           <span className="w-3 h-3 rounded-full bg-violet-300/90" />
-        </span>
-      )}
-      {mood === 'hint' && (
-        <span className="absolute -right-1 top-[4%] text-[0.85em]" aria-hidden>
-          💡
         </span>
       )}
     </div>

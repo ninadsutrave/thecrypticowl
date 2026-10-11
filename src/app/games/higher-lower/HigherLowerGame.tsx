@@ -103,7 +103,7 @@ function HigherLowerBoard({ puzzle, api }: { puzzle: HigherLowerPuzzle; api: Pla
       </div>
 
       <h2
-        className="text-center m-0"
+        className="text-center"
         style={{
           fontFamily: "'Outfit', sans-serif",
           fontSize: 'clamp(1.15rem, 4.5vw, 1.4rem)',
@@ -141,7 +141,7 @@ function HigherLowerBoard({ puzzle, api }: { puzzle: HigherLowerPuzzle; api: Pla
 
       {hintRound === round && !answered && (
         <p
-          className="m-0 rounded-2xl px-4 py-2.5 text-sm font-extrabold border flex items-center gap-2"
+          className="rounded-2xl px-4 py-2.5 text-sm font-extrabold border flex items-center gap-2"
           style={{ background: T.fodderBg, borderColor: T.streakBorder, color: T.text }}
         >
           <Lightbulb size={15} aria-hidden /> {known.name}:{' '}
@@ -177,9 +177,9 @@ function HigherLowerBoard({ puzzle, api }: { puzzle: HigherLowerPuzzle; api: Pla
           )}
         </>
       ) : (
-        <m.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} className="space-y-2">
+        <m.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} className="space-y-3">
           <p
-            className="m-0 text-center text-sm font-extrabold flex items-center justify-center gap-1.5"
+            className="text-center text-sm font-extrabold flex items-center justify-center gap-1.5"
             style={{ color: results[round] ? (isDark ? '#6EE7B7' : '#047857') : '#EF4444' }}
             role="status"
           >
@@ -235,7 +235,7 @@ function ItemCard({
       }}
     >
       <h3
-        className="m-0 break-words max-w-full"
+        className="break-words max-w-full"
         style={{
           fontFamily: "'Outfit', sans-serif",
           fontSize: 'clamp(0.95rem, 4vw, 1.3rem)',
@@ -247,14 +247,14 @@ function ItemCard({
       </h3>
       {item.description && (
         <p
-          className="m-0 mt-1 text-[0.7rem] sm:text-xs font-bold line-clamp-2"
+          className="mt-1 text-[0.7rem] sm:text-xs font-bold line-clamp-2"
           style={{ color: T.textMuted, lineHeight: 1.4 }}
         >
           {item.description}
         </p>
       )}
       <p
-        className="m-0 mt-auto pt-2 sm:pt-3"
+        className="mt-auto pt-2 sm:pt-3"
         style={{
           fontFamily: "'Outfit', sans-serif",
           fontSize: 'clamp(1.15rem, 5.6vw, 2rem)',
@@ -266,7 +266,7 @@ function ItemCard({
         {value}
       </p>
       <p
-        className="m-0 text-[0.6rem] sm:text-[0.7rem] font-extrabold uppercase tracking-wider"
+        className="text-[0.6rem] sm:text-[0.7rem] font-extrabold uppercase tracking-wider"
         style={{ color: T.textMuted }}
       >
         {label}

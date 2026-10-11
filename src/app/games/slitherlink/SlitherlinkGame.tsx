@@ -455,7 +455,7 @@ function SlitherBoard({ puzzle, api }: { puzzle: SlitherlinkPuzzle; api: PlayApi
         </div>
       )}
       {api.finished && (
-        <p className="m-0 text-sm font-extrabold" style={{ color: T.textMuted }} role="status">
+        <p className="text-sm font-extrabold" style={{ color: T.textMuted }} role="status">
           One loop, every number satisfied. ➰
         </p>
       )}

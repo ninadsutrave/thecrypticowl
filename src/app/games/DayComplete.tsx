@@ -56,7 +56,7 @@ export function DayComplete() {
         >
           All {played.length} done today! 🦉
         </h2>
-        <p className="m-0 text-sm font-bold" style={{ color: T.textMuted }}>
+        <p className="text-sm font-bold" style={{ color: T.textMuted }}>
           {solved === played.length
             ? 'Every single one solved. Owl-standing.'
             : `${solved} of ${played.length} solved: a full set played.`}

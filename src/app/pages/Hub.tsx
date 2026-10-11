@@ -159,7 +159,7 @@ export function Hub() {
         </div>
       )}
 
-      <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 list-none p-0 m-0">
+      <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 list-none p-0">
         {/* No entrance animation: the grid is the page's main content, and
             starting it at opacity 0 would delay first paint (LCP). */}
         {GAMES.map((game, i) => (

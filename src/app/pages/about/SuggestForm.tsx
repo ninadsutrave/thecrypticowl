@@ -131,7 +131,7 @@ export function SuggestForm() {
 
       {message && (
         <p
-          className="m-0 text-sm font-bold rounded-xl px-3 py-2 border"
+          className="text-sm font-bold rounded-xl px-3 py-2 border"
           style={{
             background: state === 'error' ? T.wrongBg : T.fodderBg,
             borderColor: state === 'error' ? T.wrongBorder : T.streakBorder,
@@ -145,7 +145,7 @@ export function SuggestForm() {
 
       <div className="flex flex-col-reverse sm:flex-row sm:items-center sm:justify-between gap-3">
         <p
-          className="m-0 text-xs flex items-center gap-1.5"
+          className="text-xs flex items-center gap-1.5"
           style={{ color: T.textMuted, fontWeight: 600 }}
         >
           <Lightbulb size={13} aria-hidden /> No email needed. We only keep your idea and name.

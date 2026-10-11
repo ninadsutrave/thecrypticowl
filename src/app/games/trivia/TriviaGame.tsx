@@ -135,7 +135,7 @@ function TriviaBoard({ puzzle, api }: { puzzle: TriviaPuzzle; api: PlayApi }) {
           )}
         </div>
         <p
-          className="relative m-0"
+          className="relative"
           style={{ color: T.text, fontWeight: 600, fontSize: '1.08rem', lineHeight: 1.75 }}
         >
           {puzzle.question}
@@ -154,7 +154,7 @@ function TriviaBoard({ puzzle, api }: { puzzle: TriviaPuzzle; api: PlayApi }) {
       )}
 
       {wrong.length > 0 && !api.finished && (
-        <p className="text-sm m-0" style={{ color: T.textMuted, fontWeight: 700 }}>
+        <p className="text-sm" style={{ color: T.textMuted, fontWeight: 700 }}>
           Not it: {wrong.map(w => `“${w}”`).join(', ')}
         </p>
       )}
@@ -169,11 +169,11 @@ function TriviaBoard({ puzzle, api }: { puzzle: TriviaPuzzle; api: PlayApi }) {
             borderColor: solved ? T.successBorder : T.cardBorderStrong,
           }}
         >
-          <p className="m-0 text-xs font-extrabold tracking-wider" style={{ color: T.textMuted }}>
+          <p className="text-xs font-extrabold tracking-wider" style={{ color: T.textMuted }}>
             {solved ? 'CORRECT · THE ANSWER IS' : 'THE ANSWER WAS'}
           </p>
           <p
-            className="m-0 mt-1"
+            className="mt-1"
             style={{ fontFamily: "'Outfit', sans-serif", fontSize: '1.9rem', color: T.heading }}
           >
             {puzzle.answer}

@@ -148,7 +148,7 @@ function CryptogramBoard({ puzzle, api }: { puzzle: CryptogramPuzzle; api: PlayA
 
   return (
     <div className="space-y-5">
-      <div className="flex justify-end -mb-2">
+      <div className="flex justify-end">
         <button
           onClick={() => setShowCipher(true)}
           className="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 border text-sm font-bold"

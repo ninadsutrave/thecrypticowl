@@ -447,6 +447,7 @@ export function Puzzle() {
                 ) : (
                   <>
                     <p
+                      className="flex items-center gap-1.5"
                       style={{
                         fontFamily: "'Outfit', sans-serif",
                         fontSize: '0.85rem',
@@ -454,7 +455,12 @@ export function Puzzle() {
                         marginBottom: 2,
                       }}
                     >
-                      🧩 CRYPTIC #{activePuzzle?.number}
+                      <span aria-hidden>🧩</span>
+                      {activePuzzle?.isFallback
+                        ? 'PRACTICE CLUE'
+                        : isArchive
+                          ? 'FROM THE ARCHIVE'
+                          : "TODAY'S CLUE"}
                     </p>
                     <p
                       style={{

@@ -47,13 +47,13 @@ export function HomeAchievements() {
       <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
         <h2
           id="achievements-title"
-          className="m-0 flex items-center gap-2.5"
+          className="flex items-center gap-2.5"
           style={{ fontFamily: "'Outfit', sans-serif", fontSize: '1.2rem', color: T.heading }}
         >
           <Trophy size={22} style={{ color: '#D97706' }} aria-hidden /> Your achievements
         </h2>
         <p
-          className="m-0 inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-extrabold"
+          className="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-extrabold"
           style={{
             background: T.streakBg,
             color: T.streakText,
@@ -63,7 +63,7 @@ export function HomeAchievements() {
           <Flame size={13} aria-hidden /> {streakLine}
         </p>
       </div>
-      <ul className="grid grid-cols-3 sm:grid-cols-5 gap-2.5 list-none p-0 m-0">
+      <ul className="grid grid-cols-3 sm:grid-cols-5 gap-2.5 list-none p-0">
         {milestones.map(ms => (
           <li
             key={ms.label}
@@ -94,7 +94,7 @@ export function HomeAchievements() {
               {ms.emoji}
             </div>
             <p
-              className="m-0 text-[0.7rem] sm:text-xs font-extrabold leading-tight"
+              className="text-[0.7rem] sm:text-xs font-extrabold leading-tight"
               style={{ color: ms.done ? T.brandText : T.textMuted }}
             >
               {ms.label}

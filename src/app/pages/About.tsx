@@ -75,14 +75,14 @@ export function About() {
           Puzzles for every day
         </h1>
         <p
-          className="mt-3 max-w-xl m-0"
+          className="mt-3 max-w-xl"
           style={{ color: T.textMuted, fontWeight: 600, fontSize: '1.05rem', lineHeight: 1.65 }}
         >
           The Cryptic Owl is an everyday puzzle site: a small set of fun, fresh puzzles every day,
           each worth a few minutes of your time. Whether you're on the way to the office or stuck in
           a boring meeting, there's always something here to solve.
         </p>
-        <ul className="mt-6 flex flex-wrap justify-center gap-2 list-none p-0 m-0">
+        <ul className="mt-6 flex flex-wrap justify-center gap-2 list-none p-0">
           {moments.map(({ Icon, text }) => (
             <li
               key={text}
@@ -99,7 +99,7 @@ export function About() {
         <h2 id="today" style={h2}>
           Today's lineup
         </h2>
-        <ul className="mt-4 grid gap-2.5 sm:grid-cols-2 list-none p-0 m-0">
+        <ul className="mt-4 grid gap-2.5 sm:grid-cols-2 list-none p-0">
           {GAMES.map(game => (
             <li key={game.id}>
               <Link
@@ -141,7 +141,7 @@ export function About() {
                 {title}
               </h3>
               <p
-                className="m-0 text-sm"
+                className="text-sm"
                 style={{ color: T.textMuted, fontWeight: 600, lineHeight: 1.55 }}
               >
                 {text}

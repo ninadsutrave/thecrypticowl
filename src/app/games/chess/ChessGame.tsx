@@ -250,7 +250,7 @@ function ChessBoard({ puzzle, api }: { puzzle: ChessPuzzle; api: PlayApi }) {
           className="w-full max-w-[440px] rounded-2xl border px-4 py-3 text-sm font-bold"
           style={{ background: T.wrongBg, borderColor: T.wrongBorder, color: T.text }}
         >
-          <p className="m-0">
+          <p>
             There's a forced mate in {puzzle.mateIn} from the starting position. Try another way in,
             or see the solution.
           </p>

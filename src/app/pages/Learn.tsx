@@ -673,7 +673,7 @@ export function Learn() {
       <div className="pt-12 pb-8 text-center">
         <div className="flex justify-center mb-6">
           <Mascot
-            mood="thinking"
+            mood="default"
             size={90}
             speechBubble="Let's crack the code together! 🔍"
             bubbleDirection="right"

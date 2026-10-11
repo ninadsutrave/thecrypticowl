@@ -16,7 +16,7 @@ import {
   Trophy,
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
-import { Mascot } from '../components/Mascot';
+import { Mascot, type MascotMood } from '../components/Mascot';
 import { useDarkMode } from '../context/DarkModeContext';
 import { getTheme, type Theme } from '../theme';
 import { useAuth } from '../context/AuthContext';
@@ -68,6 +68,8 @@ export interface PlayApi {
   finished: boolean;
   /** Where in-progress state is saved; null for practice replays. */
   progressSlot: string | null;
+  /** A wrong number, move or answer: the owl looks worried for a moment. */
+  oops: () => void;
 }
 
 interface GameShellProps {
@@ -163,6 +165,7 @@ export function GameShell({
             clock={record.seconds}
             frozen
             onTutorial={openTutorial}
+            mood={moodFor(record.outcome)}
           />
           <ResultCard
             game={game}
@@ -228,11 +231,18 @@ function GameSession({
   const { user } = useAuth();
   const [result, setResult] = useState<SolveRecord | null>(null);
   const progressSlot = replaying ? null : progressKey(game.id, timer.date, puzzleId);
+  const [worried, setWorried] = useState(false);
+  useEffect(() => {
+    if (!worried) return;
+    const t = setTimeout(() => setWorried(false), 1600);
+    return () => clearTimeout(t);
+  }, [worried]);
 
   const api = useMemo<PlayApi>(
     () => ({
       finished: result !== null,
       progressSlot,
+      oops: () => setWorried(true),
       complete: ({ outcome, score, hints, mistakes = 0, details, grid }) => {
         if (result) return;
         const seconds = timer.stop();
@@ -273,6 +283,7 @@ function GameSession({
         practice={replaying && !practicePuzzle && !archiveDate}
         archiveDate={archiveDate}
         onTutorial={onTutorial}
+        mood={result ? moodFor(result.outcome) : worried ? 'wrong' : 'thinking'}
       />
       {practicePuzzle && (
         <p
@@ -317,6 +328,7 @@ function GameHeader({
   practice,
   archiveDate,
   onTutorial,
+  mood = 'thinking',
 }: {
   game: GameMeta;
   subtitle?: string;
@@ -326,6 +338,8 @@ function GameHeader({
   practice?: boolean;
   archiveDate?: string | null;
   onTutorial: () => void;
+  /** Ollie beside the title: thinking while you play, then how it went. */
+  mood?: MascotMood;
 }) {
   return (
     <header className="mb-4">
@@ -365,7 +379,7 @@ function GameHeader({
 
       <div className="flex items-center gap-3">
         <GameIcon gameId={game.id} />
-        <div className="min-w-0">
+        <div className="min-w-0 flex-1">
           <h1
             style={{
               fontFamily: FONT_HEADING,
@@ -394,9 +408,17 @@ function GameHeader({
             </span>
           )}
         </div>
+        <div className="ml-auto flex-shrink-0">
+          <Mascot mood={mood} size={52} animate={mood === 'thinking'} />
+        </div>
       </div>
     </header>
   );
+}
+
+/** Happy after a solve, a wink after a reveal, worried after a miss. */
+function moodFor(outcome: SolveOutcome): MascotMood {
+  return outcome === 'solved' ? 'celebrating' : outcome === 'revealed' ? 'hint' : 'wrong';
 }
 
 const OUTCOME_COPY: Record<SolveOutcome, { title: string; bubble: string }> = {
@@ -482,7 +504,7 @@ function ResultCard({
       aria-live="polite"
     >
       <div className="flex justify-center mb-3">
-        <Mascot mood={record.outcome === 'solved' ? 'celebrating' : 'thinking'} size={72} animate />
+        <Mascot mood={moodFor(record.outcome)} size={72} animate />
       </div>
       <p
         style={{

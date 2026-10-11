@@ -192,7 +192,7 @@ function EmptyState({ T }: { T: Theme }) {
       className="rounded-3xl border p-8 text-center flex flex-col items-center gap-3"
       style={{ background: T.cardBg, borderColor: T.cardBorder }}
     >
-      <Mascot mood="thinking" size={80} animate />
+      <Mascot mood="default" size={80} animate />
       <p style={{ fontFamily: FONT_HEADING, fontSize: '1.2rem', color: T.heading }}>
         Nothing here yet
       </p>

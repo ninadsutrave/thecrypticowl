@@ -278,7 +278,7 @@ export function Puzzle() {
       >
         <div className="flex justify-center mb-6">
           <Mascot
-            mood="thinking"
+            mood="wrong"
             size={90}
             speechBubble="Puzzle not found!"
             bubbleDirection="right"
@@ -328,7 +328,7 @@ export function Puzzle() {
     if (isCorrect) return 'celebrating';
     if (wrongAttempt) return 'wrong';
     if (hintsUnlocked > 0) return 'hint';
-    return 'default';
+    return 'thinking';
   };
 
   const getMascotComment = () => {

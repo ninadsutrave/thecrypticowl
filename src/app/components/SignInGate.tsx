@@ -84,7 +84,7 @@ export function SignInGate() {
         >
           <div className="flex justify-center mb-4">
             <Mascot
-              mood="thinking"
+              mood="correct"
               size={90}
               speechBubble="Sign in to unlock!"
               bubbleDirection="right"

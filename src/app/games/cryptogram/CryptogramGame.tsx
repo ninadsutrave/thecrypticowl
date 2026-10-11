@@ -99,12 +99,16 @@ function CryptogramBoard({ puzzle, api }: { puzzle: CryptogramPuzzle; api: PlayA
       if (plain && Object.entries(guesses).some(([c, p]) => p === plain && isLocked(c))) return;
       const next = assign(guesses, target, plain);
       const wrongNow = Boolean(plain) && solution[target] !== plain;
-      if (wrongNow) setMistakes(m => m + 1);
+      if (wrongNow) {
+        setMistakes(m => m + 1);
+        api.oops();
+      }
       setGuesses(next);
       if (plain) setSelected(nextOpen(target, next));
       finishIfSolved(next, hinted.length, mistakes + (wrongNow ? 1 : 0));
     },
     [
+      api,
       selected,
       firstOpen,
       isLocked,

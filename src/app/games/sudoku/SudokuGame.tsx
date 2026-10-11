@@ -119,11 +119,14 @@ function SudokuBoard({ puzzle, api }: { puzzle: SudokuPuzzle; api: PlayApi }) {
         )
       );
       const wrongNow = placed > 0 && String(placed) !== puzzle.solution[cell];
-      if (wrongNow) setMistakes(m => m + 1);
+      if (wrongNow) {
+        setMistakes(m => m + 1);
+        api.oops();
+      }
       finishIfSolved(next, revealed.length, mistakes + (wrongNow ? 1 : 0));
     },
     [
-      api.finished,
+      api,
       selected,
       locked,
       noteMode,

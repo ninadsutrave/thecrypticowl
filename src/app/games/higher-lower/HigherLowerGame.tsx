@@ -53,6 +53,7 @@ function HigherLowerBoard({ puzzle, api }: { puzzle: HigherLowerPuzzle; api: Pla
     if (answered || api.finished) return;
     const next = [...results, up === isHigher(puzzle, round)];
     setResults(next);
+    if (!next[next.length - 1]) api.oops();
     if (next.length === n) {
       const right = next.filter(Boolean).length;
       api.complete({

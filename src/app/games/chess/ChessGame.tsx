@@ -135,9 +135,11 @@ function ChessBoard({ puzzle, api }: { puzzle: ChessPuzzle; api: PlayApi }) {
       : undefined;
     setSelected(null);
     setTargets([]);
-    play(`${from}${to}${promotion ?? ''}`);
+    const uci = `${from}${to}${promotion ?? ''}`;
+    play(uci);
     // Any mate counts, not only the puzzle's own line (the Lichess convention).
     if (g.isCheckmate()) finish('solved');
+    else if (expected && uci !== expected) api.oops();
   };
 
   /** Back to the position after the setup move, for another go. */

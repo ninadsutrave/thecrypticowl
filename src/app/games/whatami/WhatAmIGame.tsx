@@ -64,6 +64,7 @@ function WhatAmIBoard({ puzzle, api }: { puzzle: WhatAmIPuzzle; api: PlayApi }) 
       return;
     }
     setWrong(w => [...w, guess.trim()]);
+    api.oops();
     setGuess('');
     if (lastClue) {
       api.complete({

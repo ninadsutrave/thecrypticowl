@@ -52,7 +52,7 @@ export function NoInternet({ onRetry }: { onRetry?: () => void }) {
             transition={{ duration: 3.5, repeat: Infinity, ease: 'easeInOut' }}
           >
             <Mascot
-              mood="thinking"
+              mood="wrong"
               size={150}
               speechBubble="Hoo… no signal!"
               bubbleDirection="right"

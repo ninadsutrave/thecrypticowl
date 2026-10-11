@@ -63,7 +63,7 @@ export function HintCard({
           className="mt-3 flex items-center gap-2.5 rounded-2xl p-3"
           style={{ background: isDark ? 'rgba(28, 27, 36,0.8)' : 'rgba(255,255,255,0.7)' }}
         >
-          <Mascot mood={index < 2 ? 'hint' : 'thinking'} size={40} animate={false} />
+          <Mascot mood="hint" size={40} animate={false} />
           <p
             style={{
               fontSize: '0.82rem',

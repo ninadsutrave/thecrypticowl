@@ -32,7 +32,7 @@ export function NotFound() {
             }}
           >
             <Mascot
-              mood="thinking"
+              mood="wrong"
               size={160}
               speechBubble="Whooops! Where am I?"
               bubbleDirection="right"

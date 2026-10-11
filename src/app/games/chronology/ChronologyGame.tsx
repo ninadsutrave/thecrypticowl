@@ -61,6 +61,7 @@ function ChronologyBoard({ puzzle, api }: { puzzle: ChronologyPuzzle; api: PlayA
     setHistory(nextHistory);
     setLocked(slots);
     const placed = slots.filter(Boolean).length;
+    if (placed < slots.length) api.oops();
     if (placed === slots.length) {
       api.complete({
         outcome: 'solved',

@@ -172,7 +172,7 @@ export function Archive() {
           style={{ borderColor: T.brandBorder, background: T.cardBg }}
         >
           <div className="flex justify-center mb-3">
-            <Mascot mood="thinking" size={64} animate={false} />
+            <Mascot mood="default" size={64} animate={false} />
           </div>
           <p style={{ color: T.textSub, fontWeight: 700, margin: 0 }}>
             No past {game.name} puzzles yet.

@@ -63,6 +63,7 @@ function TriviaBoard({ puzzle, api }: { puzzle: TriviaPuzzle; api: PlayApi }) {
     }
     const next = [...wrong, g];
     setWrong(next);
+    api.oops();
     setGuess('');
     setShake(n => n + 1);
     if (next.length >= MAX_GUESSES) {

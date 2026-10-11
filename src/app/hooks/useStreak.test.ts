@@ -92,9 +92,9 @@ describe('getLevelTitle', () => {
   it.each([
     [1, 'Newbie'],
     [2, 'Apprentice'],
-    [5, 'Clue Hunter'],
-    [10, 'Word Wizard'],
-    [15, 'Cryptic Expert'],
+    [5, 'Puzzle Hunter'],
+    [10, 'Wise Owl'],
+    [15, 'Puzzle Expert'],
     [20, 'Grand Master'],
   ])('level %i is %s', (level, fragment) => {
     expect(getLevelTitle(level)).toContain(fragment);

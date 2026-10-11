@@ -4,7 +4,7 @@ import { fetchPuzzle, pickAngle, toPuzzle } from './lichess.js';
 import { reviewChess } from './reviewer.js';
 
 /**
- * Checkmate: no AI. A forced mate in 3–5 from the Lichess puzzle API,
+ * Checkmate: no AI. A forced mate in 4–6 from the Lichess puzzle API,
  * re-verified move by move with chess.js, rated for medium. A Lichess
  * puzzle id is never reused.
  */

@@ -4,10 +4,9 @@ import { Check, Copy, Flame, Share2, Timer, Trophy } from 'lucide-react';
 import { useDarkMode } from '../context/DarkModeContext';
 import { getTheme } from '../theme';
 import { canShareSheet, shareOrCopy } from '../pages/puzzle/shareResult';
-import { CopyLinkButton } from '../components/CopyLinkButton';
 import { computeHistoryStats } from './historyStats';
 import { dayResults } from './progress';
-import { buildDayShare, puzzleUrl } from './share';
+import { buildDayShare } from './share';
 import { formatClock, getAllPlays } from './solveRecords';
 
 /**
@@ -115,7 +114,6 @@ export function DayComplete() {
                     ? 'Share your day'
                     : 'Copy your day'}
           </button>
-          <CopyLinkButton url={puzzleUrl('/')} T={T} className="min-h-[48px] w-full sm:w-auto" />
         </div>
       </div>
     </m.section>

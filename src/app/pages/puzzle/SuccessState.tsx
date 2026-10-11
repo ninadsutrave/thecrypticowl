@@ -15,8 +15,7 @@ import { nextUnfinished } from '../../games/progress';
 import { archivePath } from '../../games/archive';
 import confetti from 'canvas-confetti';
 import { Mascot } from '../../components/Mascot';
-import { CopyLinkButton } from '../../components/CopyLinkButton';
-import { buildGameShare, puzzleUrl } from '../../games/share';
+import { buildGameShare } from '../../games/share';
 import { getGame } from '../../games/registry';
 import { getTheme } from '../../theme';
 import { useStreak, getXPForSolve, getLevelTitle } from '../../hooks/useStreak';
@@ -413,13 +412,6 @@ export function SuccessState({
               </>
             )}
           </m.button>
-          <CopyLinkButton
-            url={puzzleUrl(
-              archive && activePuzzle.date ? `/cryptic?date=${activePuzzle.date}` : '/cryptic'
-            )}
-            T={T}
-            className="mt-2 w-full"
-          />
         </div>
       </m.div>
 

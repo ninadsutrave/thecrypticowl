@@ -330,6 +330,16 @@ function ChessBoard({ puzzle, api }: { puzzle: ChessPuzzle; api: PlayApi }) {
           You've left the puzzle's main line, so hints are off. Any mate still counts.
         </p>
       )}
+      {/* After a few moves, a way back to the start without waiting to run out. */}
+      {!api.finished && !outOfMoves && history.length >= 3 && (
+        <button
+          onClick={retry}
+          className="py-2.5 px-5 rounded-2xl border-2 flex items-center gap-2 text-sm font-extrabold"
+          style={{ borderColor: T.cardBorder, color: T.text, background: T.cardBg }}
+        >
+          <RotateCcw size={15} /> Start over
+        </button>
+      )}
       {!api.finished && !outOfMoves && onLine && (
         <button
           onClick={showHint}

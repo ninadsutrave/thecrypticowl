@@ -14,11 +14,6 @@ interface ShareOptions {
 
 const site = (path = '') => `thecrypticowl.com${path}`;
 
-/** The full address of a page on the site, for "Copy link", e.g. puzzleUrl('/trivia'). */
-export function puzzleUrl(path = '/'): string {
-  return `https://www.thecrypticowl.com${path}`;
-}
-
 const dayLabel = (date: Date) =>
   date.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
 const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? '' : 's'}`;

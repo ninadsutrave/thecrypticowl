@@ -37,12 +37,11 @@ import { ReactionWidget } from '../pages/puzzle/ClueReactionWidget';
 import { TutorialFlow, type TutorialStep } from './TutorialFlow';
 import { hasSeenTutorial, markTutorialSeen } from './tutorialSeen';
 import { useGameTimer } from './useGameTimer';
-import { buildGameShare, gridWithoutEmoji, puzzleUrl } from './share';
+import { buildGameShare, gridWithoutEmoji } from './share';
 import { DayComplete } from './DayComplete';
 import { computeHistoryStats } from './historyStats';
 import { getAllPlays } from './solveRecords';
 import { canShareSheet, shareOrCopy } from '../pages/puzzle/shareResult';
-import { CopyLinkButton } from '../components/CopyLinkButton';
 import { GameIcon } from './GameIcon';
 import { archiveDateFrom, archivePath, longDate, recordArchivePlay } from './archive';
 import { SignInGate } from '../components/SignInGate';
@@ -588,10 +587,6 @@ function ResultCard({
               </>
             )}
           </button>
-          <CopyLinkButton
-            url={puzzleUrl(archive && shareDate ? `${game.path}?date=${shareDate}` : game.path)}
-            T={T}
-          />
         </div>
       )}
 

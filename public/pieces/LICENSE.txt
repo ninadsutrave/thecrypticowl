@@ -1,3 +1,7 @@
+Chess piece images in this folder: the Chessnut set by Alexis Luengas
+(https://github.com/LexLuengas/chessnut-pieces), used under the Apache
+License 2.0, reproduced below.
+
 
                                  Apache License
                            Version 2.0, January 2004

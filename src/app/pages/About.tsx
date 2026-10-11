@@ -185,9 +185,6 @@ export function About() {
           <Mascot size={22} animate={false} />
         </span>
       </div>
-      <p className="mt-2 text-center text-xs" style={{ color: T.textMuted }}>
-        Chess pieces: Chessnut by Alexis Luengas, Apache License 2.0.
-      </p>
     </div>
   );
 }

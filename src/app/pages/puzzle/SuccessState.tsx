@@ -1,6 +1,18 @@
 import { useState, useEffect, useRef } from 'react';
 import { m } from 'motion/react';
-import { Check, Copy, ExternalLink, RotateCcw, Share2, Zap } from 'lucide-react';
+import {
+  ArrowRight,
+  CalendarDays,
+  Check,
+  Copy,
+  ExternalLink,
+  RotateCcw,
+  Share2,
+  Zap,
+} from 'lucide-react';
+import { Link } from 'react-router';
+import { nextUnfinished } from '../../games/progress';
+import { archivePath } from '../../games/archive';
 import confetti from 'canvas-confetti';
 import { Mascot } from '../../components/Mascot';
 import { CopyLinkButton } from '../../components/CopyLinkButton';
@@ -43,6 +55,7 @@ export function SuccessState({
   const [shareError, setShareError] = useState(false);
   const runConfetti = useRef(false);
   const T = getTheme(isDark);
+  const next = archive ? null : nextUnfinished('cryptic');
   const { count: streak, totalSolved, xp, level, recordSolve } = useStreak();
   const { user } = useAuth();
   // The built-in fallback clue has no database row, so its "solve" can never
@@ -685,6 +698,25 @@ export function SuccessState({
         isDark={isDark}
         variant="card"
       />
+
+      {/* On to the next puzzle, as every other game's result card offers */}
+      {archive ? (
+        <Link
+          to={archivePath('cryptic')}
+          className="w-full inline-flex items-center justify-center gap-2 py-3.5 rounded-2xl font-extrabold no-underline"
+          style={{ background: 'linear-gradient(135deg, #7C3AED, #5B21B6)', color: '#FFFFFF' }}
+        >
+          <CalendarDays size={16} /> More from the archive
+        </Link>
+      ) : next ? (
+        <Link
+          to={next.path}
+          className="w-full inline-flex items-center justify-center gap-2 py-3.5 rounded-2xl font-extrabold no-underline"
+          style={{ background: 'linear-gradient(135deg, #7C3AED, #5B21B6)', color: '#FFFFFF' }}
+        >
+          Next: {next.name} <ArrowRight size={16} />
+        </Link>
+      ) : null}
 
       {/* Next puzzle countdown */}
       <NextPuzzleCountdown isDark={isDark} />

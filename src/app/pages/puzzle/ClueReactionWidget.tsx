@@ -135,7 +135,7 @@ export function ReactionWidget({
               margin: 0,
             }}
           >
-            How was this {noun}?
+            Did you like this {noun}?
           </p>
           {buttons}
         </div>
@@ -153,7 +153,7 @@ export function ReactionWidget({
           fontFamily: "'Nunito', sans-serif",
         }}
       >
-        Rate this {noun}
+        Did you like this {noun}?
       </span>
       {buttons}
     </div>

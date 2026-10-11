@@ -50,11 +50,114 @@ function tolerance(length: number): number {
   return 2;
 }
 
+/**
+ * Words with more than one accepted spelling, all mapped to one form on both
+ * sides, so "St Petersburg", "St. Petersburg" and "Saint Petersburg" match.
+ */
+const SAME_WORD: Record<string, string> = {
+  saint: 'st',
+  sankt: 'st',
+  mount: 'mt',
+  fort: 'ft',
+  doctor: 'dr',
+  mister: 'mr',
+  centre: 'center',
+  theatre: 'theater',
+  colour: 'color',
+  grey: 'gray',
+};
+
+/**
+ * Words that describe what an answer is rather than which one it is. The
+ * name alone is enough: "Ajanta" for Ajanta Caves, "Everest" for Mount
+ * Everest, "Infosys" for Infosys Limited.
+ */
+const DESCRIPTORS = new Set([
+  'caves',
+  'cave',
+  'temple',
+  'temples',
+  'palace',
+  'ft',
+  'festival',
+  'falls',
+  'national',
+  'park',
+  'river',
+  'lake',
+  'island',
+  'islands',
+  'mountains',
+  'mt',
+  'dynasty',
+  'empire',
+  'company',
+  'corporation',
+  'limited',
+  'ltd',
+  'inc',
+  'group',
+  'film',
+  'band',
+  'tower',
+  'stadium',
+  'monument',
+  'museum',
+]);
+
+/** A name too ordinary to stand alone ("Golden" for the Golden Temple). */
+const TOO_PLAIN = new Set([
+  'golden',
+  'great',
+  'grand',
+  'red',
+  'white',
+  'black',
+  'blue',
+  'green',
+  'new',
+  'old',
+  'royal',
+  'sacred',
+  'holy',
+  'big',
+  'little',
+  'high',
+  'north',
+  'south',
+  'east',
+  'west',
+]);
+
+const canonical = (s: string) =>
+  normalizeGuess(s)
+    .split(' ')
+    .map(w => SAME_WORD[w] ?? w)
+    .join(' ');
+
+/**
+ * Every way of writing an answer that should count: as written, without its
+ * descriptor words, and either of those with the spaces run together
+ * ("Kho Kho" / "Khokho").
+ */
+export function answerForms(answer: string): string[] {
+  const full = canonical(answer);
+  const words = full.split(' ').filter(Boolean);
+  const core = words.filter(w => !DESCRIPTORS.has(w)).join(' ');
+  const forms = [full];
+  if (core && core !== full && core.replace(/ /g, '').length >= 4 && !TOO_PLAIN.has(core)) {
+    forms.push(core);
+  }
+  return [...new Set(forms.flatMap(f => [f, f.replace(/ /g, '')]))].filter(Boolean);
+}
+
 export function isCorrectGuess(guess: string, accepted: readonly string[]): boolean {
-  const g = normalizeGuess(guess);
+  const g = canonical(guess);
   if (!g) return false;
-  return accepted.some(answer => {
-    const a = normalizeGuess(answer);
-    return g === a || typoDistance(g, a) <= tolerance(a.length);
-  });
+  const guesses = [g, g.replace(/ /g, '')];
+  return accepted.some(answer =>
+    answerForms(answer).some(a =>
+      guesses.some(x => x === a || typoDistance(x, a) <= tolerance(a.length))
+    )
+  );
 }

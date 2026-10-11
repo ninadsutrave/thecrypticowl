@@ -43,6 +43,30 @@ describe('isCorrectGuess', () => {
     expect(isCorrectGuess('Cba', ['Cuba'])).toBe(false);
   });
 
+  it('accepts the name without what kind of place or thing it is', () => {
+    expect(isCorrectGuess('Ajanta', ['Ajanta Caves'])).toBe(true);
+    expect(isCorrectGuess('ajanta cave', ['Ajanta Caves'])).toBe(true);
+    expect(isCorrectGuess('Everest', ['Mount Everest'])).toBe(true);
+    expect(isCorrectGuess('Infosys', ['Infosys Limited'])).toBe(true);
+  });
+
+  it('accepts saint / st / st. and other spellings of the same word', () => {
+    const SPB = ['Saint Petersburg'];
+    expect(isCorrectGuess('St Petersburg', SPB)).toBe(true);
+    expect(isCorrectGuess('St. Petersburg', SPB)).toBe(true);
+    expect(isCorrectGuess('Saint Petersburgh', SPB)).toBe(true);
+    expect(isCorrectGuess('Mt Everest', ['Mount Everest'])).toBe(true);
+    expect(isCorrectGuess('Kho-kho', ['Kho kho'])).toBe(true);
+    expect(isCorrectGuess('khokho', ['Kho kho'])).toBe(true);
+  });
+
+  it('never shortens an answer to something too plain or too short', () => {
+    expect(isCorrectGuess('Golden', ['Golden Temple'])).toBe(false);
+    expect(isCorrectGuess('Red', ['Red Fort'])).toBe(false);
+    expect(isCorrectGuess('India', ['India Gate'])).toBe(false);
+    expect(isCorrectGuess('Caves', ['Ajanta Caves'])).toBe(false);
+  });
+
   it('rejects an empty guess', () => {
     expect(isCorrectGuess('   ', ICELAND)).toBe(false);
   });

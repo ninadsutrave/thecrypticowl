@@ -35,11 +35,103 @@ export function typoDistance(a, b) {
 
 const tolerance = len => (len < 5 ? 0 : len < 10 ? 1 : 2);
 
+/** Words with more than one accepted spelling ("Saint" / "St"). */
+const SAME_WORD = {
+  saint: 'st',
+  sankt: 'st',
+  mount: 'mt',
+  fort: 'ft',
+  doctor: 'dr',
+  mister: 'mr',
+  centre: 'center',
+  theatre: 'theater',
+  colour: 'color',
+  grey: 'gray',
+};
+
+/** Words that say what an answer is, not which one ("Ajanta" for Ajanta Caves). */
+const DESCRIPTORS = new Set([
+  'caves',
+  'cave',
+  'temple',
+  'temples',
+  'palace',
+  'ft',
+  'festival',
+  'falls',
+  'national',
+  'park',
+  'river',
+  'lake',
+  'island',
+  'islands',
+  'mountains',
+  'mt',
+  'dynasty',
+  'empire',
+  'company',
+  'corporation',
+  'limited',
+  'ltd',
+  'inc',
+  'group',
+  'film',
+  'band',
+  'tower',
+  'stadium',
+  'monument',
+  'museum',
+]);
+
+/** A name too ordinary to stand alone ("Golden" for the Golden Temple). */
+const TOO_PLAIN = new Set([
+  'golden',
+  'great',
+  'grand',
+  'red',
+  'white',
+  'black',
+  'blue',
+  'green',
+  'new',
+  'old',
+  'royal',
+  'sacred',
+  'holy',
+  'big',
+  'little',
+  'high',
+  'north',
+  'south',
+  'east',
+  'west',
+]);
+
+const canonical = s =>
+  normalizeGuess(s)
+    .split(' ')
+    .map(w => SAME_WORD[w] ?? w)
+    .join(' ');
+
+/** Every way of writing an answer that should count. */
+export function answerForms(answer) {
+  const full = canonical(answer);
+  const words = full.split(' ').filter(Boolean);
+  const core = words.filter(w => !DESCRIPTORS.has(w)).join(' ');
+  const forms = [full];
+  if (core && core !== full && core.replace(/ /g, '').length >= 4 && !TOO_PLAIN.has(core)) {
+    forms.push(core);
+  }
+  return [...new Set(forms.flatMap(f => [f, f.replace(/ /g, '')]))].filter(Boolean);
+}
+
 export function isCorrectGuess(guess, accepted) {
-  const g = normalizeGuess(guess);
+  const g = canonical(guess);
   if (!g) return false;
-  return accepted.some(answer => {
-    const a = normalizeGuess(answer);
-    return g === a || typoDistance(g, a) <= tolerance(a.length);
-  });
+  const guesses = [g, g.replace(/ /g, '')];
+  return accepted.some(answer =>
+    answerForms(answer).some(a =>
+      guesses.some(x => x === a || typoDistance(x, a) <= tolerance(a.length))
+    )
+  );
 }

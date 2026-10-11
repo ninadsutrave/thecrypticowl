@@ -30,7 +30,7 @@ export const SCREEN_SYSTEM = `You curate a light, friendly daily history puzzle.
 
 Suitable means BOTH:
 - Recognisable: a well-read adult has likely heard of it or its subject, or it is a clear landmark (a founding, a first, an invention, a famous work, a coronation of a well-known ruler, a famous person's birth). Judge Indian history, leaders, reformers, film, music and sport as an Indian reader would: a figure well known in India counts even if few outside India know them.
-- Light: nothing about war, military action, violence, terrorism, weapons (including nuclear tests), disasters, sectarian or ethnic conflict, executions, persecution, or anything likely to upset or divide players.
+- Told as history, not as horror: wars, battles, campaigns, sieges, coups and military operations are welcome (including the World Wars and Indian military history). Turn away atrocities, massacres, genocide, terrorism, executions, disasters and crashes, events described by their death toll, sectarian or ethnic violence, and anything likely to upset or divide players.
 - A living person's birth only if they are loved and uncontroversial: film, music, sport, science, arts. Never a politician, activist, businessperson or anyone whose name divides opinion.
 
 Be strict: when unsure, mark it unsuitable. There are plenty to choose from.`;

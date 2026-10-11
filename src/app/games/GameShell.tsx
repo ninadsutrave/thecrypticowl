@@ -179,7 +179,9 @@ export function GameShell({
         </>
       ) : (
         <GameSession
-          key={`${archiveDate}-${round}`}
+          // A new puzzle (say a replacement fetched after the cached one was
+          // shown) starts a fresh session, never the old one's state.
+          key={`${archiveDate}-${round}-${puzzleId}`}
           game={game}
           subtitle={subtitle}
           replaying={replaying || archiveDate !== null}

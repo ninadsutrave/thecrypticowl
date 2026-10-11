@@ -64,13 +64,16 @@ const MONTHS = [
 
 /** Text that would give the year or the era away. */
 const GIVEAWAY =
-  /\b\d{3,4}\b|\bcentury\b|\bmillennium\b|\bworld war\b|\bBC\b|\bAD\b|\b(nineteen|eighteen|seventeen)[- ]?\w*\b/i;
+  /\b\d{3,4}\b|\bcentury\b|\bmillennium\b|\bBC\b|\bAD\b|\b(nineteen|eighteen|seventeen)[- ]?\w*\b/i;
 
 /** Keeps the daily puzzle light — product rule, docs/games.md § Chronology. */
+/**
+ * Kept out: atrocities, terror, disasters and death tolls. Military history
+ * itself is in (wars, battles, campaigns, sieges, coups, named operations):
+ * a battle stays, a casualty count doesn't.
+ */
 const GRIM =
-  /\b(?:wars?|troops|army|armies)\b|\b(kill|killed|killing|massacre|murder|bomb|bombing|terror|attack|shot|shoots|shooting|execut|genocide|war crime|suicide|dies|died|death|deaths|crash|disaster|earthquake|famine|epidemic|pandemic|hostage|assassinat|riot|lynch|slave|rape|torture|invade|invasion|battle|siege|coup|conquer|uprising|revolt|rebel|insurrection|burn|raid|explo|sink|sank|shipwreck|deport|persecut|purge|abolish|soldier|insurgen|militar|militan|civilian|casualt)\w*|\bdie\b|\b(?:armed )?forces\b/i;
-/** A named military operation ("Operation Pawan"), not "the operation of a metro". */
-const MILITARY_OP = /\bOperation [A-Z]/;
+  /\b(kill|killed|killing|massacre|murder|bomb|terror|shot|shoots|shooting|execut|genocide|war crime|suicide|dies|died|death|deaths|crash|disaster|earthquake|tsunami|famine|epidemic|pandemic|hostage|assassinat|riot|lynch|slave|rape|torture|burn|explo|shipwreck|deport|persecut|purge|abolish|civilian|casualt|drown)\w*|\bdie\b/i;
 
 /** Events and people with an Indian link: most of the audience is in India. */
 export const INDIA_TERMS =
@@ -109,7 +112,7 @@ export function normaliseEntry(entry, kind) {
     .replace(/\s+/g, ' ')
     .replace(/\.$/, '');
   if (text.length < 20 || text.length > 140) return null;
-  if (GIVEAWAY.test(text) || GRIM.test(text) || MILITARY_OP.test(text)) return null;
+  if (GIVEAWAY.test(text) || GRIM.test(text)) return null;
   const url =
     page.content_urls?.desktop?.page ??
     `https://en.wikipedia.org/wiki/${encodeURIComponent(page.title ?? '')}`;

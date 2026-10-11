@@ -60,10 +60,18 @@ describe('famous people and popularity', () => {
     expect(pool).not.toContain('Smith');
   });
 
-  it('drops named military operations but not "the operation of" a metro', () => {
-    const ev = text => normaliseEntry({ year: 1987, text, pages: [page('x')] }, 'events');
-    expect(ev('Start of Operation Pawan by Indian forces in Sri Lanka')).toBeNull();
-    expect(ev('Montreal begins the operation of its underground Montreal Metro')).not.toBeNull();
+  it('keeps military history but not death tolls', () => {
+    const ev = text => normaliseEntry({ year: 1942, text, pages: [page('x')] }, 'events');
+    expect(
+      ev('World War II: At the Battle of Cape Esperance, American ships defeat a Japanese force')
+    ).not.toBeNull();
+    expect(
+      ev('Sri Lankan Civil War: The Indian Peace Keeping Force began Operation Pawan')
+    ).not.toBeNull();
+    expect(
+      ev('Start of Operation Pawan in Sri Lanka. Thousands of civilians and soldiers die')
+    ).toBeNull();
+    expect(ev('A plane crashes on landing in Omsk, killing 178')).toBeNull();
   });
 
   it('puts better-known entries first far more often', () => {

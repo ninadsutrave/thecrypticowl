@@ -49,7 +49,13 @@ function ChronologyBoard({ puzzle, api }: { puzzle: ChronologyPuzzle; api: PlayA
   const [hintId, setHintId] = useGameState<string | null>(api, 'hint', null);
   const hintUsed = hintId !== null;
   const byId = new Map(puzzle.events.map(e => [e.id, e]));
-  const order = orderIds.map(id => byId.get(id)!).filter(Boolean);
+  // A saved order from a different set of events (the day's puzzle was
+  // replaced) would hide events: fall back to the puzzle's own order.
+  const savedOrder = orderIds.map(id => byId.get(id)!).filter(Boolean);
+  const order =
+    savedOrder.length === puzzle.events.length && new Set(orderIds).size === orderIds.length
+      ? savedOrder
+      : puzzle.events;
   const setOrder = (fn: (o: typeof order) => typeof order) => setOrderIds(fn(order).map(e => e.id));
 
   const finished = api.finished;

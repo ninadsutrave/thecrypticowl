@@ -18,7 +18,8 @@ export interface DailyPuzzle<T> {
  * date, or a past day's when the URL carries `?date=` (the archive).
  *
  * Paints instantly from the device cache when today's puzzle was fetched
- * before. Otherwise asks Supabase; on no row, a network failure or a payload
+ * before, and still asks Supabase, switching over if the day's puzzle has
+ * since been replaced. Without a cache it waits for Supabase; on no row, a network failure or a payload
  * that fails `parse`, falls back to the built-in sample, flagged as practice
  * so it never counts as the day's solve.
  *
@@ -47,30 +48,38 @@ export function useDailyPuzzle<T>(
   const current = state.date === date ? state : initial();
   if (current !== state) setState(current);
 
+  // Always ask for the day's puzzle, even after painting from the cache: a
+  // puzzle replaced during the day (a better question swapped in) must reach
+  // players who opened the old one, not stay pinned to their device.
   useEffect(() => {
-    if (!current.loading) return;
     let cancelled = false;
+    const fromCache = !current.loading;
     prunePuzzleCache();
     fetchGamePuzzle(game, date)
       .then(raw => {
         if (cancelled) return;
         const parsed = parse(raw);
         if (parsed) {
+          if (fromCache && JSON.stringify(raw) === JSON.stringify(readJSON(cacheKey, null))) return;
           if (!archiveDate) writeJSON(cacheKey, raw);
           setState({ date, puzzle: parsed, isPractice: false, loading: false });
-        } else {
+        } else if (!fromCache) {
           setState({ date, puzzle: sample, isPractice: true, loading: false });
         }
       })
       .catch(() => {
-        if (!cancelled) setState({ date, puzzle: sample, isPractice: true, loading: false });
+        // Offline with a cached puzzle: keep playing it.
+        if (!cancelled && !fromCache) {
+          setState({ date, puzzle: sample, isPractice: true, loading: false });
+        }
       });
     return () => {
       cancelled = true;
     };
-    // `parse` and `sample` are module-level constants for every game.
+    // `parse` and `sample` are module-level constants for every game; this
+    // runs once per game and day.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [game, date, cacheKey, current.loading]);
+  }, [game, date, cacheKey]);
 
   return { puzzle: current.puzzle, isPractice: current.isPractice, loading: current.loading };
 }

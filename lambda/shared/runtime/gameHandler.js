@@ -1,5 +1,5 @@
 import { getAIClient, getJudgeClient } from '../clients/aiClient.js';
-import { notify } from './alerts.js';
+import { boldText, emailSubject, notify } from './alerts.js';
 import { notifySNS } from '../clients/providers/sns.js';
 import { addDays, dateKey, dateWindow, isDateKey } from './dates.js';
 import { hasAlertChannel, resolveRunConfig } from './preflight.js';
@@ -231,8 +231,10 @@ export function createGameHandler(spec, deps = {}) {
     // nagging; every threshold gives at least three weeks' notice.
     if (health.length > 0 && isMonday(today)) {
       await stockAlert(
-        [`${source}: puzzle stock is running low.`, '', ...health.map(h => `• ${h}`)].join('\n'),
-        { subject: `Cryptic Owl: ${label} puzzles are running low`, kind: 'stock' }
+        [boldText(label), '⚠️ Puzzle stock is running low', '', ...health.map(h => `• ${h}`)].join(
+          '\n'
+        ),
+        { subject: emailSubject(), kind: 'stock' }
       ).catch(err => console.error('Stock alert failed:', err.message));
     }
 

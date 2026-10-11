@@ -35,14 +35,15 @@ export async function notifySNS(message, options = {}) {
 
   // `kind` tags the message so a subscription can filter on it: the owner's
   // email subscribes to "stock" only, not to every run report.
-  const { subject = SNS_DEFAULT_SUBJECT, kind = 'run' } = options;
+  // `email` is the plain-text version notify() formats for mail.
+  const { subject = SNS_DEFAULT_SUBJECT, kind = 'run', email = message } = options;
 
   try {
     const { client, PublishCommand } = await getClient();
     await client.send(
       new PublishCommand({
         TopicArn: topicArn,
-        Message: message,
+        Message: email,
         Subject: subject,
         MessageAttributes: { kind: { DataType: 'String', StringValue: kind } },
       })

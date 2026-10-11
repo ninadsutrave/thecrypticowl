@@ -285,7 +285,8 @@ describe('createGameHandler', () => {
     expect(monday).toHaveBeenCalledTimes(1);
     expect(monday.mock.calls[0][0]).toMatch(/only 12 India subjects left/);
     expect(monday.mock.calls[0][1]).toMatchObject({ kind: 'stock' });
-    expect(monday.mock.calls[0][1].subject).toMatch(/Trivia puzzles are running low/);
+    expect(monday.mock.calls[0][1].subject).toMatch(/^CrypticOwl : \d{1,2} \w{3} \d{4}$/);
+    expect(monday.mock.calls[0][0]).toMatch(/Puzzle stock is running low/);
     expect(await run('2026-10-13')).not.toHaveBeenCalled();
   });
 });

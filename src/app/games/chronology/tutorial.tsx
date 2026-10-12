@@ -34,7 +34,7 @@ export function getChronologyTutorial(count: number): TutorialStep[] {
       body: <p>Use the arrows on each event to move it up or down. Earliest goes at the top.</p>,
     },
     {
-      title: 'Four checks',
+      title: 'Three checks',
       visual: (
         <Stack gap={4}>
           <Cells items={['', '', '']} tones={['bad', 'good', 'bad']} size={26} />
@@ -45,7 +45,7 @@ export function getChronologyTutorial(count: number): TutorialStep[] {
       body: (
         <p>
           Press Check when you're happy. Events in the right place lock in green; the rest stay
-          movable. You have four checks to get them all.
+          movable. You have three checks to get them all.
         </p>
       ),
     },

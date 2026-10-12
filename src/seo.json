@@ -50,9 +50,9 @@
       "game": "chronology",
       "name": "Chronology",
       "title": "Chronology · Free daily puzzle · The Cryptic Owl",
-      "description": "Six moments in history that all happened on today's date. Put them in order, earliest first: a daily history puzzle with Indian and world events.",
+      "description": "Four moments in history that all happened on today's date. Put them in order, earliest first: a daily history puzzle with Indian and world events.",
       "heading": "Chronology: put today's moments in history in order",
-      "body": "Six events that happened on this date in different years. Drag them into order, earliest first."
+      "body": "Four events that happened on this date in different years. Drag them into order, earliest first."
     },
     {
       "path": "/cryptic",

@@ -101,7 +101,7 @@ const VOICES: Record<GameId, Voice> = {
       return checks === 1 ? `Sorted it first time in ${t}` : `Sorted it in ${checks} checks (${t})`;
     },
     failed: r =>
-      `Got ${num(r.details?.placed)}/5 in place after ${plural(num(r.details?.checks, 4), 'check')} 😅`,
+      `Got ${num(r.details?.placed)}/${num(r.details?.total, 4)} in place after ${plural(num(r.details?.checks, 3), 'check')} 😅`,
     dare: r =>
       r.outcome !== 'solved'
         ? 'Can you put it in order?'

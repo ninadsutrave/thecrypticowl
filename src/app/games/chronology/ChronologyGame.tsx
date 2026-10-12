@@ -12,7 +12,7 @@ import { SAMPLE_CHRONOLOGY, type ChronologyPuzzle } from './sample';
 import { getChronologyTutorial } from './tutorial';
 
 const ACCENT = '#D97706';
-const MAX_ATTEMPTS = 4;
+const MAX_ATTEMPTS = 3;
 
 export function ChronologyGame() {
   const {
@@ -91,7 +91,7 @@ function ChronologyBoard({ puzzle, api }: { puzzle: ChronologyPuzzle; api: PlayA
         score: `${placed}/${slots.length} in place`,
         hints: hintUsed ? 1 : 0,
         mistakes: nextHistory.length,
-        details: { checks: nextHistory.length, placed },
+        details: { checks: nextHistory.length, placed, total: slots.length },
         grid: chronologyGrid(nextHistory),
       });
     }

@@ -14,7 +14,7 @@ export interface ChronologyPuzzle {
 }
 
 /**
- * Practice set, shown when today's generated one is unavailable: six things
+ * Practice set, shown when today's generated one is unavailable: four things
  * that happened on 15 August, Indian and world, well spread in time.
  */
 export const SAMPLE_CHRONOLOGY: ChronologyPuzzle = {
@@ -38,18 +38,6 @@ export const SAMPLE_CHRONOLOGY: ChronologyPuzzle = {
       text: 'Napoleon Bonaparte is born in Corsica',
       year: 1769,
       url: 'https://en.wikipedia.org/wiki/Napoleon',
-    },
-    {
-      id: 'woodstock',
-      text: 'The Woodstock music festival begins in New York State',
-      year: 1969,
-      url: 'https://en.wikipedia.org/wiki/Woodstock',
-    },
-    {
-      id: 'aurobindo',
-      text: 'Sri Aurobindo is born in Calcutta',
-      year: 1872,
-      url: 'https://en.wikipedia.org/wiki/Sri_Aurobindo',
     },
     {
       id: 'panama',

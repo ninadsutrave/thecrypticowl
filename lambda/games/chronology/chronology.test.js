@@ -98,13 +98,13 @@ describe('selection', () => {
   };
   const views = new Map(years.map(y => [`P${y}`, 50_000]));
 
-  it('picks six famous events, at most one close pair, none starting in place', async () => {
+  it('picks four famous events, at most one close pair, none starting in place', async () => {
     const c = await generateChronology(
       { date: '2026-10-09', rng: createRng(1), used: new Set() },
       { fetchOnThisDay: async () => feed, fetchMonthlyViews: async () => views }
     );
     expect(c.payload.day).toBe('9 October');
-    expect(c.payload.events).toHaveLength(6);
+    expect(c.payload.events).toHaveLength(4);
     expect(closePairs(c.payload.events.map(e => e.year))).toBeLessThanOrEqual(1);
     expect(reviewChronology(c)).toMatchObject({ ok: true });
     expect(c.payload.events[0]).not.toHaveProperty('title');
@@ -142,12 +142,12 @@ describe('selection', () => {
       expect(c.summary).not.toMatch(/reused/);
     });
 
-    it('tops up a short date with at most two events not used in three years', async () => {
-      const used = [1446, 1701, 1874, 1888, 1940, 1962];
+    it('tops up a short date with at most one event not used in three years', async () => {
+      const used = [1446, 1701, 1874, 1888, 1940, 1962, 1600];
       const c = await run(used, async () => new Set());
       const reused = c.payload.events.filter(e => used.includes(e.year));
       expect(reused.length).toBeGreaterThan(0);
-      expect(reused.length).toBeLessThanOrEqual(2);
+      expect(reused.length).toBeLessThanOrEqual(1);
       expect(c.summary).toMatch(/\(\d reused\)/);
     });
 
@@ -155,7 +155,7 @@ describe('selection', () => {
       const all = years;
       const recentWithin = days => async d => new Set(d > days ? all.map(key) : []);
       const c = await run(all, recentWithin(365));
-      expect(c.payload.events).toHaveLength(6);
+      expect(c.payload.events).toHaveLength(4);
       await expect(run(all, async () => new Set(all.map(key)))).rejects.toThrow();
     });
 
@@ -204,7 +204,7 @@ describe('suitability screen', () => {
       { date: '2026-10-09', rng: createRng(1), used: new Set(), callJudge },
       deps
     );
-    expect(c.payload.events).toHaveLength(6);
+    expect(c.payload.events).toHaveLength(4);
   });
 
   it('falls back when the judge leaves too few to build a puzzle', async () => {
@@ -213,7 +213,7 @@ describe('suitability screen', () => {
       { date: '2026-10-09', rng: createRng(1), used: new Set(), callJudge },
       deps
     );
-    expect(c.payload.events).toHaveLength(6);
+    expect(c.payload.events).toHaveLength(4);
   });
 });
 

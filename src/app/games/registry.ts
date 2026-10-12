@@ -81,7 +81,7 @@ export const GAMES: readonly GameMeta[] = [
     path: '/chronology',
     emoji: '⏳',
     blurb:
-      "Six moments in history that all happened on today's date. Put them in order, earliest first.",
+      "Four moments in history that all happened on today's date. Put them in order, earliest first.",
     accent: '#D97706',
     accentStrong: '#B45309',
     accentOnDark: '#FCD34D',

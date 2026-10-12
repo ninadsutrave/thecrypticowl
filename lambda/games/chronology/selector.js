@@ -1,7 +1,7 @@
 import { fetchMonthlyViews, fetchOnThisDay } from '../../shared/sources/wikipedia.js';
 import { screenEvents } from './judge.js';
 
-export const EVENTS_PER_DAY = 6;
+export const EVENTS_PER_DAY = 4;
 /** Oldest to newest: wide enough to cross eras without forcing in obscure old entries. */
 const MIN_SPAN_YEARS = 100;
 /** At most one birthday a set (and often none), so famous events lead. */
@@ -13,7 +13,7 @@ const MAX_BIRTHS = 1;
  */
 const LIVING_FLOOR = { india: 50_000, other: 100_000 };
 /** Spread across history: no century supplies more than this many events. */
-const MAX_PER_CENTURY = 3;
+const MAX_PER_CENTURY = 2;
 
 /**
  * Fame, by rank rather than a fixed bar. Fixed page-view thresholds left some
@@ -81,7 +81,7 @@ export const INDIA_TERMS =
 export const isIndian = c => INDIA_TERMS.test(`${c.text} ${c.title ?? ''}`);
 /** India-linked entries kept beyond the fame cap, so a set can include one. */
 const INDIA_EXTRA = 8;
-/** A few of the six, never most: at most two India-linked events a day. */
+/** Never most of the set: at most two of the four are India-linked. */
 const MAX_INDIAN = 2;
 
 export function dayLabel(date) {
@@ -242,7 +242,7 @@ const INDIA_WEIGHT = 2;
 
 /**
  * A shuffle that puts better-known entries first more often (weighted
- * random order, Efraimidis–Spirakis): the six still vary day to day, but
+ * random order, Efraimidis–Spirakis): the four still vary day to day, but
  * the Reykjavík summit beats a society's founding far more often than not.
  * Entries without a view count shuffle evenly.
  */
@@ -262,9 +262,9 @@ export function popularFirst(pool, rng) {
  * When a date runs short of fresh events, old ones come back: first at most
  * `MAX_REUSED` per puzzle, from events not used in the last three years;
  * only if that can't make a set, any number, from ever more recent windows.
- * Each puzzle is still a new mix of six, and no date ever goes without one.
+ * Each puzzle is still a new mix of four, and no date ever goes without one.
  */
-export const MAX_REUSED = 2;
+export const MAX_REUSED = 1;
 export const REUSE_TIERS = [
   { days: 3 * 365, max: MAX_REUSED },
   { days: 3 * 365, max: EVENTS_PER_DAY },
@@ -275,7 +275,7 @@ export const REUSE_TIERS = [
 const keyOf = e => `event:${e.id}`;
 
 /**
- * Six events meeting the strictest difficulty rung the pool allows, with at
+ * Four events meeting the strictest difficulty rung the pool allows, with at
  * most `maxReused` of them from `reusable`. Throws when no set fits.
  */
 export function pickEvents(
@@ -372,7 +372,7 @@ export async function generateChronology(ctx, deps = {}) {
     ? null
     : await sourcesFor(ctx.date, getFeed, getViews, ctx.callJudge);
   const candidates = pool ?? (await uncachedSources(ctx.date, getFeed, getViews, ctx.callJudge));
-  // Every day, one or two of the six events have an Indian link when the
+  // Every day, one or two of the four events have an Indian link when the
   // date has one that fits (most players are in India); otherwise any good set.
   const wantIndia = candidates.some(isIndian);
   let result;

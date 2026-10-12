@@ -3,7 +3,7 @@ import { reviewChronology } from './reviewer.js';
 import { generateChronology } from './selector.js';
 
 /**
- * Chronology: six events from Wikipedia's "On this day" feed for the
+ * Chronology: four events from Wikipedia's "On this day" feed for the
  * puzzle's date, chosen in code for medium difficulty, screened for
  * suitability by the judge model when one is available. Events are tracked
  * by source key: fresh ones first, and once a date runs short, at most two

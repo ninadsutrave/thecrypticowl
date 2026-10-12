@@ -1,12 +1,13 @@
+import type { CSSProperties } from 'react';
 import { m } from 'motion/react';
-import { ArrowDown, ArrowRight, ArrowUp, Check, ExternalLink, Lightbulb, X } from 'lucide-react';
+import { ArrowRight, Check, ExternalLink, Lightbulb, X } from 'lucide-react';
 import { useDarkMode } from '../../context/DarkModeContext';
 import { getTheme, type Theme } from '../../theme';
 import { GameShell, type PlayApi } from '../GameShell';
 import { GameLoading } from '../GameLoading';
 import { useDailyPuzzle } from '../useDailyPuzzle';
 import { useGameState } from '../useGameState';
-import { formatValue, isHigher, rounds, roundsGrid } from './logic';
+import { ballpark, formatValue, isHigher, rounds, roundsGrid } from './logic';
 import { parseHigherLower } from './parse';
 import { SAMPLE_HIGHER_LOWER, type HigherLowerItem, type HigherLowerPuzzle } from './sample';
 import { getHigherLowerTutorial } from './tutorial';
@@ -49,6 +50,18 @@ function HigherLowerBoard({ puzzle, api }: { puzzle: HigherLowerPuzzle; api: Pla
   const score = results.filter(Boolean).length;
   const ink = isDark ? '#5EEAD4' : ACCENT;
 
+  // The card that really is higher this round, and the one the player tapped
+  // (worked out from whether they were right, so nothing extra is stored).
+  const higherSide: 'known' | 'hidden' = isHigher(puzzle, round) ? 'hidden' : 'known';
+  const pickedSide = answered
+    ? results[round] === (higherSide === 'hidden')
+      ? 'hidden'
+      : 'known'
+    : null;
+  const toneFor = (side: 'known' | 'hidden') =>
+    pickedSide === side ? (results[round] ? 'good' : 'bad') : 'known';
+
+  /** Tapping the new card says it is higher; tapping the first says the new one is lower. */
   const guess = (up: boolean) => {
     if (answered || api.finished) return;
     const next = [...results, up === isHigher(puzzle, round)];
@@ -118,9 +131,16 @@ function HigherLowerBoard({ puzzle, api }: { puzzle: HigherLowerPuzzle; api: Pla
         <ItemCard
           item={known}
           label={puzzle.noun}
-          // No numbers while you decide: both stay hidden until you answer
-          // (or the hint reveals this one).
-          value={answered || hintRound === round ? formatValue(known.value, puzzle.format) : '?'}
+          // Round 1 starts with both numbers hidden. From round 2 this card is
+          // the one revealed last round, so its number stays on show.
+          value={
+            answered || round > 0 || hintRound === round
+              ? formatValue(known.value, puzzle.format)
+              : '?'
+          }
+          tone={toneFor('known')}
+          onPick={answered ? undefined : () => guess(false)}
+          pickLabel={`${known.name}: ${puzzle.title}`}
           T={T}
         />
         <span
@@ -135,45 +155,41 @@ function HigherLowerBoard({ puzzle, api }: { puzzle: HigherLowerPuzzle; api: Pla
           item={hidden}
           label={puzzle.noun}
           value={answered ? formatValue(hidden.value, puzzle.format) : '?'}
-          tone={answered ? (results[round] ? 'good' : 'bad') : 'mystery'}
+          tone={toneFor('hidden')}
+          onPick={answered ? undefined : () => guess(true)}
+          pickLabel={`${hidden.name}: ${puzzle.title}`}
           T={T}
         />
       </div>
+
+      {!answered && (
+        <p className="text-center text-xs font-bold -mt-1" style={{ color: T.textMuted }}>
+          Tap your answer
+        </p>
+      )}
 
       {hintRound === round && !answered && (
         <p
           className="rounded-2xl px-4 py-2.5 text-sm font-extrabold border flex items-center gap-2"
           style={{ background: T.fodderBg, borderColor: T.streakBorder, color: T.text }}
         >
-          <Lightbulb size={15} aria-hidden /> {known.name}:{' '}
-          {formatValue(known.value, puzzle.format)}
+          <Lightbulb size={15} aria-hidden />{' '}
+          {round === 0
+            ? `${known.name}: ${formatValue(known.value, puzzle.format)}`
+            : `${hidden.name}: ${ballpark(hidden.value, puzzle.format)}`}
         </p>
       )}
 
       {!answered ? (
         <>
-          <div className="grid grid-cols-2 gap-2">
-            {[
-              { up: true, label: puzzle.higher, Icon: ArrowUp },
-              { up: false, label: puzzle.lower, Icon: ArrowDown },
-            ].map(({ up, label, Icon }) => (
-              <button
-                key={label}
-                onClick={() => guess(up)}
-                className="min-h-[52px] rounded-2xl font-extrabold text-base flex items-center justify-center gap-2 transition-transform active:scale-[0.97]"
-                style={{ background: ACCENT, color: 'white' }}
-              >
-                <Icon size={18} aria-hidden /> {label}
-              </button>
-            ))}
-          </div>
           {hintRound === null && (
             <button
               onClick={() => setHintRound(round)}
               className="w-full py-2.5 rounded-2xl border-2 text-sm font-extrabold flex items-center justify-center gap-2"
               style={{ borderColor: T.streakBorder, color: T.streakText, background: T.fodderBg }}
             >
-              <Lightbulb size={15} /> Hint: show one number (once per game)
+              <Lightbulb size={15} /> Hint{round === 0 ? ': show one number' : ': a rough figure'}{' '}
+              (once per game)
             </button>
           )}
         </>
@@ -209,31 +225,37 @@ function ItemCard({
   label,
   value,
   tone = 'known',
+  onPick,
+  pickLabel,
   T,
 }: {
   item: HigherLowerItem;
   label: string;
   value: string;
-  tone?: 'known' | 'mystery' | 'good' | 'bad';
+  tone?: 'known' | 'good' | 'bad';
+  /** Set while the round is open: the whole card is the answer button. */
+  onPick?: () => void;
+  pickLabel?: string;
   T: Theme;
 }) {
-  const border =
-    tone === 'good'
-      ? T.successBorder
-      : tone === 'bad'
-        ? T.wrongBorder
-        : tone === 'mystery'
-          ? ACCENT_SOFT
-          : T.cardBorder;
+  const border = tone === 'good' ? T.successBorder : tone === 'bad' ? T.wrongBorder : T.cardBorder;
+  const Tag = onPick ? 'button' : 'article';
   return (
-    <article
-      className="rounded-2xl sm:rounded-3xl border-2 px-2.5 py-3 sm:px-4 sm:py-5 flex flex-col items-center text-center min-w-0"
-      style={{
-        background: tone === 'good' ? T.successBg : tone === 'bad' ? T.wrongBg : T.cardBg,
-        borderColor: border,
-        borderStyle: tone === 'mystery' ? 'dashed' : 'solid',
-        boxShadow: T.shadowCard,
-      }}
+    <Tag
+      {...(onPick ? { type: 'button' as const, onClick: onPick, 'aria-label': pickLabel } : {})}
+      className={`w-full rounded-2xl sm:rounded-3xl border-2 px-2.5 py-3 sm:px-4 sm:py-5 flex flex-col items-center text-center min-w-0 ${
+        onPick
+          ? 'cursor-pointer transition-all hover:-translate-y-0.5 hover:[border-color:var(--pick)] focus-visible:[border-color:var(--pick)] active:scale-[0.98]'
+          : ''
+      }`}
+      style={
+        {
+          background: tone === 'good' ? T.successBg : tone === 'bad' ? T.wrongBg : T.cardBg,
+          borderColor: border,
+          boxShadow: T.shadowCard,
+          '--pick': ACCENT_SOFT,
+        } as CSSProperties
+      }
     >
       <h3
         className="break-words max-w-full"
@@ -259,7 +281,7 @@ function ItemCard({
         style={{
           fontFamily: "'Outfit', sans-serif",
           fontSize: 'clamp(1.15rem, 5.6vw, 2rem)',
-          color: tone === 'mystery' ? ACCENT_SOFT : T.heading,
+          color: value === '?' ? ACCENT_SOFT : T.heading,
           lineHeight: 1.1,
         }}
         aria-live="polite"
@@ -272,7 +294,7 @@ function ItemCard({
       >
         {label}
       </p>
-    </article>
+    </Tag>
   );
 }
 

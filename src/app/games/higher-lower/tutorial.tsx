@@ -18,36 +18,34 @@ export function getHigherLowerTutorial(puzzle: HigherLowerPuzzle): TutorialStep[
       body: (
         <p>
           Each day has a theme, today: <strong>{puzzle.title}</strong> You see two things, with
-          their numbers hidden. Is the new one higher or lower than the first?
+          their numbers hidden. Tap the one you think is higher.
         </p>
       ),
     },
     {
-      title: 'Higher or lower?',
+      title: 'Tap your pick',
       visual: (
         <Stack gap={6}>
-          <div className="flex gap-1.5">
-            <Pill color="#64748B">▲ Higher</Pill>
-            <Pill color={ACCENT}>▼ Lower</Pill>
-          </div>
-          <Line>Kangchenjunga · 8,586 m</Line>
-          <Line tone="good">Nanda Devi · 7,816 m ✓</Line>
+          <Line tone="good">Kangchenjunga · 8,586 m ✓</Line>
+          <Line>Nanda Devi · 7,816 m</Line>
+          <Pill color={ACCENT}>Taller: Kangchenjunga</Pill>
         </Stack>
       ),
       body: (
         <p>
-          Call it, and both numbers are revealed. The new one becomes the first card of the next
+          Tap a card, and both numbers are revealed. The new one becomes the first card of the next
           round. Pairs are always close, never tied.
         </p>
       ),
     },
     {
-      title: 'One hint: a number',
-      visual: <Line tone="focus">💡 Kangchenjunga: 8,586 m</Line>,
+      title: 'One hint',
+      visual: <Line tone="focus">💡 Nanda Devi: about 8,000 m</Line>,
       body: (
         <p>
-          Unsure? Once per game, the hint shows the first card's number to judge against. It's noted
-          in your result. Get a majority of the rounds right to solve the puzzle.
+          Each revealed number stays on show for the next round. Unsure? Once per game, a hint gives
+          a rough figure for the card you can't see yet. It's noted in your result. Get a majority
+          of the rounds right to solve the puzzle.
         </p>
       ),
     },

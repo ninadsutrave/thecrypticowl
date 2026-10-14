@@ -59,13 +59,6 @@ function SudokuBoard({ puzzle, api }: { puzzle: SudokuPuzzle; api: PlayApi }) {
   const [selected, setSelected] = useState<number | null>(null);
   const [noteMode, setNoteMode] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
-  // Clearing can't be undone, so each clear asks for a second tap.
-  const [confirming, setConfirming] = useState<'notes' | 'grid' | null>(null);
-  useEffect(() => {
-    if (!confirming) return;
-    const t = setTimeout(() => setConfirming(null), 3000);
-    return () => clearTimeout(t);
-  }, [confirming]);
 
   const locked = useCallback(
     (i: number) => puzzle.givens[i] !== undefined || revealed.includes(i) || api.finished,
@@ -155,11 +148,6 @@ function SudokuBoard({ puzzle, api }: { puzzle: SudokuPuzzle; api: PlayApi }) {
 
   const clear = (what: 'notes' | 'grid') => {
     if (api.finished) return;
-    if (confirming !== what) {
-      setConfirming(what);
-      return;
-    }
-    setConfirming(null);
     setNotes(Array(total).fill(0));
     if (what === 'grid') {
       // Givens and hint cells stay; mistakes already made still count.
@@ -375,18 +363,16 @@ function SudokuBoard({ puzzle, api }: { puzzle: SudokuPuzzle; api: PlayApi }) {
             <ToolButton
               onClick={() => clear('notes')}
               T={T}
-              label={confirming === 'notes' ? 'Tap again to clear' : 'Clear notes'}
+              label="Clear notes"
               disabled={!hasNotes}
-              warn={confirming === 'notes'}
             >
               <RotateCcw size={16} />
             </ToolButton>
             <ToolButton
               onClick={() => clear('grid')}
               T={T}
-              label={confirming === 'grid' ? 'Tap again to clear' : 'Clear grid'}
+              label="Clear grid"
               disabled={!hasEntries && !hasNotes}
-              warn={confirming === 'grid'}
             >
               <Trash2 size={16} />
             </ToolButton>
@@ -415,7 +401,6 @@ function ToolButton({
   label,
   active,
   disabled,
-  warn,
   children,
 }: {
   onClick: () => void;
@@ -423,8 +408,6 @@ function ToolButton({
   label: string;
   active?: boolean;
   disabled?: boolean;
-  /** Waiting for the second tap of a clear. */
-  warn?: boolean;
   children: React.ReactNode;
 }) {
   return (
@@ -434,9 +417,9 @@ function ToolButton({
       disabled={disabled}
       className="py-2.5 rounded-2xl border-2 flex items-center justify-center gap-1.5 text-sm font-extrabold disabled:opacity-40 disabled:cursor-not-allowed"
       style={{
-        background: active ? ACCENT : warn ? T.wrongBg : T.cardBg,
-        borderColor: active ? ACCENT : warn ? T.wrongBorder : T.cardBorder,
-        color: active ? 'white' : warn ? '#DC2626' : T.brandText,
+        background: active ? ACCENT : T.cardBg,
+        borderColor: active ? ACCENT : T.cardBorder,
+        color: active ? 'white' : T.brandText,
       }}
     >
       {children}

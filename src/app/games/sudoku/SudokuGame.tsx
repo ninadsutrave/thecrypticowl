@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Eraser, Lightbulb, Pencil } from 'lucide-react';
+import { Eraser, Lightbulb, Pencil, RotateCcw, Trash2 } from 'lucide-react';
 import { useDarkMode } from '../../context/DarkModeContext';
 import { getTheme, type Theme } from '../../theme';
 import { GameShell, type PlayApi } from '../GameShell';
@@ -59,6 +59,13 @@ function SudokuBoard({ puzzle, api }: { puzzle: SudokuPuzzle; api: PlayApi }) {
   const [selected, setSelected] = useState<number | null>(null);
   const [noteMode, setNoteMode] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
+  // Clearing can't be undone, so each clear asks for a second tap.
+  const [confirming, setConfirming] = useState<'notes' | 'grid' | null>(null);
+  useEffect(() => {
+    if (!confirming) return;
+    const t = setTimeout(() => setConfirming(null), 3000);
+    return () => clearTimeout(t);
+  }, [confirming]);
 
   const locked = useCallback(
     (i: number) => puzzle.givens[i] !== undefined || revealed.includes(i) || api.finished,
@@ -141,6 +148,25 @@ function SudokuBoard({ puzzle, api }: { puzzle: SudokuPuzzle; api: PlayApi }) {
       setMistakes,
     ]
   );
+
+  const hasNotes = notes.some(Boolean);
+  // Your own digits: everything not given and not filled by a hint.
+  const hasEntries = values.some((v, i) => v !== 0 && !locked(i));
+
+  const clear = (what: 'notes' | 'grid') => {
+    if (api.finished) return;
+    if (confirming !== what) {
+      setConfirming(what);
+      return;
+    }
+    setConfirming(null);
+    setNotes(Array(total).fill(0));
+    if (what === 'grid') {
+      // Givens and hint cells stay; mistakes already made still count.
+      setValues(values.map((v, i) => (locked(i) ? v : 0)));
+      setMessage(null);
+    }
+  };
 
   const hint = () => {
     if (api.finished) return;
@@ -345,6 +371,26 @@ function SudokuBoard({ puzzle, api }: { puzzle: SudokuPuzzle; api: PlayApi }) {
               <Lightbulb size={16} />
             </ToolButton>
           </div>
+          <div className="grid grid-cols-2 gap-2 mt-2">
+            <ToolButton
+              onClick={() => clear('notes')}
+              T={T}
+              label={confirming === 'notes' ? 'Tap again to clear' : 'Clear notes'}
+              disabled={!hasNotes}
+              warn={confirming === 'notes'}
+            >
+              <RotateCcw size={16} />
+            </ToolButton>
+            <ToolButton
+              onClick={() => clear('grid')}
+              T={T}
+              label={confirming === 'grid' ? 'Tap again to clear' : 'Clear grid'}
+              disabled={!hasEntries && !hasNotes}
+              warn={confirming === 'grid'}
+            >
+              <Trash2 size={16} />
+            </ToolButton>
+          </div>
         </div>
       )}
     </div>
@@ -368,23 +414,29 @@ function ToolButton({
   T,
   label,
   active,
+  disabled,
+  warn,
   children,
 }: {
   onClick: () => void;
   T: Theme;
   label: string;
   active?: boolean;
+  disabled?: boolean;
+  /** Waiting for the second tap of a clear. */
+  warn?: boolean;
   children: React.ReactNode;
 }) {
   return (
     <button
       onClick={onClick}
       aria-pressed={active}
-      className="py-2.5 rounded-2xl border-2 flex items-center justify-center gap-1.5 text-sm font-extrabold"
+      disabled={disabled}
+      className="py-2.5 rounded-2xl border-2 flex items-center justify-center gap-1.5 text-sm font-extrabold disabled:opacity-40 disabled:cursor-not-allowed"
       style={{
-        background: active ? ACCENT : T.cardBg,
-        borderColor: active ? ACCENT : T.cardBorder,
-        color: active ? 'white' : T.brandText,
+        background: active ? ACCENT : warn ? T.wrongBg : T.cardBg,
+        borderColor: active ? ACCENT : warn ? T.wrongBorder : T.cardBorder,
+        color: active ? 'white' : warn ? '#DC2626' : T.brandText,
       }}
     >
       {children}

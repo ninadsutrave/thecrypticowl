@@ -41,10 +41,10 @@ function abortRun(message) {
  * each clue generation costs 1. A `rejectLexical` verdict abandons the word
  * immediately rather than spending the remaining inner retries on it.
  *
- * Example with MAX_ATTEMPTS=9, MAX_CLUE_ATTEMPTS_PER_LEXICAL=3:
+ * Example with MAX_ATTEMPTS=15, MAX_CLUE_ATTEMPTS_PER_LEXICAL=3:
  *   Word 1: [lexical] [clue1] [clue2] [clue3]  — 4 attempts
  *   Word 2: [lexical] [clue1]                  — 2 attempts (accepted)
- *   Total: 6 / 9 used
+ *   Total: 6 / 15 used
  *
  * Words rejected during the run are remembered and fed back into the lexical
  * planner, so it does not keep proposing the same unclueable word.
@@ -54,7 +54,16 @@ function abortRun(message) {
  * @param {string}   dbProvider
  * @returns {Promise<{ lexical: object, clue: object, verdict: object, stats: object }>}
  */
-export async function generateValidClue(callAI, callJudge, dbProvider) {
+/** Stop starting new attempts with less than this left, so the run ends (and alerts) cleanly. */
+const MIN_TIME_LEFT_MS = 90_000;
+
+export async function generateValidClue(
+  callAI,
+  callJudge,
+  dbProvider,
+  { timeLeft = () => Infinity } = {}
+) {
+  const outOfTime = () => timeLeft() < MIN_TIME_LEFT_MS;
   // Variety constraints are a nice-to-have — a DB hiccup must not stop the
   // day's puzzle being generated.
   let constraints = { avoidTypes: [], avoidAnswers: [], knownAnswers: new Set() };
@@ -83,7 +92,7 @@ export async function generateValidClue(callAI, callJudge, dbProvider) {
     rejectedAnswers: exhaustedAnswers,
   };
 
-  while (attempts < MAX_ATTEMPTS) {
+  while (attempts < MAX_ATTEMPTS && !outOfTime()) {
     attempts++;
     stats.lexicalSelections++;
 
@@ -131,7 +140,7 @@ export async function generateValidClue(callAI, callJudge, dbProvider) {
 
     for (
       let clueAttempt = 1;
-      clueAttempt <= MAX_CLUE_ATTEMPTS_PER_LEXICAL && attempts < MAX_ATTEMPTS;
+      clueAttempt <= MAX_CLUE_ATTEMPTS_PER_LEXICAL && attempts < MAX_ATTEMPTS && !outOfTime();
       clueAttempt++
     ) {
       attempts++;

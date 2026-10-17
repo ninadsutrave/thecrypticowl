@@ -14,7 +14,7 @@ export { resolveRunConfig };
  * a missing secret surfaces the moment it is deployed rather than at 03:15 the
  * next morning.
  */
-export const handler = async (event = {}) => {
+export const handler = async (event = {}, context = {}) => {
   const { aiProvider, judgeProvider, dbProvider, missing, warnings } = resolveRunConfig();
   const dryRun = event?.dryRun === true;
 
@@ -80,7 +80,8 @@ export const handler = async (event = {}) => {
     const { lexical, clue, verdict, stats } = await generateValidClue(
       callAI,
       callJudge,
-      dbProvider
+      dbProvider,
+      { timeLeft: () => context.getRemainingTimeInMillis?.() ?? Infinity }
     );
 
     const result = await writeToDB(lexical, clue, verdict, aiProvider, dbProvider);

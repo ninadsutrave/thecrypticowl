@@ -123,6 +123,7 @@ export function createGameHandler(spec, deps = {}) {
         // previews for several dates never repeats a subject.
         const taken = new Set(Array.isArray(event.used) ? event.used : []);
         const result = await produce({
+          runDay: today,
           date,
           used: taken,
           usedSince: async () => taken,
@@ -169,7 +170,7 @@ export function createGameHandler(spec, deps = {}) {
           continue;
         }
         try {
-          const result = await produce({ date, used, usedSince, ai, env });
+          const result = await produce({ date, used, usedSince, ai, env, runDay: today });
           if (!result.ok) {
             failed.push({ date, reason: result.lastRejection });
             continue;
@@ -266,7 +267,7 @@ export function createGameHandler(spec, deps = {}) {
    * Generate → review → judge, up to `maxAttempts`, for one date. Returns the
    * accepted candidate, or the last rejection when every attempt failed.
    */
-  async function produce({ date, used, usedSince, ai, env }) {
+  async function produce({ date, used, usedSince, ai, env, runDay }) {
     let feedback = null;
     let lastRejection = 'no attempt made';
 
@@ -274,7 +275,10 @@ export function createGameHandler(spec, deps = {}) {
       const ctx = {
         date,
         attempt,
-        rng: createRng(`${game}:${date}:${attempt}`),
+        // Seeded by the day of the run too: a date that failed yesterday
+        // gets different choices today, instead of replaying the same
+        // subjects and failing the same way every morning.
+        rng: createRng(`${game}:${date}:${attempt}:${runDay}`),
         used,
         usedSince,
         feedback,

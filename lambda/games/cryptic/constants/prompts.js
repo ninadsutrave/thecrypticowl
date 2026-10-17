@@ -1,7 +1,7 @@
 // ─── PIPELINE CONSTANTS ───────────────────────────────────────────────────────
 
 /** Maximum generation attempts before the pipeline throws. */
-export const MAX_ATTEMPTS = 9;
+export const MAX_ATTEMPTS = 15;
 
 // ─── WORDPLAY TYPES ───────────────────────────────────────────────────────────
 

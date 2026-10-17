@@ -143,6 +143,31 @@ export function unpublishable(verdict) {
   return null;
 }
 
+/** The earliest date from `todayStr` on with no clue, and how many upcoming days are stocked. */
+async function findFreeDate(db, todayStr) {
+  const { data: upcomingRows } = await db
+    .from('daily_puzzles')
+    .select('date')
+    .gte('date', todayStr)
+    .order('date', { ascending: true })
+    .limit(400);
+
+  const taken = new Set((Array.isArray(upcomingRows) ? upcomingRows : []).map(r => r.date));
+  const cursor = new Date(`${todayStr}T00:00:00Z`);
+  while (taken.has(cursor.toISOString().split('T')[0])) {
+    cursor.setUTCDate(cursor.getUTCDate() + 1);
+  }
+  return { date: cursor.toISOString().split('T')[0], taken: taken.size };
+}
+
+/** The date the next clue would go to (see writeToDB). */
+export async function nextFreeDate(
+  dbProvider = 'supabase',
+  todayStr = new Date().toISOString().split('T')[0]
+) {
+  return (await findFreeDate(getDBClient(dbProvider), todayStr)).date;
+}
+
 export async function writeToDB(lexical, clue, verdict = {}, aiProvider, dbProvider = 'supabase') {
   // Last line of defence: only a clue that passed every gate is stored, even
   // if a caller forgets to check the verdict.
@@ -158,22 +183,9 @@ export async function writeToDB(lexical, clue, verdict = {}, aiProvider, dbProvi
   // filling the earliest one first means players never meet an empty day,
   // and a second invocation still moves on to the next free date.
   const todayStr = new Date().toISOString().split('T')[0];
-
-  const { data: upcomingRows } = await db
-    .from('daily_puzzles')
-    .select('date')
-    .gte('date', todayStr)
-    .order('date', { ascending: true })
-    .limit(400);
-
-  const taken = new Set((Array.isArray(upcomingRows) ? upcomingRows : []).map(r => r.date));
-  const cursor = new Date(`${todayStr}T00:00:00Z`);
-  while (taken.has(cursor.toISOString().split('T')[0])) {
-    cursor.setUTCDate(cursor.getUTCDate() + 1);
-  }
-  const targetDate = cursor.toISOString().split('T')[0];
+  const { date: targetDate, taken } = await findFreeDate(db, todayStr);
   console.log(
-    `[dbService] Target date: ${targetDate} (today=${todayStr}, upcoming_in_db=${taken.size})`
+    `[dbService] Target date: ${targetDate} (today=${todayStr}, upcoming_in_db=${taken})`
   );
 
   // ── 2. Idempotency guard ───────────────────────────────────────────────────

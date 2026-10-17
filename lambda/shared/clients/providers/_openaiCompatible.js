@@ -3,6 +3,8 @@ import { toJsonSchema } from './_schemaUtils.js';
 const MAX_RETRY_DELAY_MS = 120_000;
 // Groq's free tier allows few tokens a minute: waiting it out is normal.
 const MAX_RATE_LIMIT_RETRIES = 4;
+/** A per-day quota in a 429 body, as opposed to a per-minute one. */
+const DAILY_LIMIT = /per day|\((TPD|RPD)\)/i;
 const MAX_SERVER_ERROR_RETRIES = 2;
 const REQUEST_TIMEOUT_MS = 90_000;
 const TRANSIENT_STATUSES = new Set([500, 502, 503, 504]);
@@ -113,6 +115,23 @@ export async function callOpenAICompatible(
     throw new Error(`${providerLabel} network error (${model}): ${err.message}`);
   }
   clearTimeout(timeoutId);
+
+  // A daily limit (Groq: "tokens per day (TPD)" / "requests per day (RPD)")
+  // won't lift for hours: waiting and retrying only burns the Lambda's time.
+  // Fail at once, flagged so the run stops instead of trying the next word.
+  if (res.status === 429) {
+    const body = await res.text();
+    if (DAILY_LIMIT.test(body)) {
+      const err = new Error(
+        `${providerLabel} daily limit reached (${model}): ${body.substring(0, 300)}`
+      );
+      err.quotaExhausted = true;
+      throw err;
+    }
+    if (_retryCount >= MAX_RATE_LIMIT_RETRIES) {
+      throw new Error(`${providerLabel} API error (${model}): 429 - ${body}`);
+    }
+  }
 
   if (res.status === 429 && _retryCount < MAX_RATE_LIMIT_RETRIES) {
     const retryAfterSec = parseInt(res.headers.get('retry-after') ?? '', 10);
